@@ -28,6 +28,7 @@ void OtherPlayerManager::SpawnOtherPlayer(int clientID) {
         // 실제 PlayerObject 생성
         float scale = 0.1f;
         PlayerObject* playerObj = new PlayerObject(m_currentScene, m_currentScene->AllocateId());
+        playerObj->SetIsNetworkPlayer(true);  // 네트워크 플레이어로 설정
         playerObj->AddComponent(new Transform{ {0.0f, 0.0f, 0.0f} });
         playerObj->AddComponent(new AdjustTransform{ {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {scale, scale, scale} });
         playerObj->AddComponent(new Mesh{ "1P(boy-idle).fbx" });
@@ -58,7 +59,7 @@ void OtherPlayerManager::SpawnOtherPlayer(int clientID) {
     }
 }
 
-void OtherPlayerManager::UpdateOtherPlayer(int clientID, float x, float y, float z, float rotY) {
+void OtherPlayerManager::UpdateOtherPlayer(int clientID, float x, float y, float z, float rotY, const std::string& animationFile, float animationTime) {
     auto it = otherPlayers.find(clientID);
     if (it == otherPlayers.end()) {
         // 플레이어가 없으면 새로 생성
@@ -75,8 +76,20 @@ void OtherPlayerManager::UpdateOtherPlayer(int clientID, float x, float y, float
         auto* transform = playerObj->GetComponent<Transform>();
         if (transform) {
             // 위치 업데이트
-            transform->SetPosition({x, y, z});
+            transform->SetPosition({x, y, z, 1.0f});
             transform->SetRotation({0.0f, rotY, 0.0f});
+            
+            // 애니메이션 업데이트
+            Animation* anim = playerObj->GetComponent<Animation>();
+            if (anim && !animationFile.empty()) {
+                // 애니메이션 파일이 변경되었으면 리셋
+                if (anim->mCurrentFileName != animationFile) {
+                    anim->ResetAnim(animationFile, animationTime);
+                } else {
+                    // 같은 애니메이션이면 시간만 업데이트
+                    anim->mAnimationTime = animationTime;
+                }
+            }
             
             if (m_networkManager) {
                 m_networkManager->LogToFile("[OtherPlayerManager] Updated player " + std::to_string(clientID) + 

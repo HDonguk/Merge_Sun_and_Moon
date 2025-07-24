@@ -24,6 +24,8 @@ struct PacketPlayerUpdate {
     int clientID;
     float x, y, z;    // Position
     float rotY;       // Rotation
+    char animationFile[64];  // 현재 애니메이션 파일명
+    float animationTime;     // 애니메이션 시간
 };
 
 struct PacketPlayerSpawn {

@@ -39,7 +39,7 @@ protected:
 	bool m_valid = true;
 	vector<Component*> m_components;
 
-	// ¿ÀºêÁ§Æ® ¸¶´Ù µ¶¸³ÀûÀÎ CB
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ CB
 	UINT8* m_mappedData = nullptr;
 	ComPtr<ID3D12Resource> m_constantBuffer;
 };
@@ -50,6 +50,11 @@ public:
 	using Object::Object;
 	void OnUpdate(GameTimer& gTimer) override;
 	void OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration) override;
+	
+	// ë„¤íŠ¸ì›Œí¬ í”Œë ˆì´ì–´ êµ¬ë¶„
+	void SetIsNetworkPlayer(bool isNetwork) { m_isNetworkPlayer = isNetwork; }
+	bool IsNetworkPlayer() const { return m_isNetworkPlayer; }
+	
 private:
 	void ProcessInput(const GameTimer& gTimer);
 	void Move(XMVECTOR dir, float speed, float deltatime);
@@ -66,6 +71,7 @@ private:
 	bool mIsFired = false;
 	bool mIsHitted = false;
 	int mLife = 3;
+	bool m_isNetworkPlayer = false;  // ë„¤íŠ¸ì›Œí¬ í”Œë ˆì´ì–´ êµ¬ë¶„
 };
 
 class CameraObject : public Object

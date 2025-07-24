@@ -366,6 +366,11 @@ void GameServer::ProcessSinglePacket(char* buffer, int clientID, int packetSize)
             PacketPlayerUpdate* pkt = (PacketPlayerUpdate*)buffer;
             pkt->clientID = clientID;
             clientIt->second.lastUpdate = *pkt;
+            
+            // 애니메이션 정보 로그 (디버깅용)
+            std::cout << "[PlayerUpdate] Client " << clientID << " at (" << pkt->x << ", " << pkt->y << ", " << pkt->z 
+                      << ") animation: " << pkt->animationFile << " time: " << pkt->animationTime << std::endl;
+            
             BroadcastPacket(pkt, sizeof(PacketPlayerUpdate), clientID);
             break;
         }

@@ -393,6 +393,21 @@ void NetworkManager::SendPlayerUpdate(float x, float y, float z, float rotY) {
         pkt.y = y;
         pkt.z = z;
         pkt.rotY = rotY;
+        
+        // 애니메이션 정보 추가
+        if (m_scene) {
+            auto* player = m_scene->GetObj<PlayerObject>();
+            if (player) {
+                Animation* anim = player->GetComponent<Animation>();
+                if (anim) {
+                    strncpy_s(pkt.animationFile, anim->mCurrentFileName.c_str(), sizeof(pkt.animationFile) - 1);
+                    pkt.animationTime = anim->mAnimationTime;
+                } else {
+                    strncpy_s(pkt.animationFile, "1P(boy-idle).fbx", sizeof(pkt.animationFile) - 1);
+                    pkt.animationTime = 0.0f;
+                }
+            }
+        }
 
         int sendResult = send(sock, (char*)&pkt, sizeof(pkt), 0);
         if (sendResult == SOCKET_ERROR) {
@@ -538,8 +553,13 @@ void NetworkManager::ProcessPacket(char* buffer) {
                     return;
                 }
 
+                // 애니메이션 정보 추출
+                std::string animationFile = updatePkt->animationFile;
+                float animationTime = updatePkt->animationTime;
+
                 OtherPlayerManager::GetInstance()->UpdateOtherPlayer(
-                    updatePkt->clientID, updatePkt->x, updatePkt->y, updatePkt->z, updatePkt->rotY);
+                    updatePkt->clientID, updatePkt->x, updatePkt->y, updatePkt->z, updatePkt->rotY,
+                    animationFile, animationTime);
                 LogToFile("[Update] Successfully updated player: " + std::to_string(updatePkt->clientID));
                 break;
             }

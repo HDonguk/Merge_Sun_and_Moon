@@ -32,7 +32,7 @@ public:
 
     void SpawnOtherPlayer(int clientID);
 
-    void UpdateOtherPlayer(int clientID, float x, float y, float z, float rotY);
+    void UpdateOtherPlayer(int clientID, float x, float y, float z, float rotY, const std::string& animationFile = "", float animationTime = 0.0f);
 
     void RemoveOtherPlayer(int clientID) {
         if (otherPlayers.find(clientID) != otherPlayers.end()) {

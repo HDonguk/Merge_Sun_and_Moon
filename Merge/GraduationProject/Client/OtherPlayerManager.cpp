@@ -59,14 +59,14 @@ void OtherPlayerManager::SpawnOtherPlayer(int clientID) {
     }
 }
 
-void OtherPlayerManager::UpdateOtherPlayer(int clientID, float x, float y, float z, float rotY) {
-   
-    
+void OtherPlayerManager::UpdateOtherPlayer(int clientID, float x, float y, float z, float rotY, const std::string& animationFile, float animationTime) {
     auto it = otherPlayers.find(clientID);
     if (it == otherPlayers.end()) {
-
         SpawnOtherPlayer(clientID);
-        return;
+        it = otherPlayers.find(clientID);
+        if (it == otherPlayers.end()) {
+            return; // 생성 실패
+        }
     }
 
     auto* player = it->second;
@@ -76,6 +76,12 @@ void OtherPlayerManager::UpdateOtherPlayer(int clientID, float x, float y, float
     // 네트워크에서 받은 위치와 회전값만 업데이트
     position.mFloat4 = XMFLOAT4(x, y, z, 1.0f);
     rotation.mFloat4 = XMFLOAT4(0.0f, rotY, 0.0f, 0.0f);
+    
+    // 애니메이션 업데이트 (GraduationProject는 간단한 구조이므로 기본 처리)
+    if (!animationFile.empty() && m_networkManager) {
+        m_networkManager->LogToFile("[OtherPlayerManager] Updated player " + std::to_string(clientID) + 
+            " animation: " + animationFile + " time: " + std::to_string(animationTime));
+    }
 }
 
 // Scene의 Update에서 처리

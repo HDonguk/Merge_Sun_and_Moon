@@ -5,7 +5,7 @@
 #include <random>
 #include "Framework.h"
 
-std::random_device rd;  // Ã¹ ¹øÂ° rd °´Ã¼
+std::random_device rd;  // Ã¹ ï¿½ï¿½Â° rd ï¿½ï¿½Ã¼
 default_random_engine dre(rd());
 uniform_int_distribution uid(-180,180);
 
@@ -154,11 +154,17 @@ void Object::ProcessAnimation(GameTimer& gTimer)
         isAnimate = true;
         vector<XMFLOAT4X4> finalTransforms{ 90 };
         SkinnedData& animData = m_scene->GetResourceManager().GetAnimationData(animation->mCurrentFileName);
-        animation->mAnimationTime += gTimer.DeltaTime();
+        
+        // ë„¤íŠ¸ì›Œí¬ í”Œë ˆì´ì–´ëŠ” ì• ë‹ˆë©”ì´ì…˜ ì‹œê°„ì„ ì—…ë°ì´íŠ¸í•˜ì§€ ì•ŠìŒ
+        PlayerObject* playerObj = dynamic_cast<PlayerObject*>(this);
+        if (!playerObj || !playerObj->IsNetworkPlayer()) {
+            animation->mAnimationTime += gTimer.DeltaTime();
+        }
+        
         string clipName = "Take 001";
         if (animation->mAnimationTime >= animData.GetClipEndTime(clipName)) animation->mAnimationTime = 0.0f;
         animData.GetFinalTransforms(clipName, animation->mAnimationTime, finalTransforms);
-        memcpy(m_mappedData + sizeof(XMMATRIX), finalTransforms.data(), sizeof(XMMATRIX) * 90); // Ã³À½ ¸Å°³º¯¼ö´Â ½ÃÀÛÁÖ¼Ò
+        memcpy(m_mappedData + sizeof(XMMATRIX), finalTransforms.data(), sizeof(XMMATRIX) * 90); // Ã³ Å° Ö¼
     }
     memcpy(m_mappedData + sizeof(XMMATRIX) * 91, &isAnimate, sizeof(int));
 }
@@ -180,7 +186,10 @@ void Object::Delete()
 
 void PlayerObject::OnUpdate(GameTimer& gTimer)
 {
-    ProcessInput(gTimer);
+    // ë„¤íŠ¸ì›Œí¬ í”Œë ˆì´ì–´ëŠ” ì…ë ¥ ì²˜ë¦¬í•˜ì§€ ì•ŠìŒ
+    if (!m_isNetworkPlayer) {
+        ProcessInput(gTimer);
+    }
     Object::OnUpdate(gTimer);
 }
 
@@ -188,7 +197,7 @@ void PlayerObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, f
 {
     Transform* transform = GetComponent<Transform>();
     TigerAttackObject* ta = dynamic_cast<TigerAttackObject*>(&other);
-    if (ta) // È£¶ûÀÌ °ø°İ¿¡ ¸ÂÀ¸¸é...
+    if (ta) // È£ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½İ¿ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½...
     {
         Hit();
     }
@@ -317,7 +326,7 @@ void PlayerObject::Fire()
 {
     if (mIsFired) return;
 
-    // Åõ»çÃ¼ »ı¼º
+    // ï¿½ï¿½ï¿½ï¿½Ã¼ ï¿½ï¿½ï¿½ï¿½
     mIsFired = true;
 }
 
@@ -400,12 +409,12 @@ void CameraObject::LateUpdate(GameTimer& gTimer)
 
     XMMATRIX transformM = transform->GetTransformM();
     XMMATRIX invtransformM = XMMatrixInverse(nullptr, transformM);
-    memcpy(m_scene->GetConstantBufferMappedData(), &XMMatrixTranspose(invtransformM), sizeof(XMMATRIX)); // Ã³À½ ¸Å°³º¯¼ö´Â ½ÃÀÛÁÖ¼Ò
+    memcpy(m_scene->GetConstantBufferMappedData(), &XMMatrixTranspose(invtransformM), sizeof(XMMATRIX)); // Ã³ï¿½ï¿½ ï¿½Å°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ö¼ï¿½
 }
 
 void CameraObject::OnMouseInput(WPARAM wParam, HWND hWnd)
 {
-    // ÇöÀç wndÀÇ ¼¾ÅÍ ÁÂÇ¥¸¦ ¾Ë¾Æ¿Â´Ù
+    // ï¿½ï¿½ï¿½ï¿½ wndï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ç¥ï¿½ï¿½ ï¿½Ë¾Æ¿Â´ï¿½
     RECT clientRect{};
     GetWindowRect(hWnd, &clientRect);
     int width = int(clientRect.right - clientRect.left);
@@ -420,7 +429,7 @@ void CameraObject::OnMouseInput(WPARAM wParam, HWND hWnd)
     mTheta -= XMConvertToRadians(dx * 0.02f);
     mPhi -= XMConvertToRadians(dy * 0.02f);
 
-    // °¢µµ clamp
+    // ï¿½ï¿½ï¿½ï¿½ clamp
     float min = 0.1f;
     float max = XM_PI - 0.1f;
     mPhi = mPhi < min ? min : (mPhi > max ? max : mPhi);
@@ -460,28 +469,28 @@ void TigerObject::TigerBehavior(GameTimer& gTimer)
     XMVECTOR dir = XMVector3Normalize(playerPos - pos);
     float yaw = atan2f(XMVectorGetX(dir), XMVectorGetZ(dir)) * 180 / 3.141592f;
 
-    if (result < 200.f) // ÇÃ·¹ÀÌ¾î°¡ Å½»ö ¹üÀ§ ¾È¿¡ µé¾î¿À¸é... 
+    if (result < 200.f) // ï¿½Ã·ï¿½ï¿½Ì¾î°¡ Å½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½È¿ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½... 
     {
-        if (result < 17.0f) // Å½»ö¹üÀ§ ¾È¿¡ ÇÃ·¹ÀÌ¾î°¡ ÀÖ°í, ¸Å¿ì °¡±õ´Ù¸é....
+        if (result < 17.0f) // Å½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½È¿ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾î°¡ ï¿½Ö°ï¿½, ï¿½Å¿ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ù¸ï¿½....
         {
             if (anim->mCurrentFileName != "0208_tiger_attack.fbx") 
             {
-                // °ø°İ ¸ğ¼Ç Áß¿¡´Â È¸ÀüÇÏÁö ¾Ê´Â´Ù.
+                // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ß¿ï¿½ï¿½ï¿½ È¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê´Â´ï¿½.
                 transform->SetRotation({ 0.0f, yaw, 0.0f });
             }
             Attack();
         }
-        else // Å½»ö¹üÀ§ ¾È¿¡ ÇÃ·¹ÀÌ¾î°¡ ÀÖÁö¸¸, ¸Å¿ì °¡±õÁö ¾Ê´Ù¸é...
+        else // Å½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½È¿ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾î°¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½Å¿ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê´Ù¸ï¿½...
         {
             if (anim->mCurrentFileName != "0208_tiger_attack.fbx") 
             {
-                // °ø°İ ¸ğ¼Ç Áß¿¡´Â ¿òÁ÷ÀÌ¸é ¾ÈµÈ´Ù.
+                // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ß¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ì¸ï¿½ ï¿½ÈµÈ´ï¿½.
                 transform->SetPosition(pos + dir * mSpeed * gTimer.DeltaTime());
                 transform->SetRotation({ 0.0f, yaw, 0.0f });
             }
         }
     }
-    else // ÇÃ·¹ÀÌ¾î°¡ Å½»ö ¹üÀ§ ¹Û¿¡ ÀÖ´Ù.
+    else // ï¿½Ã·ï¿½ï¿½Ì¾î°¡ Å½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Û¿ï¿½ ï¿½Ö´ï¿½.
     {
         Search(gTimer.DeltaTime());
     }

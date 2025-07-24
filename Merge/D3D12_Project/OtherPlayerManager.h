@@ -29,7 +29,7 @@ public:
     void SetNetworkManager(NetworkManager* networkManager) { m_networkManager = networkManager; }
 
     void SpawnOtherPlayer(int clientID);
-    void UpdateOtherPlayer(int clientID, float x, float y, float z, float rotY);
+    void UpdateOtherPlayer(int clientID, float x, float y, float z, float rotY, const std::string& animationFile = "", float animationTime = 0.0f);
     void RemoveOtherPlayer(int clientID);
 
     std::unordered_map<int, PlayerObject*>& GetPlayers() {

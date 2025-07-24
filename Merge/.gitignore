@@ -67,6 +67,7 @@ StyleCopReport.xml
 *.obj
 *.iobj
 *.pch
+*.ipch
 *.pdb
 *.ipdb
 *.pgc
@@ -379,7 +380,7 @@ logs/
 *.tmp
 *.temp
 
-# D3D12 specific
+# D3D12 specific - but allow D3D12_Project folder
 *.dds
 *.fbx
 *.obj
@@ -484,4 +485,12 @@ Thumbs.db
 network_log_*.txt
 
 # Server specific
-Server/Server/TextFile1.txt 
+Server/Server/TextFile1.txt
+
+# Allow D3D12_Project folder and its contents
+!D3D12_Project/
+!D3D12_Project/**
+
+# Ignore .vs folder in D3D12_Project
+D3D12_Project/.vs/
+D3D12_Project/.vs/** 

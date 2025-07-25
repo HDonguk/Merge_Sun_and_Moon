@@ -57,6 +57,7 @@ public:
 	
 private:
 	void ProcessInput(const GameTimer& gTimer);
+	void ChangeState(string fileName);
 	void Move(XMVECTOR dir, float speed, float deltatime);
 	void Idle();
 	void Jump();
@@ -69,8 +70,10 @@ private:
 	float mWalkSpeed = 20.0f;
 	float mRunSpeed = 40.0f;
 	float mElapseTime = 0.0f;
+	float mJumpTime = 0.0f;
 	bool mIsFired = false;
 	bool mIsHitted = false;
+	bool mJumped = false;
 	int mLife = 3;
 	bool m_isNetworkPlayer = false;  // 네트워크 플레이어 구분
 };
@@ -116,20 +119,34 @@ public:
 	void OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration) override;
 private:
 	void TigerBehavior(GameTimer& gTimer);
+	void ChangeState(string fileName);
 	void Search(float deltaTime);
 	void Attack();
 	void TimeOut();
 	void Fire();
+	void Hit();
+	void Dead();
 	void CalcTime(float deltaTime);
 	float mSpeed = 25.0f;
 	float mElapseTime = 0.0f;
 	float mAttackTime = 0.0f;
 	float mSearchTime = 0.0f;
 	bool mIsFired = false;
+	bool mIsHitted = false;
+	int mLife = 2;
 };
 
 
 class TigerAttackObject : public Object
+{
+public:
+	using Object::Object;
+	void OnUpdate(GameTimer& gTimer) override;
+private:
+	float mElapseTime = 0.0f;
+};
+
+class PlayerAttackObject : public Object
 {
 public:
 	using Object::Object;

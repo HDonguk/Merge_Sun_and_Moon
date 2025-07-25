@@ -196,17 +196,18 @@ void PlayerObject::OnUpdate(GameTimer& gTimer)
 void PlayerObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration)
 {
     Transform* transform = GetComponent<Transform>();
+    PlayerAttackObject* pa = dynamic_cast<PlayerAttackObject*>(&other);
+    if (pa) return;
     TigerAttackObject* ta = dynamic_cast<TigerAttackObject*>(&other);
     if (ta) // ȣ���� ���ݿ� ������...
     {
         Hit();
+        return;
     }
-    else
-    {
-        XMVECTOR pos = transform->GetPosition();
-        pos -= collisionNormal * penetration;
-        transform->SetPosition(pos);
-    }
+
+    XMVECTOR pos = transform->GetPosition();
+    pos -= collisionNormal * penetration;
+    transform->SetPosition(pos);
 
     float similarity = XMVectorGetX(XMVector3Dot(XMVECTOR{ 0.0f, 1.0f, 0.0f, 0.0f }, -collisionNormal));
     Gravity* gravity = GetComponent<Gravity>();
@@ -249,6 +250,12 @@ void PlayerObject::ProcessInput(const GameTimer& gTimer)
     }
 }
 
+void PlayerObject::ChangeState(string fileName)
+{
+    Animation* anim = GetComponent<Animation>();
+    if (anim->ResetAnim(fileName, 0.0f)) mElapseTime = 0.0f;
+}
+
 void PlayerObject::Move(XMVECTOR dir, float speed,float deltaTime)
 {
     Animation* anim = GetComponent<Animation>();
@@ -257,10 +264,10 @@ void PlayerObject::Move(XMVECTOR dir, float speed,float deltaTime)
     if (anim->mCurrentFileName == "boy_dying_fix.fbx") return;
 
     if (speed >= mRunSpeed) {
-        anim->ResetAnim("boy_run_fix.fbx", 0.0f);
+        ChangeState("boy_run_fix.fbx");
     }
     else if (speed >= mWalkSpeed) {
-        anim->ResetAnim("boy_walk_fix.fbx", 0.0f);
+        ChangeState("boy_walk_fix.fbx");
     }
 
     Transform* transform = GetComponent<Transform>();
@@ -278,15 +285,6 @@ void PlayerObject::Move(XMVECTOR dir, float speed,float deltaTime)
     transform->SetRotation({ 0.0f, yaw, 0.0f });
 }
 
-void PlayerObject::Jump()
-{
-    Gravity* gravity = GetComponent<Gravity>();
-    Animation* anim = GetComponent<Animation>();
-    if (!gravity) return;
-    if (anim->mCurrentFileName == "boy_hit.fbx") return;
-    if (anim->mCurrentFileName == "boy_dying_fix.fbx") return;
-    gravity->SetVerticalSpeed(20.0f);
-}
 
 void PlayerObject::Idle()
 {
@@ -295,8 +293,22 @@ void PlayerObject::Idle()
     if (anim->mCurrentFileName == "boy_hit.fbx") return;
     if (anim->mCurrentFileName == "boy_dying_fix.fbx") return;
 
-    anim->ResetAnim("1P(boy-idle).fbx", 0.0f);
+    ChangeState("1P(boy-idle).fbx");
 }
+
+void PlayerObject::Jump()
+{
+    if (mJumped) return;
+    mJumped = true;
+    mJumpTime = 0.0f;
+    Gravity* gravity = GetComponent<Gravity>();
+    Animation* anim = GetComponent<Animation>();
+    if (!gravity) return;
+    if (anim->mCurrentFileName == "boy_hit.fbx") return;
+    if (anim->mCurrentFileName == "boy_dying_fix.fbx") return;
+    gravity->SetVerticalSpeed(40.0f);
+}
+
 
 void PlayerObject::Attack()
 {
@@ -304,30 +316,38 @@ void PlayerObject::Attack()
     if (anim->mCurrentFileName == "boy_hit.fbx") return;
     if (anim->mCurrentFileName == "boy_dying_fix.fbx") return;
 
-    anim->ResetAnim("boy_attack(45).fbx", 0.0f);
+    ChangeState("boy_attack(45).fbx");
 }
 
 void PlayerObject::TimeOut()
 {
-    mElapseTime = 0.0f;
     Animation* anim = GetComponent<Animation>();
     if (anim->mCurrentFileName == "boy_attack(45).fbx") 
     {
-        anim->ResetAnim("1P(boy-idle).fbx", 0.0f);
         mIsFired = false;
+        ChangeState("1P(boy-idle).fbx");
+        return;
     }
 
     if (anim->mCurrentFileName == "boy_hit.fbx")
     {
-        anim->ResetAnim("1P(boy-idle).fbx", 0.0f);
         mIsHitted = false;
+        ChangeState("1P(boy-idle).fbx");
+        return;
     }
 
     if (anim->mCurrentFileName == "boy_dying_fix.fbx")
     {
-        anim->ResetAnim("1P(boy-idle).fbx", 0.0f);
         mIsHitted = false;
         mLife = 3;
+        ChangeState("1P(boy-idle).fbx");
+        return;
+    }
+
+    if (mJumped)
+    {
+        mJumped = false;
+        return;
     }
 }
 
@@ -335,8 +355,14 @@ void PlayerObject::Fire()
 {
     if (mIsFired) return;
 
-    // ����ü ����
     mIsFired = true;
+
+    Object* obj = new PlayerAttackObject(m_scene, m_scene->AllocateId(), m_id);
+    obj->AddComponent(new Transform{ {0.0f, 8.0f, 8.0f} });
+    obj->AddComponent(new Collider{ {0.0f, 0.0f, 0.0f}, {6.0f, 8.0f, 6.0f} });
+    m_scene->AddObj(obj);
+
+    // ����ü �߰� ����
 }
 
 void PlayerObject::Hit()
@@ -349,14 +375,13 @@ void PlayerObject::Hit()
         Dead();
         return;
     }
-    Animation* anim = GetComponent<Animation>();
-    anim->ResetAnim("boy_hit.fbx", 0.0f);
+    ChangeState("boy_hit.fbx");
 }
 
 void PlayerObject::Dead()
 {
     Animation* anim = GetComponent<Animation>();
-    anim->ResetAnim("boy_dying_fix.fbx", 0.0f);    
+    ChangeState("boy_dying_fix.fbx");
 }
 
 void PlayerObject::CalcTime(float deltaTime)
@@ -379,6 +404,12 @@ void PlayerObject::CalcTime(float deltaTime)
     {
         mElapseTime += deltaTime;
         if (mElapseTime > 2.0f) TimeOut();
+    }
+
+    if (mJumped)
+    {
+        mJumpTime += deltaTime;
+        if (mJumpTime > 1.2f) TimeOut();
     }
 }
 
@@ -459,6 +490,13 @@ void TigerObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, fl
     TigerAttackObject* ta = dynamic_cast<TigerAttackObject*>(&other);
     if (ta) return;
 
+    PlayerAttackObject* pa = dynamic_cast<PlayerAttackObject*>(&other);
+    if (pa)
+    {
+        Hit();
+        return;
+    }
+
     Transform* transform = GetComponent<Transform>();
     XMVECTOR pos = transform->GetPosition();
     pos += -collisionNormal * penetration;
@@ -482,7 +520,7 @@ void TigerObject::TigerBehavior(GameTimer& gTimer)
     {
         if (result < 17.0f) // Ž������ �ȿ� �÷��̾ �ְ�, �ſ� �����ٸ�....
         {
-            if (anim->mCurrentFileName != "0208_tiger_attack.fbx") 
+            if (anim->mCurrentFileName == "0113_tiger_walk.fbx")
             {
                 // ���� ��� �߿��� ȸ������ �ʴ´�.
                 transform->SetRotation({ 0.0f, yaw, 0.0f });
@@ -491,9 +529,9 @@ void TigerObject::TigerBehavior(GameTimer& gTimer)
         }
         else // Ž������ �ȿ� �÷��̾ ������, �ſ� ������ �ʴٸ�...
         {
-            if (anim->mCurrentFileName != "0208_tiger_attack.fbx") 
+            if (anim->mCurrentFileName == "0113_tiger_walk.fbx")
             {
-                // ���� ��� �߿��� �����̸� �ȵȴ�.
+                // �ȱ� ��� �߿��� ȸ�� �Ǵ� �̵��Ѵ�.
                 transform->SetPosition(pos + dir * mSpeed * gTimer.DeltaTime());
                 transform->SetRotation({ 0.0f, yaw, 0.0f });
             }
@@ -503,6 +541,12 @@ void TigerObject::TigerBehavior(GameTimer& gTimer)
     {
         Search(gTimer.DeltaTime());
     }
+}
+
+void TigerObject::ChangeState(string fileName)
+{
+    Animation* anim = GetComponent<Animation>();
+    if (anim->ResetAnim(fileName, 0.0f)) mElapseTime = 0.0f;
 }
 
 void TigerObject::Search(float deltaTime)
@@ -527,19 +571,34 @@ void TigerObject::Search(float deltaTime)
 void TigerObject::Attack()
 {
     Animation* anim = GetComponent<Animation>();
+    if (anim->mCurrentFileName == "0208_tiger_hit.fbx") return;
+    if (anim->mCurrentFileName == "0208_tiger_dying.fbx") return;
     if (mAttackTime < 2.0f) return;
-    anim->ResetAnim("0208_tiger_attack.fbx", 0.0f);
+    ChangeState("0208_tiger_attack.fbx");
 }
 void TigerObject::TimeOut()
 {
-    mElapseTime = 0.0f;
     Animation* anim = GetComponent<Animation>();
     
     if (anim->mCurrentFileName == "0208_tiger_attack.fbx") 
     {
-        anim->ResetAnim("0113_tiger_walk.fbx", 0.0f);
         mIsFired = false;
         mAttackTime = 0.0f;
+        ChangeState("0113_tiger_walk.fbx");
+    }
+
+    if (anim->mCurrentFileName == "0208_tiger_hit.fbx")
+    {
+        mIsHitted = false;
+        ChangeState("0113_tiger_walk.fbx");
+    }
+
+    if (anim->mCurrentFileName == "0208_tiger_dying.fbx")
+    {
+        Delete();
+        //mIsHitted = false;
+        //mLife = 2;
+        //ChangeState("0113_tiger_walk.fbx");
     }
 }
 void TigerObject::Fire()
@@ -551,6 +610,24 @@ void TigerObject::Fire()
     obj->AddComponent(new Transform{ {0.0f, 6.0f, 18.0f} });
     obj->AddComponent(new Collider{ {0.0f, 0.0f, 0.0f}, {4.0f, 6.0f, 8.0f} });
     m_scene->AddObj(obj);
+}
+
+void TigerObject::Hit()
+{
+    if (mIsHitted) return;
+    mIsHitted = true;
+    --mLife;
+    if (mLife == 0)
+    {
+        Dead();
+        return;
+    }
+    ChangeState("0208_tiger_hit.fbx");
+}
+
+void TigerObject::Dead()
+{
+    ChangeState("0208_tiger_dying.fbx");
 }
 
 void TigerObject::CalcTime(float deltaTime) 
@@ -567,6 +644,18 @@ void TigerObject::CalcTime(float deltaTime)
         mAttackTime += deltaTime;
         mSearchTime += deltaTime;
     }
+
+    if (anim->mCurrentFileName == "0208_tiger_hit.fbx")
+    {
+        mElapseTime += deltaTime;
+        if (mElapseTime > 0.8f) TimeOut();
+    }
+
+    if (anim->mCurrentFileName == "0208_tiger_dying.fbx")
+    {
+        mElapseTime += deltaTime;
+        if (mElapseTime > 1.9f) TimeOut();
+    }
 }
 
 void TigerAttackObject::OnUpdate(GameTimer& gTimer)
@@ -580,5 +669,12 @@ void QuadObject::OnUpdate(GameTimer& gTimer)
 {
     CameraObject* camera = m_scene->GetObj<CameraObject>();
     m_parent_id = camera->GetId();
+    Object::OnUpdate(gTimer);
+}
+
+void PlayerAttackObject::OnUpdate(GameTimer& gTimer)
+{
+    mElapseTime += gTimer.DeltaTime();
+    if (mElapseTime >= 0.1) Delete();
     Object::OnUpdate(gTimer);
 }

@@ -74,7 +74,7 @@ struct Texture : public Component
 struct Animation : public Component
 {
 	Animation(string initFileName);
-	void ResetAnim(string fileName, float time);
+	bool ResetAnim(string fileName, float time);
 	float mAnimationTime = 0.0f;
 	string mCurrentFileName = "";
 };

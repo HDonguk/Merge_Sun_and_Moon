@@ -91,10 +91,10 @@ void Scene::BuildObjects()
 
     {
         float scale = 0.2f;
-        float basePosX = 150.0f;
-        float basePosZ = 150.0f;
-        float offset = 700.0f;
-        int repeat = 3;
+        float basePosX = 500.0f;
+        float basePosZ = 500.0f;
+        float offset = 100.0f;
+        int repeat = 5;
         for (int i = 0; i < repeat; ++i) {
             for (int j = 0; j < repeat; ++j) {
                 objectPtr = new TigerObject(this, AllocateId());
@@ -981,6 +981,8 @@ void Scene::LoadMeshAnimationTexture()
     m_resourceManager->LoadFbx("0113_tiger_walk.fbx", true, true);
     m_resourceManager->LoadFbx("0113_tiger_run.fbx", true, true);
     m_resourceManager->LoadFbx("0208_tiger_attack.fbx", true, true);
+    m_resourceManager->LoadFbx("0208_tiger_hit.fbx", true, true);
+    m_resourceManager->LoadFbx("0208_tiger_dying.fbx", true, true);
 
     m_resourceManager->LoadFbx("long_tree.fbx", false, true);
     m_resourceManager->LoadFbx("broken_house.fbx", false, true);

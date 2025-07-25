@@ -126,7 +126,7 @@ XMMATRIX AdjustTransform::GetTransformM()
 XMVECTOR Gravity::ProcessGravity(XMVECTOR pos, float deltaTime)
 {
 	mElapseTime += deltaTime;
-	float gForce = mG * mElapseTime * mElapseTime;
+	float gForce = 60.0 + mG * mElapseTime * mElapseTime;
 	mVerticalSpeed -= gForce * deltaTime;
 
 	XMFLOAT3 newPos{};
@@ -178,9 +178,10 @@ Animation::Animation(string initFileName) : mCurrentFileName{initFileName}
 {
 }
 
-void Animation::ResetAnim(string fileName, float time)
+bool Animation::ResetAnim(string fileName, float time)
 {
-	if (fileName == mCurrentFileName) return;
+	if (fileName == mCurrentFileName) return false;
 	mCurrentFileName = fileName;
 	mAnimationTime = time;
+	return true;
 }

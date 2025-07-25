@@ -71,6 +71,7 @@ private:
 	float mRunSpeed = 40.0f;
 	float mElapseTime = 0.0f;
 	float mJumpTime = 0.0f;
+	float mAttackTime = 0.0f;
 	bool mIsFired = false;
 	bool mIsHitted = false;
 	bool mJumped = false;
@@ -121,13 +122,15 @@ private:
 	void TigerBehavior(GameTimer& gTimer);
 	void ChangeState(string fileName);
 	void Search(float deltaTime);
+	void Run();
 	void Attack();
 	void TimeOut();
 	void Fire();
 	void Hit();
 	void Dead();
 	void CalcTime(float deltaTime);
-	float mSpeed = 25.0f;
+	float mWalkSpeed = 25.0f;
+	float mRunSpeed = 45.0f;
 	float mElapseTime = 0.0f;
 	float mAttackTime = 0.0f;
 	float mSearchTime = 0.0f;

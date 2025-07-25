@@ -50,7 +50,7 @@ float4 PS(VSOutput input) : SV_TARGET
 {
     float shadow = CalcShadowFactor(input.shadowPosH);
     shadow = max(shadow, 0.6f);
-    float4 lightVector = float4(0.3, 1, 0, 0);
+    float4 lightVector = float4(0.0f, 1.0f, -0.3f, 0.0f);
     lightVector = normalize(lightVector);
     float4 result = Texture.Sample(Sampler, input.uv) * (pow(max(dot(input.normal, lightVector), 0.f), powValue) + ambiantValue) * shadow;
     return result;

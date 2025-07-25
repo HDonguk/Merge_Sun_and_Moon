@@ -129,6 +129,7 @@ private:
 	void Hit();
 	void Dead();
 	void CalcTime(float deltaTime);
+	void CreateLeather();
 	float mWalkSpeed = 25.0f;
 	float mRunSpeed = 45.0f;
 	float mElapseTime = 0.0f;
@@ -136,7 +137,7 @@ private:
 	float mSearchTime = 0.0f;
 	bool mIsFired = false;
 	bool mIsHitted = false;
-	int mLife = 2;
+	int mLife = 3;
 };
 
 
@@ -163,5 +164,25 @@ class QuadObject : public Object
 public:
 	using Object::Object;
 	void OnUpdate(GameTimer& gTimer) override;
+private:
+};
+
+class TigerMockup : public Object
+{
+public:
+	using Object::Object;
+	void OnUpdate(GameTimer& gTimer) override;
+	void OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration) override;
+private:
+	float mSearchTime = 0.0f;
+	float mWalkSpeed = 20.0f;
+};
+
+class TigerLeather : public Object
+{
+public:
+	Object::Object;
+	void OnUpdate(GameTimer& gTimer) override;
+	void OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration) override;
 private:
 };

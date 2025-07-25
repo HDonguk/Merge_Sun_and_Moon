@@ -125,6 +125,11 @@ XMMATRIX AdjustTransform::GetTransformM()
 
 XMVECTOR Gravity::ProcessGravity(XMVECTOR pos, float deltaTime)
 {
+	if (mOnGround)
+	{
+		mOnGround = false;
+		return pos;
+	}
 	mElapseTime += deltaTime;
 	float gForce = 60.0 + mG * mElapseTime * mElapseTime;
 	mVerticalSpeed -= gForce * deltaTime;
@@ -144,6 +149,7 @@ void Gravity::ResetElapseTime()
 	if (mVerticalSpeed <= 0.0f) {
 		mElapseTime = 0.0f;
 		mVerticalSpeed = 0.0f;
+		mOnGround = true;
 	}
 
 }

@@ -36,6 +36,7 @@ public:
     std::tuple<XMVECTOR, float> GetCollisionData(BoundingOrientedBox OBB1, BoundingOrientedBox OBB2);
     Object* GetObjFromId(uint32_t id);
     uint32_t AllocateId();
+    void SetStage(wstring stage);
 
     template<typename T>
     T* GetObj()
@@ -49,6 +50,7 @@ public:
         return temp;
     }
 private:
+    void ProcessStageQueue();
     void CompactObjects();
     void ProcessObjectQueue();
     void DeleteCurrentObjects();
@@ -66,8 +68,9 @@ private:
     void BuildTextureBufferView(ID3D12Device* device);
     void BuildDescriptorHeap(ID3D12Device* device);
     void BuildProjMatrix();
-    void BuildObjects();
-    void BuildBaseObjects();
+    void BuildBaseStage();
+    void BuildHuntingStage();
+    void BuildGodStage();
     void BuildShadow();
     void BuildShaders();
     void BuildInputElement();
@@ -75,7 +78,8 @@ private:
         const std::wstring& fileName, const D3D_SHADER_MACRO* defines, const std::string& entryPoint, const std::string& target);
 private:
     Framework* m_parent = nullptr;
-    wstring mCurrentStage = L"Base";
+    wstring m_current_stage = L"Base";
+    wstring m_stage_queue = L"";
     vector<Object*> m_objects;
     uint32_t m_id_counter = 0;
     Object* m_object_queue[MAX_QUEUE]{};
@@ -86,7 +90,7 @@ private:
     CD3DX12_VIEWPORT m_viewport;
     CD3DX12_RECT m_scissorRect;
     ComPtr<ID3D12RootSignature> m_rootSignature;
-    //std::unordered_map<std::string, ComPtr<ID3D12RootSignature>> m_rootSignatures;
+  
     std::unordered_map<std::string, ComPtr<ID3D12PipelineState>> m_PSOs;
     std::unordered_map<std::string, ComPtr<ID3DBlob>> m_shaders;
     //

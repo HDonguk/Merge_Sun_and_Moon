@@ -34,8 +34,14 @@ void FbxExtractor::ImportFbxFile(const std::string& fileName, bool onlyAnimation
 	mFbxScene = FbxScene::Create(mFbxManager, "");
 	if(mFbxImporter->Import(mFbxScene) == false) throw;
 	
-	if (zUp) ConvertSceneAxisSystem(FbxAxisSystem::eZAxis, FbxAxisSystem::eParityOdd, FbxAxisSystem::eLeftHanded);
-	else ConvertSceneAxisSystem(FbxAxisSystem::eYAxis, FbxAxisSystem::eParityOdd, FbxAxisSystem::eLeftHanded);
+	if (zUp)
+	{
+		ConvertSceneAxisSystem(FbxAxisSystem::eZAxis, FbxAxisSystem::eParityOdd, FbxAxisSystem::eLeftHanded);
+	}
+	else
+	{
+		ConvertSceneAxisSystem(FbxAxisSystem::eYAxis, FbxAxisSystem::eParityOdd, FbxAxisSystem::eLeftHanded);
+	}
 
 	mOnlyAnimation = onlyAnimation;
 

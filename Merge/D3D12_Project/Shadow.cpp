@@ -11,7 +11,7 @@ Shadow::Shadow(Scene* parent, UINT width, UINT height) :
 	mScissorRect{ 0, 0, static_cast<long>(width), static_cast<long>(height) },
 	mSceneSphere{ XMFLOAT3{0.f,0.f,0.f}, 500.f }
 {
-	XMStoreFloat3(&mLightDirection, XMVector3Normalize(XMVECTOR{ -1.f, -1.f, 0.f }));
+	XMStoreFloat3(&mLightDirection, XMVector3Normalize(XMVECTOR{ 0.0f, -1.f, 0.3f }));
 
 	ID3D12DescriptorHeap* cbvSrvUavDescHeap = mParent->GetDescriptorHeap();
 	D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = cbvSrvUavDescHeap->GetCPUDescriptorHandleForHeapStart();
@@ -44,9 +44,9 @@ void Shadow::UpdateShadow()
 	mSceneSphere.Center = { posX, 0.0f, posZ };
 	//기회가 되면 Framework 로 부터 시간 가져와서 조명의 위치에 따라 그림자가 생성되게 구현.
 	XMVECTOR lightDir = XMLoadFloat3(&mLightDirection);
-	XMVECTOR lightPos = -5.f * mSceneSphere.Radius * lightDir;
+	XMVECTOR lightPos = -100.0f * mSceneSphere.Radius * lightDir;
 	XMVECTOR target = XMLoadFloat3(&mSceneSphere.Center);
-	XMVECTOR up = { 0.f, 1.f, 0.f , 0.f};
+	XMVECTOR up = { 0.0f, 1.0f, 0.0f , 0.0f };
 	XMMATRIX lightViewMatrix = XMMatrixLookAtLH(lightPos, target, up);
 	//XMMATRIX lightViewMatrix = XMMatrixLookToLH(lightPos, target, up);
 	XMStoreFloat4x4(&mViewMatrix, lightViewMatrix);

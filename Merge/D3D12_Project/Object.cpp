@@ -52,16 +52,16 @@ void Object::OnUpdate(GameTimer& gTimer)
 
 void Object::OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration)
 {
-    float similarity = XMVectorGetX(XMVector3Dot(XMVECTOR{ 0.0f, 1.0f, 0.0f, 0.0f }, -collisionNormal));
-    Gravity* gravity = GetComponent<Gravity>();
-    if (gravity && similarity > 0.95f) {
-        gravity->ResetElapseTime();
+    //float similarity = XMVectorGetX(XMVector3Dot(XMVECTOR{ 0.0f, 1.0f, 0.0f, 0.0f }, -collisionNormal));
+    //Gravity* gravity = GetComponent<Gravity>();
+    //if (gravity && similarity > 0.80f) {
+    //    gravity->ResetElapseTime();
 
-        Transform* transform = GetComponent<Transform>();
-        XMVECTOR pos = transform->GetPosition();
-        pos += -collisionNormal * penetration;
-        transform->SetPosition(pos);
-    }
+    //    Transform* transform = GetComponent<Transform>();
+    //    XMVECTOR pos = transform->GetPosition();
+    //    pos -= collisionNormal * penetration;
+    //    transform->SetPosition(pos);
+    //}
 }
 
 void Object::LateUpdate(GameTimer& gTimer)
@@ -211,7 +211,7 @@ void PlayerObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, f
 
     float similarity = XMVectorGetX(XMVector3Dot(XMVECTOR{ 0.0f, 1.0f, 0.0f, 0.0f }, -collisionNormal));
     Gravity* gravity = GetComponent<Gravity>();
-    if (gravity && similarity > 0.95f) {
+    if (gravity && similarity > 0.80f) {
         gravity->ResetElapseTime();
     }
 }
@@ -482,7 +482,6 @@ void CameraObject::OnMouseInput(WPARAM wParam, HWND hWnd)
 
 void TigerObject::OnUpdate(GameTimer& gTimer)
 {
-    // RandomVelocity(gTimer);
     CalcTime(gTimer.DeltaTime());
     TigerBehavior(gTimer);
     Object::OnUpdate(gTimer);
@@ -604,15 +603,13 @@ void TigerObject::TimeOut()
     if (anim->mCurrentFileName == "0208_tiger_hit.fbx")
     {
         mIsHitted = false;
-        ChangeState("0113_tiger_walk.fbx");
+        ChangeState("0722_tiger_idle2.fbx");
     }
 
     if (anim->mCurrentFileName == "0208_tiger_dying.fbx")
     {
+        CreateLeather();
         Delete();
-        //mIsHitted = false;
-        //mLife = 2;
-        //ChangeState("0113_tiger_walk.fbx");
     }
 }
 void TigerObject::Fire()
@@ -677,6 +674,23 @@ void TigerObject::CalcTime(float deltaTime)
     }
 }
 
+void TigerObject::CreateLeather()
+{
+    Transform* transform = GetComponent<Transform>();
+    XMVECTOR pos = transform->GetPosition();
+
+    Object* objectPtr = nullptr;
+    float scale = 0.1f;
+    objectPtr = new TigerLeather(m_scene, m_scene->AllocateId());
+    objectPtr->AddComponent(new Transform{ pos });
+    objectPtr->AddComponent(new AdjustTransform{ {0.0f * scale, 100.0f * scale, 0.0f * scale}, {-90.0f, 0.0f, 0.0f}, {scale, scale, scale} });
+    objectPtr->AddComponent(new Mesh{ "tiger_leather.fbx" });
+    objectPtr->AddComponent(new Texture{ L"tigerLeather", 1.0f, 0.6f });
+    objectPtr->AddComponent(new Collider{ {0.0f, 100.0f * scale, 0.0f}, {90.0f * scale, 100.0f * scale, 20.0f * scale} });
+    objectPtr->AddComponent(new Gravity);
+    m_scene->AddObj(objectPtr);
+}
+
 void TigerAttackObject::OnUpdate(GameTimer& gTimer)
 {
     mElapseTime += gTimer.DeltaTime();
@@ -696,4 +710,57 @@ void PlayerAttackObject::OnUpdate(GameTimer& gTimer)
     mElapseTime += gTimer.DeltaTime();
     if (mElapseTime >= 0.1) Delete();
     Object::OnUpdate(gTimer);
+}
+
+void TigerMockup::OnUpdate(GameTimer& gTimer)
+{
+    static float randYaw = uid(dre);
+    Transform* transform = GetComponent<Transform>();
+
+    mSearchTime += gTimer.DeltaTime();
+
+    if (mSearchTime > 2.0f)
+    {
+        mSearchTime = 0.0f;
+        randYaw = uid(dre);
+        transform->SetRotation({ 0.0f, randYaw, 0.0f });
+    }
+
+    XMVECTOR dir = XMVector3TransformNormal({ 0.0f, 0.0f, 1.0f }, transform->GetRotationM());
+    dir = XMVector3Normalize(dir);
+    XMVECTOR pos = transform->GetPosition();
+    transform->SetPosition(pos + dir * mWalkSpeed * gTimer.DeltaTime());
+    Object::OnUpdate(gTimer);
+}
+
+void TigerMockup::OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration)
+{
+    PlayerObject* player = dynamic_cast<PlayerObject*>(&other);
+    if (player)
+    {
+        m_scene->SetStage(L"Hunting");
+    }
+
+    Transform* transform = GetComponent<Transform>();
+    XMVECTOR pos = transform->GetPosition();
+    pos += -collisionNormal * penetration;
+    transform->SetPosition(pos);
+}
+
+void TigerLeather::OnUpdate(GameTimer& gTimer)
+{
+    Transform* transform = GetComponent<Transform>();
+    XMFLOAT3 rot{};
+    XMStoreFloat3(&rot, transform->GetRotation());
+
+    rot.y += 60.0f * gTimer.DeltaTime();
+
+    transform->SetRotation(XMLoadFloat3(&rot));
+    Object::OnUpdate(gTimer);
+}
+
+void TigerLeather::OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration)
+{
+    PlayerObject* player = dynamic_cast<PlayerObject*>(&other);
+    if (player) Delete();
 }

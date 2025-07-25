@@ -799,12 +799,12 @@ void NetworkManager::Update(GameTimer& gTimer, Scene* scene) {
 
     if (!m_isRunning) return;
 
-    // Player 테스트를 위해 Update 호출 로그 추가
-    static int updateCount = 0;
-    updateCount++;
-    if (updateCount % 60 == 0) { // 1초마다 로그 (60fps 기준)
-        LogToFile("[Update] NetworkManager::Update called - count: " + std::to_string(updateCount));
-    }
+    // 로그 출력 최소화로 성능 개선
+    // static int updateCount = 0;
+    // updateCount++;
+    // if (updateCount % 300 == 0) { // 5초마다 로그 (성능 개선)
+    //     LogToFile("[Update] NetworkManager::Update called - count: " + std::to_string(updateCount));
+    // }
 
     // 나무 생성 큐 처리 (메인 스레드에서 안전하게 처리)
     ProcessTreeSpawnQueue();
@@ -825,10 +825,10 @@ void NetworkManager::Update(GameTimer& gTimer, Scene* scene) {
     XMVECTOR rot = transform->GetRotation();
     
     m_updateTimer += gTimer.DeltaTime();
-    const float UPDATE_INTERVAL = 0.05f;  // 50ms마다 업데이트 (더 부드러운 움직임)
+    const float UPDATE_INTERVAL = 0.1f;  // 100ms마다 업데이트 (성능 개선)
 
     if (m_updateTimer >= UPDATE_INTERVAL) {
-        LogToFile("[Update] Sending player position update");
+        // 로그 제거로 성능 개선
         SendPlayerUpdate(
             XMVectorGetX(pos), 
             XMVectorGetY(pos), 

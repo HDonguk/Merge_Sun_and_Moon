@@ -111,27 +111,8 @@ void Scene::BuildHuntingStage()
         }
     }
 
-    // 호랑이 (로컬 테스트용)
-    {
-        float scale = 0.2f;
-        float basePosX = 500.0f;
-        float basePosZ = 500.0f;
-        float offset = 100.0f;
-        int repeat = 4;
-        for (int i = 0; i < repeat; ++i) {
-            for (int j = 0; j < repeat; ++j) {
-                objectPtr = new TigerObject(this, AllocateId());
-                objectPtr->AddComponent(new Transform{ {basePosX + offset * j, 0.0f, basePosZ + offset * i} });
-                objectPtr->AddComponent(new AdjustTransform{ {0.0f, 0.0f, -40.0f * scale}, {0.0f, 180.0f, 0.0f}, {scale, scale, scale} });
-                objectPtr->AddComponent(new Mesh{ "0113_tiger.fbx" });
-                objectPtr->AddComponent(new Texture{ L"tigercolor", 1.0f, 0.4f });
-                objectPtr->AddComponent(new Animation{ "0722_tiger_idle2.fbx" });  // 초기 애니메이션을 idle로 변경
-                objectPtr->AddComponent(new Gravity);
-                objectPtr->AddComponent(new Collider{ {0.0f, 6.0f, 0.0f}, {2.0f, 6.0f, 10.0f} });
-                AddObj(objectPtr);
-            }
-        }
-    }
+    // 호랑이들은 서버에서 관리되므로 로컬에서는 생성하지 않음
+    // 서버에서 PACKET_TIGER_SPAWN 패킷을 통해 호랑이들이 생성됨
     ProcessObjectQueue();
 }
 
@@ -393,22 +374,18 @@ void Scene::BuildBaseStage()
         float scale = 0.2f;
         objectPtr = new TigerMockup(this, AllocateId());
         objectPtr->AddComponent(new Transform{ {550.0f, 0.0f, 250.0f} });
-        objectPtr->AddComponent(new AdjustTransform{ {0.0f, 0.0f, -40.0f * scale}, {0.0f, 180.0f, 0.0f}, {scale, scale, scale} });
-        objectPtr->AddComponent(new Mesh{ "0113_tiger.fbx" });
-        objectPtr->AddComponent(new Texture{ L"tigercolor", 1.0f, 0.4f });
-        objectPtr->AddComponent(new Animation{ "0113_tiger_walk.fbx" });
-        objectPtr->AddComponent(new Gravity);
-        objectPtr->AddComponent(new Collider{ {0.0f, 6.0f, 0.0f}, {2.0f, 6.0f, 10.0f} });
+        objectPtr->AddComponent(new AdjustTransform{ {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {scale, scale, scale} });
+        objectPtr->AddComponent(new Mesh{ "god.fbx" });  // 호랑이 대신 god 모델 사용
+        objectPtr->AddComponent(new Texture{ L"god", 1.0f, 0.8f });  // 다른 텍스처 사용
+        objectPtr->AddComponent(new Collider{ {0.0f, 10.0f, 0.0f}, {5.0f, 10.0f, 5.0f} });
         AddObj(objectPtr);
 
         objectPtr = new TigerMockup(this, AllocateId());
         objectPtr->AddComponent(new Transform{ {650.0f, 0.0f, 350.0f} });
-        objectPtr->AddComponent(new AdjustTransform{ {0.0f, 0.0f, -40.0f * scale}, {0.0f, 180.0f, 0.0f}, {scale, scale, scale} });
-        objectPtr->AddComponent(new Mesh{ "0113_tiger.fbx" });
-        objectPtr->AddComponent(new Texture{ L"tigercolor", 1.0f, 0.4f });
-        objectPtr->AddComponent(new Animation{ "0113_tiger_walk.fbx" });
-        objectPtr->AddComponent(new Gravity);
-        objectPtr->AddComponent(new Collider{ {0.0f, 6.0f, 0.0f}, {2.0f, 6.0f, 10.0f} });
+        objectPtr->AddComponent(new AdjustTransform{ {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {scale, scale, scale} });
+        objectPtr->AddComponent(new Mesh{ "god.fbx" });  // 호랑이 대신 god 모델 사용
+        objectPtr->AddComponent(new Texture{ L"god", 1.0f, 0.8f });  // 다른 텍스처 사용
+        objectPtr->AddComponent(new Collider{ {0.0f, 10.0f, 0.0f}, {5.0f, 10.0f, 5.0f} });
         AddObj(objectPtr);
     }
 
@@ -1189,6 +1166,7 @@ void Scene::LoadMeshAnimationTexture()
     m_resourceManager->LoadFbx("cloud4.fbx", false, true);
 
     m_resourceManager->LoadFbx("tiger_leather.fbx", false, true);
+    m_resourceManager->LoadFbx("god.fbx", false, true);  // god 모델 로드 추가
 
 
 

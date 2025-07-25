@@ -23,7 +23,7 @@ public:
 private:
     static constexpr int MAX_CLIENTS = 2;
     static constexpr int MAX_PACKET_SIZE = 1024;
-    static constexpr int MAX_TIGERS = 16;  // 4x4 그리드 = 16마리 호랑이
+    static constexpr int MAX_TIGERS = 5;   // 성능 개선을 위해 5마리로 줄임
     static constexpr int MAX_TREES = 289;  // 17x17 나무
 
     struct ClientInfo {

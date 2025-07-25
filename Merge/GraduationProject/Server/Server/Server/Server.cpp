@@ -668,42 +668,53 @@ void GameServer::BroadcastNewPlayer(int newClientID) {
 void GameServer::InitializeTigers() {
     std::cout << "\n[InitializeTigers] Starting tiger initialization..." << std::endl;
     
-    // 클라이언트와 동일한 4x4 그리드 형태로 호랑이 배치
+    // 성능 개선을 위해 호랑이 수를 5마리로 줄임
     float basePosX = 500.0f;
     float basePosZ = 500.0f;
-    float offset = 100.0f;
-    int repeat = 4;
+    float offset = 150.0f;  // 간격을 좀 더 넓게
     
-    for (int i = 0; i < repeat; ++i) {
-        for (int j = 0; j < repeat; ++j) {
-            TigerInfo tiger;
-            tiger.tigerID = m_nextTigerID++;
-            
-            // 그리드 위치에 배치
-            tiger.x = basePosX + offset * j;
-            tiger.y = 0.0f;
-            tiger.z = basePosZ + offset * i;
-            tiger.rotY = GetRandomFloat(0.0f, 360.0f);
-            tiger.moveTimer = GetRandomFloat(0.5f, 2.5f);  // 다양한 시작 시간
-            tiger.isChasing = false;
-            tiger.currentAnimation = "0722_tiger_idle2.fbx";  // 초기 애니메이션
-            tiger.animationTime = 0.0f;  // 초기 애니메이션 시간
-            tiger.attackTime = 0.0f;     // 초기 공격 타이머
-            tiger.searchTime = 0.0f;     // 초기 탐색 타이머
-            tiger.elapseTime = 0.0f;     // 초기 애니메이션 경과 시간
-            tiger.isFired = false;       // 초기 공격 발사 상태
-            
-            // 초기 목표 위치 설정 (현재 위치에서 랜덤하게)
-            float moveAngle = GetRandomFloat(0.0f, 360.0f) * (3.141592f / 180.0f);
-            float moveDistance = GetRandomFloat(40.0f, 90.0f);
-            tiger.targetX = tiger.x + cos(moveAngle) * moveDistance;
-            tiger.targetZ = tiger.z + sin(moveAngle) * moveDistance;
-            
-            m_tigers[tiger.tigerID] = tiger;
+    // 5마리 호랑이를 적절히 배치
+    std::vector<std::pair<float, float>> positions = {
+        {basePosX - offset, basePosZ - offset},      // 좌상단
+        {basePosX + offset, basePosZ - offset},      // 우상단
+        {basePosX, basePosZ},                        // 중앙
+        {basePosX - offset, basePosZ + offset},      // 좌하단
+        {basePosX + offset, basePosZ + offset}       // 우하단
+    };
+    
+    // 고정된 값들을 사용하여 모든 클라이언트가 동일한 호랑이를 보도록 함
+    std::vector<float> fixedRotations = {0.0f, 90.0f, 180.0f, 270.0f, 45.0f};  // 고정된 회전값
+    std::vector<float> fixedMoveTimers = {1.0f, 1.5f, 2.0f, 0.5f, 1.2f};       // 고정된 이동 타이머
+    
+    for (size_t i = 0; i < positions.size(); ++i) {
+        TigerInfo tiger;
+        tiger.tigerID = m_nextTigerID++;
+        
+        // 위치에 배치
+        tiger.x = positions[i].first;
+        tiger.y = 0.0f;
+        tiger.z = positions[i].second;
+        tiger.rotY = fixedRotations[i];  // 고정된 회전값 사용
+        tiger.moveTimer = fixedMoveTimers[i];  // 고정된 이동 타이머 사용
+        tiger.isChasing = false;
+        tiger.currentAnimation = "0722_tiger_idle2.fbx";  // 초기 애니메이션
+        tiger.animationTime = 0.0f;  // 초기 애니메이션 시간
+        tiger.attackTime = 0.0f;     // 초기 공격 타이머
+        tiger.searchTime = 0.0f;     // 초기 탐색 타이머
+        tiger.elapseTime = 0.0f;     // 초기 애니메이션 경과 시간
+        tiger.isFired = false;       // 초기 공격 발사 상태
+        
+        // 고정된 초기 목표 위치 설정
+        float moveAngle = (i * 72.0f) * (3.141592f / 180.0f);  // 72도씩 회전 (360/5)
+        float moveDistance = 60.0f;  // 고정된 거리
+        tiger.targetX = tiger.x + cos(moveAngle) * moveDistance;
+        tiger.targetZ = tiger.z + sin(moveAngle) * moveDistance;
+        
+        m_tigers[tiger.tigerID] = tiger;
 
-            std::cout << "[Tiger] Created tiger ID: " << tiger.tigerID 
-                      << " at position (" << tiger.x << ", " << tiger.y << ", " << tiger.z << ")" << std::endl;
-        }
+        std::cout << "[Tiger] Created tiger ID: " << tiger.tigerID 
+                  << " at position (" << tiger.x << ", " << tiger.y << ", " << tiger.z << ")"
+                  << " with rotation " << tiger.rotY << " degrees" << std::endl;
     }
     
     std::cout << "[InitializeTigers] Completed. Total tigers created: " << m_tigers.size() << std::endl;
@@ -713,25 +724,34 @@ void GameServer::InitializeTigers() {
 void GameServer::InitializeTrees() {
     std::cout << "\n[InitializeTrees] Starting tree position initialization..." << std::endl;
     
-    // 플레이어 주변에 3개의 나무만 생성 (더욱 안정성을 위해 개수 최소화)
+    // 플레이어 주변에 3개의 나무를 고정된 위치에 생성
     const int TREE_COUNT = 3;
-    const float SPAWN_RADIUS = 200.0f; // 플레이어 주변 200 유닛 반경 (더 가까이)
+    
+    // 고정된 나무 위치들
+    std::vector<std::tuple<float, float, float>> treePositions = {
+        {500.0f + 100.0f, 0.0f, 500.0f + 50.0f},   // 우측 앞
+        {500.0f - 80.0f, 0.0f, 500.0f + 120.0f},   // 좌측 뒤
+        {500.0f + 60.0f, 0.0f, 500.0f - 90.0f}     // 우측 뒤
+    };
+    
+    std::vector<float> fixedRotations = {45.0f, 180.0f, 270.0f};  // 고정된 회전값
     
     for (int i = 0; i < TREE_COUNT; ++i) {
         TreeInfo tree;
         tree.treeID = m_nextTreeID++;
         
-        // 플레이어 주변 랜덤 위치 생성
-        float angle = GetRandomFloat(0.0f, 360.0f) * (3.141592f / 180.0f);
-        float distance = GetRandomFloat(30.0f, SPAWN_RADIUS); // 더 가까운 거리
-        
-        tree.x = 500.0f + cos(angle) * distance; // 플레이어 시작 위치 주변
-        tree.y = 0.0f;
-        tree.z = 500.0f + sin(angle) * distance;
-        tree.rotY = GetRandomFloat(0.0f, 360.0f);
+        // 고정된 위치에 배치
+        tree.x = std::get<0>(treePositions[i]);
+        tree.y = std::get<1>(treePositions[i]);
+        tree.z = std::get<2>(treePositions[i]);
+        tree.rotY = fixedRotations[i];  // 고정된 회전값 사용
         tree.treeType = 0; // long_tree
         
         m_trees[tree.treeID] = tree;
+        
+        std::cout << "[Tree] Created tree ID: " << tree.treeID 
+                  << " at position (" << tree.x << ", " << tree.y << ", " << tree.z << ")"
+                  << " with rotation " << tree.rotY << " degrees" << std::endl;
     }
     
     std::cout << "[InitializeTrees] Completed. Total tree positions created: " << m_trees.size() << std::endl;
@@ -843,11 +863,11 @@ void GameServer::UpdateTigerBehavior(TigerInfo& tiger, float deltaTime) {
 
 void GameServer::UpdateTigers(float deltaTime) {
     m_tigerUpdateTimer += deltaTime;
-    if (m_tigerUpdateTimer < 0.05f) return; // 50ms마다 업데이트 (더 부드러운 움직임)
+    if (m_tigerUpdateTimer < 0.1f) return; // 100ms마다 업데이트 (성능 개선)
 
     for (auto& tigerPair : m_tigers) {
         auto& tiger = tigerPair.second;
-        UpdateTigerBehavior(tiger, 0.05f); // 고정된 시간 간격 사용
+        UpdateTigerBehavior(tiger, 0.1f); // 고정된 시간 간격 사용
     }
 
     BroadcastTigerUpdates();

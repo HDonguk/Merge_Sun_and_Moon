@@ -487,7 +487,36 @@ TigerObject::TigerObject(Scene* scene, uint32_t id, uint32_t parentId) : Object(
 void TigerObject::OnUpdate(GameTimer& gTimer)
 {
     CalcTime(gTimer.DeltaTime());
-    TigerBehavior(gTimer);
+    
+    // 네트워크 호랑이는 서버에서 관리되므로 클라이언트 AI 로직을 사용하지 않음
+    if (!m_isNetworkTiger) {
+        TigerBehavior(gTimer);
+    } else {
+        // 네트워크 호랑이는 서버에서 받은 위치로 보간
+        Transform* transform = GetComponent<Transform>();
+        if (transform) {
+            XMVECTOR currentPos = transform->GetPosition();
+            XMVECTOR targetPos = m_targetPosition;
+            
+            // 위치 보간
+            XMVECTOR newPos = XMVectorLerp(currentPos, targetPos, m_interpolationSpeed * gTimer.DeltaTime());
+            transform->SetPosition(newPos);
+            
+            // 회전 보간
+            XMVECTOR currentRot = transform->GetRotation();
+            float currentY = XMVectorGetY(currentRot);
+            float targetY = m_targetRotationY;
+            
+            // 각도 보간 (가장 짧은 경로로)
+            float angleDiff = targetY - currentY;
+            if (angleDiff > 180.0f) angleDiff -= 360.0f;
+            if (angleDiff < -180.0f) angleDiff += 360.0f;
+            
+            float newY = currentY + angleDiff * m_interpolationSpeed * gTimer.DeltaTime();
+            transform->SetRotation({0.0f, newY, 0.0f});
+        }
+    }
+    
     Object::OnUpdate(gTimer);
 }
 
@@ -556,6 +585,11 @@ void TigerObject::ChangeState(string fileName)
 
 void TigerObject::Search(float deltaTime)
 {
+    // 네트워크 호랑이는 서버에서 관리되므로 Search 로직을 사용하지 않음
+    if (m_isNetworkTiger) {
+        return;
+    }
+    
     static float randYaw = uid(dre);
     Transform* transform = GetComponent<Transform>();
     

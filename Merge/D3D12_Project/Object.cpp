@@ -344,11 +344,7 @@ void PlayerObject::TimeOut()
         return;
     }
 
-    if (mJumped)
-    {
-        mJumped = false;
-        return;
-    }
+
 }
 
 void PlayerObject::Fire()
@@ -409,7 +405,10 @@ void PlayerObject::CalcTime(float deltaTime)
     if (mJumped)
     {
         mJumpTime += deltaTime;
-        if (mJumpTime > 1.2f) TimeOut();
+        if (mJumpTime > 1.2f)
+        {
+            mJumped = false;
+        }
     }
 }
 

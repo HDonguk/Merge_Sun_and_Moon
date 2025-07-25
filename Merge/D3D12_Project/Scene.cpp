@@ -111,6 +111,7 @@ void Scene::BuildHuntingStage()
         }
     }
 
+    // 호랑이 (로컬 테스트용)
     {
         float scale = 0.2f;
         float basePosX = 500.0f;
@@ -124,7 +125,7 @@ void Scene::BuildHuntingStage()
                 objectPtr->AddComponent(new AdjustTransform{ {0.0f, 0.0f, -40.0f * scale}, {0.0f, 180.0f, 0.0f}, {scale, scale, scale} });
                 objectPtr->AddComponent(new Mesh{ "0113_tiger.fbx" });
                 objectPtr->AddComponent(new Texture{ L"tigercolor", 1.0f, 0.4f });
-                objectPtr->AddComponent(new Animation{ "0113_tiger_walk.fbx" });
+                objectPtr->AddComponent(new Animation{ "0722_tiger_idle2.fbx" });  // 초기 애니메이션을 idle로 변경
                 objectPtr->AddComponent(new Gravity);
                 objectPtr->AddComponent(new Collider{ {0.0f, 6.0f, 0.0f}, {2.0f, 6.0f, 10.0f} });
                 AddObj(objectPtr);

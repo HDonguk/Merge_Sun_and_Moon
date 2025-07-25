@@ -576,8 +576,6 @@ void NetworkManager::ProcessPacket(char* buffer) {
                 break;
             }
 
-            // Player 테스트를 위해 Tiger와 Tree 관련 패킷 처리 주석처리
-            /*
             case PACKET_TIGER_SPAWN: {
                 PacketTigerSpawn* tigerSpawnPkt = (PacketTigerSpawn*)buffer;
                 LogToFile("[Tiger] Received spawn packet for tiger ID: " + std::to_string(tigerSpawnPkt->tigerID));
@@ -605,8 +603,41 @@ void NetworkManager::ProcessPacket(char* buffer) {
                 
                 LogToFile("[Tiger] Successfully stored tiger info for ID: " + std::to_string(tigerSpawnPkt->tigerID));
                 
-                // Scene에 Tiger 생성 요청 (현재는 로그만 출력)
-                LogToFile("[Tiger] Tiger spawn request received for ID: " + std::to_string(tigerSpawnPkt->tigerID));
+                // Scene에 Tiger 생성 요청
+                if (m_scene) {
+                    try {
+                        float scale = 0.2f;
+                        TigerObject* tigerObj = new TigerObject(m_scene, m_scene->AllocateId());
+                        tigerObj->SetIsNetworkTiger(true);  // 네트워크 호랑이로 설정
+                        tigerObj->AddComponent(new Transform{ {tigerSpawnPkt->x, tigerSpawnPkt->y, tigerSpawnPkt->z} });
+                        tigerObj->AddComponent(new AdjustTransform{ {0.0f, 0.0f, -40.0f * scale}, {0.0f, 180.0f, 0.0f}, {scale, scale, scale} });
+                        tigerObj->AddComponent(new Mesh{ "0113_tiger.fbx" });
+                        tigerObj->AddComponent(new Texture{ L"tigercolor", 1.0f, 0.4f });
+                        tigerObj->AddComponent(new Animation{ "0113_tiger_walk.fbx" });
+                        tigerObj->AddComponent(new Gravity);
+                        tigerObj->AddComponent(new Collider{ {0.0f, 6.0f, 0.0f}, {2.0f, 6.0f, 10.0f} });
+                        
+                        m_scene->AddObj(tigerObj);
+                        
+                        // 호랑이 ID를 저장하여 나중에 업데이트할 때 사용
+                        tigerObj->SetNetworkTigerID(tigerSpawnPkt->tigerID);
+                        
+                        // 초기 목표 위치 설정
+                        tigerObj->SetTargetPosition(tigerSpawnPkt->x, tigerSpawnPkt->y, tigerSpawnPkt->z);
+                        tigerObj->SetTargetRotationY(0.0f);
+                        
+                        // 초기 애니메이션 설정
+                        Animation* anim = tigerObj->GetComponent<Animation>();
+                        if (anim) {
+                            anim->ResetAnim("0722_tiger_idle2.fbx", 0.0f);
+                        }
+                        
+                        LogToFile("[Tiger] Successfully created tiger object for ID: " + std::to_string(tigerSpawnPkt->tigerID));
+                    }
+                    catch (const std::exception& e) {
+                        LogToFile("[Tiger] Exception during tiger creation: " + std::string(e.what()));
+                    }
+                }
                 break;
             }
             
@@ -618,15 +649,26 @@ void NetworkManager::ProcessPacket(char* buffer) {
                     break;
                 }
                 
-                if (m_tigers.find(tigerUpdatePkt->tigerID) != m_tigers.end()) {
-                    // Tiger 정보 업데이트
-                    m_tigers[tigerUpdatePkt->tigerID].x = tigerUpdatePkt->x;
-                    m_tigers[tigerUpdatePkt->tigerID].y = tigerUpdatePkt->y;
-                    m_tigers[tigerUpdatePkt->tigerID].z = tigerUpdatePkt->z;
-                    m_tigers[tigerUpdatePkt->tigerID].rotY = tigerUpdatePkt->rotY;
-                    
-                    // Scene의 Tiger 오브젝트 업데이트 (현재는 로그만 출력)
-                    LogToFile("[Tiger] Tiger update request received for ID: " + std::to_string(tigerUpdatePkt->tigerID));
+                // Scene의 Tiger 오브젝트 업데이트
+                if (m_scene) {
+                    // 모든 TigerObject를 순회하여 해당 ID의 호랑이를 찾아 업데이트
+                    for (Object* obj : m_scene->GetObjects()) {
+                        TigerObject* tigerObj = dynamic_cast<TigerObject*>(obj);
+                        if (tigerObj && tigerObj->IsNetworkTiger() && tigerObj->GetNetworkTigerID() == tigerUpdatePkt->tigerID) {
+                            // 목표 위치 설정 (보간을 위해)
+                            tigerObj->SetTargetPosition(tigerUpdatePkt->x, tigerUpdatePkt->y, tigerUpdatePkt->z);
+                            tigerObj->SetTargetRotationY(tigerUpdatePkt->rotY);
+                            
+                            // 애니메이션 정보 설정
+                            Animation* anim = tigerObj->GetComponent<Animation>();
+                            if (anim && strcmp(anim->mCurrentFileName.c_str(), tigerUpdatePkt->animationFile) != 0) {
+                                // 애니메이션 파일이 변경되면 시간을 0으로 리셋
+                                anim->ResetAnim(tigerUpdatePkt->animationFile, 0.0f);
+                            }
+                            // 애니메이션 시간은 클라이언트에서 자체 관리 (서버 시간 사용하지 않음)
+                            break;
+                        }
+                    }
                 }
                 break;
             }
@@ -659,7 +701,6 @@ void NetworkManager::ProcessPacket(char* buffer) {
                 }
                 break;
             }
-            */
 
             default:
                 LogToFile("[Warning] Unknown packet type: " + std::to_string(header->type));
@@ -784,7 +825,7 @@ void NetworkManager::Update(GameTimer& gTimer, Scene* scene) {
     XMVECTOR rot = transform->GetRotation();
     
     m_updateTimer += gTimer.DeltaTime();
-    const float UPDATE_INTERVAL = 0.5f;  // 500ms마다 업데이트 (네트워크 부하 감소)
+    const float UPDATE_INTERVAL = 0.05f;  // 50ms마다 업데이트 (더 부드러운 움직임)
 
     if (m_updateTimer >= UPDATE_INTERVAL) {
         LogToFile("[Update] Sending player position update");

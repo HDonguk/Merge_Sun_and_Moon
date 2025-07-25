@@ -115,9 +115,23 @@ public:
 class TigerObject : public Object
 {
 public:
-	using Object::Object;
+	TigerObject(Scene* scene, uint32_t id, uint32_t parentId = -1);
 	void OnUpdate(GameTimer& gTimer) override;
 	void OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration) override;
+	
+	// 네트워크 관련 메서드
+	void SetIsNetworkTiger(bool isNetworkTiger) { m_isNetworkTiger = isNetworkTiger; }
+	bool IsNetworkTiger() const { return m_isNetworkTiger; }
+	void SetNetworkTigerID(int tigerID) { m_networkTigerID = tigerID; }
+	int GetNetworkTigerID() const { return m_networkTigerID; }
+	
+	// 보간을 위한 목표 위치 설정
+	void SetTargetPosition(float x, float y, float z) { m_targetPosition = {x, y, z, 1.0f}; }
+	void SetTargetRotationY(float rotY) { m_targetRotationY = rotY; }
+	
+	// 공격 받기 메서드 (public으로 변경)
+	void Hit();
+	
 private:
 	void TigerBehavior(GameTimer& gTimer);
 	void ChangeState(string fileName);
@@ -126,7 +140,6 @@ private:
 	void Attack();
 	void TimeOut();
 	void Fire();
-	void Hit();
 	void Dead();
 	void CalcTime(float deltaTime);
 	void CreateLeather();
@@ -138,6 +151,15 @@ private:
 	bool mIsFired = false;
 	bool mIsHitted = false;
 	int mLife = 3;
+	
+	// 네트워크 관련 멤버 변수
+	bool m_isNetworkTiger = false;
+	int m_networkTigerID = -1;
+	
+	// 보간을 위한 목표 위치
+	XMVECTOR m_targetPosition = {0.0f, 0.0f, 0.0f, 1.0f};
+	float m_targetRotationY = 0.0f;
+	float m_interpolationSpeed = 10.0f; // 보간 속도
 };
 
 
@@ -155,6 +177,7 @@ class PlayerAttackObject : public Object
 public:
 	using Object::Object;
 	void OnUpdate(GameTimer& gTimer) override;
+	void OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration) override;
 private:
 	float mElapseTime = 0.0f;
 };

@@ -155,7 +155,7 @@ void Object::ProcessAnimation(GameTimer& gTimer)
         vector<XMFLOAT4X4> finalTransforms{ 90 };
         SkinnedData& animData = m_scene->GetResourceManager().GetAnimationData(animation->mCurrentFileName);
         
-        // 네트워크 플레이어는 애니메이션 시간을 업데이트하지 않음
+        // 네트워크 플레이어만 애니메이션 시간을 업데이트하지 않음 (호랑이는 업데이트)
         PlayerObject* playerObj = dynamic_cast<PlayerObject*>(this);
         if (!playerObj || !playerObj->IsNetworkPlayer()) {
             animation->mAnimationTime += gTimer.DeltaTime();
@@ -480,6 +480,10 @@ void CameraObject::OnMouseInput(WPARAM wParam, HWND hWnd)
     SetCursorPos(centerX, centerY);
 }
 
+TigerObject::TigerObject(Scene* scene, uint32_t id, uint32_t parentId) : Object(scene, id, parentId)
+{
+}
+
 void TigerObject::OnUpdate(GameTimer& gTimer)
 {
     CalcTime(gTimer.DeltaTime());
@@ -586,7 +590,7 @@ void TigerObject::Attack()
     Animation* anim = GetComponent<Animation>();
     if (anim->mCurrentFileName == "0208_tiger_hit.fbx") return;
     if (anim->mCurrentFileName == "0208_tiger_dying.fbx") return;
-    if (mAttackTime < 2.0f) return;
+    if (mAttackTime < 3.0f) return;  // 2초에서 3초로 증가
     ChangeState("0208_tiger_attack.fbx");
 }
 void TigerObject::TimeOut()
@@ -710,6 +714,23 @@ void PlayerAttackObject::OnUpdate(GameTimer& gTimer)
     mElapseTime += gTimer.DeltaTime();
     if (mElapseTime >= 0.1) Delete();
     Object::OnUpdate(gTimer);
+}
+
+void PlayerAttackObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration)
+{
+    TigerObject* tiger = dynamic_cast<TigerObject*>(&other);
+    if (tiger)
+    {
+        tiger->Hit();
+        Delete();  // 공격 오브젝트 삭제
+        return;
+    }
+
+    // 다른 오브젝트와의 충돌 처리
+    Transform* transform = GetComponent<Transform>();
+    XMVECTOR pos = transform->GetPosition();
+    pos += -collisionNormal * penetration;
+    transform->SetPosition(pos);
 }
 
 void TigerMockup::OnUpdate(GameTimer& gTimer)

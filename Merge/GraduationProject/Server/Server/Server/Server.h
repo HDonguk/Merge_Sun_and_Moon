@@ -23,7 +23,7 @@ public:
 private:
     static constexpr int MAX_CLIENTS = 2;
     static constexpr int MAX_PACKET_SIZE = 1024;
-    static constexpr int MAX_TIGERS = 5;  // 최대 호랑이 수
+    static constexpr int MAX_TIGERS = 16;  // 4x4 그리드 = 16마리 호랑이
     static constexpr int MAX_TREES = 289;  // 17x17 나무
 
     struct ClientInfo {
@@ -47,6 +47,12 @@ private:
         float targetX, targetZ;  // 목표 위치
         float moveTimer;         // 이동 타이머
         bool isChasing;         // 플레이어 추적 여부
+        std::string currentAnimation;  // 현재 애니메이션 파일명
+        float animationTime;     // 애니메이션 시간
+        float attackTime;        // 공격 타이머 (원본과 동일)
+        float searchTime;        // 탐색 타이머
+        float elapseTime;        // 애니메이션 경과 시간
+        bool isFired;           // 공격 발사 여부
     };
 
     struct TreeInfo {
@@ -98,7 +104,7 @@ private:
     void UpdateTigerBehavior(TigerInfo& tiger, float deltaTime);
     float GetRandomFloat(float min, float max);
     bool IsPlayerNearby(const TigerInfo& tiger, float radius);
-    void GetNearestPlayerPosition(const TigerInfo& tiger, float& outX, float& outZ);
+    void GetNearestPlayerPosition(const TigerInfo& tiger, float& targetX, float& targetZ);
     
     // 나무 관련 메서드
     void InitializeTrees();

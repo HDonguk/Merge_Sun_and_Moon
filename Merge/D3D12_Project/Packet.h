@@ -17,7 +17,8 @@ enum PacketType {
     PACKET_LOGIN_REQUEST = 6,  // 로그인 요청
     PACKET_LOGIN_RESPONSE = 7, // 로그인 응답
     PACKET_PLAYER_DISCONNECT = 8, // 플레이어 연결 해제
-    PACKET_CLIENT_READY = 9    // 클라이언트 준비 완료 신호
+    PACKET_CLIENT_READY = 9,   // 클라이언트 준비 완료 신호
+    PACKET_TIGER_ATTACK = 10   // 호랑이 공격 패킷
 };
 
 struct PacketPlayerUpdate {
@@ -46,6 +47,8 @@ struct PacketTigerUpdate {
     int tigerID;
     float x, y, z;
     float rotY;
+    char animationFile[64];  // 현재 애니메이션 파일명
+    float animationTime;     // 애니메이션 시간
 };
 
 struct TreePosition {
@@ -81,5 +84,12 @@ struct PacketPlayerDisconnect {
 struct PacketClientReady {
     PacketHeader header;
     int clientID;
+};
+
+struct PacketTigerAttack {
+    PacketHeader header;
+    int tigerID;
+    float x, y, z;  // 공격 위치
+    float rotY;     // 공격 방향
 };
 #pragma pack(pop) 

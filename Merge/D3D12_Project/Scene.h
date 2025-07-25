@@ -37,6 +37,7 @@ public:
     Object* GetObjFromId(uint32_t id);
     uint32_t AllocateId();
     void SetStage(wstring stage);
+    const vector<Object*>& GetObjects() const { return m_objects; }
 
     template<typename T>
     T* GetObj()

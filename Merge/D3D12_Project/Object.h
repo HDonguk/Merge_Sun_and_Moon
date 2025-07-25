@@ -59,6 +59,7 @@ private:
 	void ProcessInput(const GameTimer& gTimer);
 	void Move(XMVECTOR dir, float speed, float deltatime);
 	void Idle();
+	void Jump();
 	void Attack();
 	void TimeOut();
 	void Fire();
@@ -120,18 +121,13 @@ private:
 	void TimeOut();
 	void Fire();
 	void CalcTime(float deltaTime);
-	float mSpeed = 20.0f;
+	float mSpeed = 25.0f;
 	float mElapseTime = 0.0f;
 	float mAttackTime = 0.0f;
 	float mSearchTime = 0.0f;
 	bool mIsFired = false;
 };
 
-class StoneObject : public Object
-{
-public:
-	using Object::Object;
-};
 
 class TigerAttackObject : public Object
 {

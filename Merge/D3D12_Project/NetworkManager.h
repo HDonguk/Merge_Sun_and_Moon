@@ -39,6 +39,8 @@ public:
     void SendPlayerUpdate(float x, float y, float z, float rotY);
     void SendLoginRequest(const std::string& username);
     void SendPlayerDisconnect();
+    void SendTigerRespawnRequest();  // 호랑이 재생성 요청
+    void ClearTigerInfo();  // 호랑이 정보 초기화
     void Shutdown();
     bool IsRunning() const { return m_isRunning; }
     bool IsLoggedIn() const { return m_isLoggedIn; }

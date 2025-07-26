@@ -21,9 +21,12 @@ Scene::Scene(Framework* parent, UINT width, UINT height) :
 
 void Scene::OnInit(ID3D12Device* device, ID3D12GraphicsCommandList* commandList)
 {
+    OutputDebugString(L"[Scene] OnInit() started\n");
     LoadMeshAnimationTexture();
     BuildProjMatrix();
+    OutputDebugString(L"[Scene] About to call BuildBaseStage()\n");
     BuildBaseStage();
+    OutputDebugString(L"[Scene] BuildBaseStage() completed\n");
     BuildRootSignature(device);
     BuildInputElement();
     BuildShaders();
@@ -38,11 +41,16 @@ void Scene::OnInit(ID3D12Device* device, ID3D12GraphicsCommandList* commandList)
     BuildConstantBufferView(device);
     BuildTextureBufferView(device);
     BuildShadow();
+    OutputDebugString(L"[Scene] OnInit() completed\n");
 }
 
 void Scene::BuildHuntingStage()
 {
+    OutputDebugString(L"[Scene] BuildHuntingStage() called - Building Hunting Stage\n");
     m_current_stage = L"Hunting";
+    OutputDebugString(L"[Scene] Current stage set to: Hunting\n");
+    
+    OutputDebugString(L"[Scene] Starting to create objects for Hunting Stage...\n");
 
     Object* objectPtr = nullptr;
     {
@@ -113,12 +121,17 @@ void Scene::BuildHuntingStage()
 
     // 호랑이들은 서버에서 관리되므로 로컬에서는 생성하지 않음
     // 서버에서 PACKET_TIGER_SPAWN 패킷을 통해 호랑이들이 생성됨
+    OutputDebugString(L"[Scene] Processing object queue...\n");
     ProcessObjectQueue();
+    OutputDebugString(L"[Scene] BuildHuntingStage completed successfully\n");
 }
 
 void Scene::BuildBaseStage()
 {
+    OutputDebugString(L"[Scene] BuildBaseStage() called - Building Base Stage\n");
     m_current_stage = L"Base";
+    OutputDebugString(L"[Scene] Current stage set to: Base\n");
+    
     Object* objectPtr = nullptr;
     {
         objectPtr = new CameraObject(this, AllocateId());
@@ -537,6 +550,120 @@ void Scene::BuildBaseStage()
 void Scene::BuildGodStage()
 {
     m_current_stage = L"God";
+    Object* objectPtr = nullptr;
+
+    // ī�޶�
+    {
+        objectPtr = new CameraObject(this, AllocateId());
+        objectPtr->AddComponent(new Transform{ {0.0f, 0.0f, 0.0f} });
+        AddObj(objectPtr);
+    }
+
+    // �÷��̾�
+    {
+        float scale = 0.1f;
+        objectPtr = new PlayerObject(this, AllocateId());
+        objectPtr->AddComponent(new Transform{ {100.0f, 0.0f, 100.0f} });
+        objectPtr->AddComponent(new AdjustTransform{ {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {scale, scale, scale} });
+        objectPtr->AddComponent(new Mesh{ "1P(boy-idle).fbx" });
+        objectPtr->AddComponent(new Texture{ L"boy" , 1.0f, 0.4f });
+        objectPtr->AddComponent(new Animation{ "1P(boy-idle).fbx" });
+        objectPtr->AddComponent(new Gravity);
+        objectPtr->AddComponent(new Collider{ {0.0f, 80.0f * scale, 0.0f}, {30.0f * scale, 80.0f * scale, 30.0f * scale} });
+        AddObj(objectPtr);
+    }
+
+    // ���
+    {
+        objectPtr = new TestObject(this, AllocateId());
+        objectPtr->AddComponent(new Transform{ {0.0f, 0.0f, 0.0f} });
+        objectPtr->AddComponent(new Mesh{ "HalfPlane" });
+        objectPtr->AddComponent(new Texture{ L"grass", 1.0f, 0.4f });
+        AddObj(objectPtr);
+    }
+
+    // �߾ӳ���
+    {
+        float scale = 5.0f;
+        objectPtr = new TestObject(this, AllocateId());
+        objectPtr->AddComponent(new Transform{ {250.0f, 0.0f, 250.0f} });
+        objectPtr->AddComponent(new AdjustTransform{ {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {scale, scale, scale} });
+        objectPtr->AddComponent(new Mesh{ "wood.fbx" });
+        objectPtr->AddComponent(new Texture{ L"wood", 1.0f, 0.4f });
+        objectPtr->AddComponent(new Gravity);
+        objectPtr->AddComponent(new Collider{ {0.0f, 35.0f * scale, 0.0f}, {10.0f * scale, 35.0f * scale, 10.0f * scale} });
+        AddObj(objectPtr);
+    }
+
+    // ����
+    {
+        float scale = 20.0f;
+        objectPtr = new AxeObject(this, AllocateId());
+        objectPtr->AddComponent(new Transform{ {250.0f, 500.0f, 250.0f} });
+        objectPtr->AddComponent(new AdjustTransform{ {0.0f, 0.1f * scale, 0.0f}, {0.0f, -90.0f, 0.0f}, {scale, scale, scale} });
+        objectPtr->AddComponent(new Mesh{ "axe.fbx" });
+        objectPtr->AddComponent(new Texture{ L"axe", 1.0f, 0.4f });
+        objectPtr->AddComponent(new Gravity);
+        objectPtr->AddComponent(new Collider{ {0.0f, 0.2f * scale, 0.0f}, {0.1f * scale, 0.2f * scale, 0.05f * scale} });
+        AddObj(objectPtr);
+    }
+
+    // ����
+    {
+        float offsetZ = 100.0f;
+        float offsetX = 100.0f;
+        float offsetY = 50.0f;
+        float scale = 0.3f;
+        for (int i = 0; i < 4; ++i)
+        {
+            objectPtr = new TestObject(this, AllocateId());
+            objectPtr->AddComponent(new Transform{ {100.0f, offsetY * i, 100.0f + offsetZ * i}, {-30.0f, 0.0f, 0.0f} });
+            objectPtr->AddComponent(new AdjustTransform{ {100.0f * scale, 0.0f, -150.0f * scale }, {0.0f, -90.0f, 0.0f}, {scale, scale, scale} });
+            objectPtr->AddComponent(new Mesh{ "fence.fbx" });
+            objectPtr->AddComponent(new Texture{ L"Brown", 1.0f, 0.4f });
+            objectPtr->AddComponent(new Collider{ {0.0f, 0.0f, 0.0f}, {100.0f * scale, 15.0f * scale, 150.0f * scale } });
+            AddObj(objectPtr);
+        }
+
+        for (int i = 0; i < 3; ++i)
+        {
+            objectPtr = new TestObject(this, AllocateId());
+            objectPtr->AddComponent(new Transform{ {200.0f + offsetX * i, 150.0f + offsetY * i, 400.0f }, {-30.0f, 90.0f, 0.0f} });
+            objectPtr->AddComponent(new AdjustTransform{ {100.0f * scale, 0.0f, -150.0f * scale }, {0.0f, -90.0f, 0.0f}, {scale, scale, scale} });
+            objectPtr->AddComponent(new Mesh{ "fence.fbx" });
+            objectPtr->AddComponent(new Texture{ L"Brown", 1.0f, 0.4f });
+            objectPtr->AddComponent(new Collider{ {0.0f, 0.0f, 0.0f}, {100.0f * scale, 15.0f * scale, 150.0f * scale } });
+            AddObj(objectPtr);
+        }
+
+        for (int i = 0; i < 3; ++i)
+        {
+            objectPtr = new TestObject(this, AllocateId());
+            objectPtr->AddComponent(new Transform{ {400.0f, 250.0f + offsetY * i, 300.0f - offsetZ * i  }, {30.0f, 00.0f, 0.0f} });
+            objectPtr->AddComponent(new AdjustTransform{ {100.0f * scale, 0.0f, -150.0f * scale }, {0.0f, -90.0f, 0.0f}, {scale, scale, scale} });
+            objectPtr->AddComponent(new Mesh{ "fence.fbx" });
+            objectPtr->AddComponent(new Texture{ L"Brown", 1.0f, 0.4f });
+            objectPtr->AddComponent(new Collider{ {0.0f, 0.0f, 0.0f}, {100.0f * scale, 15.0f * scale, 150.0f * scale } });
+            AddObj(objectPtr);
+        }
+
+        objectPtr = new TestObject(this, AllocateId());
+        objectPtr->AddComponent(new Transform{ {300.0f, 350.0f, 50.0f  }, {0.0f, 90.0f, 0.0f} });
+        objectPtr->AddComponent(new AdjustTransform{ {100.0f * scale, 0.0f, -150.0f * scale }, {0.0f, -90.0f, 0.0f}, {scale, scale, scale} });
+        objectPtr->AddComponent(new Mesh{ "fence.fbx" });
+        objectPtr->AddComponent(new Texture{ L"Brown", 1.0f, 0.4f });
+        objectPtr->AddComponent(new Collider{ {0.0f, 0.0f, 0.0f}, {100.0f * scale, 15.0f * scale, 150.0f * scale } });
+        AddObj(objectPtr);
+
+        objectPtr = new RotFenceObject(this, AllocateId());
+        objectPtr->AddComponent(new Transform{ {250.0f, 350.0f, 150.0f  }, {0.0f, 0.0f, 0.0f} });
+        objectPtr->AddComponent(new AdjustTransform{ {100.0f * scale, 0.0f, -150.0f * scale }, {0.0f, -90.0f, 0.0f}, {scale, scale, scale} });
+        objectPtr->AddComponent(new Mesh{ "fence.fbx" });
+        objectPtr->AddComponent(new Texture{ L"Brown", 1.0f, 0.4f });
+        objectPtr->AddComponent(new Collider{ {0.0f, 0.0f, 0.0f}, {100.0f * scale, 15.0f * scale, 150.0f * scale } });
+        AddObj(objectPtr);
+
+    }
 }
 
 
@@ -802,17 +929,32 @@ void Scene::ProcessStageQueue()
 {
     if (m_stage_queue == L"Base")
     {
+        OutputDebugString(L"[Scene] ProcessStageQueue: Switching to Base Stage\n");
         DeleteCurrentObjects();
         BuildBaseStage();
     }
     else if (m_stage_queue == L"Hunting")
     {
+        OutputDebugString(L"[Scene] ProcessStageQueue: Switching to Hunting Stage\n");
+        OutputDebugString(L"[Scene] About to delete current objects...\n");
         DeleteCurrentObjects();
+        OutputDebugString(L"[Scene] Current objects deleted, building Hunting Stage...\n");
+        
+        // NetworkManager의 호랑이 정보 초기화
+        OutputDebugString(L"[Scene] About to clear NetworkManager tiger info...\n");
+        if (m_parent) {
+            m_parent->GetNetworkManager().ClearTigerInfo();
+            OutputDebugString(L"[Scene] NetworkManager tiger info cleared successfully\n");
+        } else {
+            OutputDebugString(L"[Scene] Warning: m_parent is null, cannot clear NetworkManager tiger info\n");
+        }
+        
         BuildHuntingStage();
-
+        OutputDebugString(L"[Scene] Hunting Stage built successfully\n");
     }
     else if (m_stage_queue == L"God")
     {
+        OutputDebugString(L"[Scene] ProcessStageQueue: Switching to God Stage\n");
         DeleteCurrentObjects();
         BuildGodStage();
     }
@@ -822,10 +964,23 @@ void Scene::ProcessStageQueue()
 
 void Scene::DeleteCurrentObjects()
 {
-    for (Object* obj : m_objects) {
-        delete obj;
+    OutputDebugString(L"[Scene] DeleteCurrentObjects: Starting cleanup\n");
+    
+    try {
+        for (Object* obj : m_objects) {
+            if (obj != nullptr) {
+                delete obj;
+            }
+        }
+        m_objects.clear();
+        OutputDebugString(L"[Scene] DeleteCurrentObjects: All objects cleared\n");
     }
-    m_objects.clear();
+    catch (const std::exception& e) {
+        OutputDebugString(L"[Scene] DeleteCurrentObjects: Exception occurred during cleanup\n");
+    }
+    catch (...) {
+        OutputDebugString(L"[Scene] DeleteCurrentObjects: Unknown exception occurred during cleanup\n");
+    }
 }
 
 void Scene::BuildRootSignature(ID3D12Device* device)
@@ -1151,6 +1306,9 @@ void Scene::ProcessInput()
     if ((keyState[VK_F1] & 0x88) == 0x80) {
         m_stage_queue = L"Base";
     }
+    if ((keyState[VK_F2] & 0x88) == 0x80) {
+        m_stage_queue = L"God";
+    }
 }
 
 void Scene::LoadMeshAnimationTexture()
@@ -1195,6 +1353,10 @@ void Scene::LoadMeshAnimationTexture()
     m_resourceManager->LoadFbx("cloud4.fbx", false, true);
 
     m_resourceManager->LoadFbx("tiger_leather.fbx", false, true);
+
+    m_resourceManager->LoadFbx("axe.fbx", false, true);
+    m_resourceManager->LoadFbx("wood.fbx", false, true);
+
     m_resourceManager->LoadFbx("god.fbx", false, true);  // god 모델 로드 추가
 
 
@@ -1237,6 +1399,10 @@ void Scene::LoadMeshAnimationTexture()
     m_texture_name_to_index.insert({ L"Brown", i++ });
     m_DDSFileName.push_back(L"./Textures/tiger.dds");
     m_texture_name_to_index.insert({ L"tigerLeather", i++ });
+    m_DDSFileName.push_back(L"./Textures/axe.dds");
+    m_texture_name_to_index.insert({ L"axe", i++ });
+    m_DDSFileName.push_back(L"./Textures/wood.dds");
+    m_texture_name_to_index.insert({ L"wood", i++ });
 }
 
 // Update frame-based values.

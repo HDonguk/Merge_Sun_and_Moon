@@ -17,7 +17,8 @@ enum PacketType {
     PACKET_LOGIN_RESPONSE = 7, // 로그인 응답
     PACKET_PLAYER_DISCONNECT = 8, // 플레이어 연결 해제
     PACKET_CLIENT_READY = 9,   // 클라이언트 준비 완료 신호
-    PACKET_TIGER_ATTACK = 10   // 호랑이 공격 패킷
+    PACKET_TIGER_ATTACK = 10,  // 호랑이 공격 패킷
+    PACKET_TIGER_RESPAWN_REQUEST = 11  // 호랑이 재생성 요청
 };
 
 struct PacketPlayerUpdate {
@@ -90,5 +91,11 @@ struct PacketTigerAttack {
     int tigerID;
     float x, y, z;  // 공격 위치
     float rotY;     // 공격 방향
+};
+
+struct PacketTigerRespawnRequest {
+    PacketHeader header;
+    int clientID;
+    // 추가 데이터가 필요하면 여기에 추가
 };
 #pragma pack(pop)

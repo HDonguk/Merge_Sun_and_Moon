@@ -90,7 +90,6 @@ private:
 	float mElapseTime = 0.0f;
 	float mG = 80.0f;
 	float mVerticalSpeed = 0.0f;
-	bool mOnGround = false;
 };
 
 class Collider : public Component

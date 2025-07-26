@@ -4,6 +4,7 @@
 #include "DXSampleHelper.h"
 #include <random>
 #include "Framework.h"
+#include "NetworkManager.h"
 
 std::random_device rd;  // ù ��° rd ��ü
 default_random_engine dre(rd());
@@ -38,9 +39,7 @@ void Object::OnUpdate(GameTimer& gTimer)
             Transform* parentTransform = parentObj->GetComponent<Transform>();
             finalM = finalM * parentTransform->GetFinalM();
         }
-        else {
-            Delete();
-        }
+
     }
     transform->SetFinalM(finalM);
 
@@ -79,6 +78,21 @@ void Object::LateUpdate(GameTimer& gTimer)
             gravity->ResetElapseTime();
         }
     }
+
+    XMMATRIX finalM = transform->GetTransformM();
+    if (m_parent_id != -1) {
+        Object* parentObj = m_scene->GetObjFromId(m_parent_id);
+        if (parentObj)
+        {
+            Transform* parentTransform = parentObj->GetComponent<Transform>();
+            finalM = finalM * parentTransform->GetFinalM();
+        }
+        else
+        {
+            Delete();
+        }
+    }
+    transform->SetFinalM(finalM);
 
     XMMATRIX world = transform->GetFinalM();
     XMMATRIX adjustM = XMMatrixIdentity();
@@ -196,12 +210,20 @@ void PlayerObject::OnUpdate(GameTimer& gTimer)
 void PlayerObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration)
 {
     Transform* transform = GetComponent<Transform>();
+
     PlayerAttackObject* pa = dynamic_cast<PlayerAttackObject*>(&other);
     if (pa) return;
+
     TigerAttackObject* ta = dynamic_cast<TigerAttackObject*>(&other);
     if (ta) // ȣ���� ���ݿ� ������...
     {
         Hit();
+        return;
+    }
+
+    AxeObject* axe = dynamic_cast<AxeObject*>(&other);
+    if (axe)
+    {
         return;
     }
 
@@ -308,6 +330,7 @@ void PlayerObject::Jump()
     if (anim->mCurrentFileName == "boy_hit.fbx") return;
     if (anim->mCurrentFileName == "boy_dying_fix.fbx") return;
     gravity->SetVerticalSpeed(40.0f);
+    gravity->ResetElapseTime();
 }
 
 
@@ -791,9 +814,50 @@ void TigerMockup::OnUpdate(GameTimer& gTimer)
 void TigerMockup::OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration)
 {
     PlayerObject* player = dynamic_cast<PlayerObject*>(&other);
-    if (player)
+    if (player && !m_hasCollided)  // 충돌 플래그 확인
     {
+        // 위치 정보 로그 추가
+        Transform* godTransform = GetComponent<Transform>();
+        Transform* playerTransform = player->GetComponent<Transform>();
+        
+        XMFLOAT3 godPos, playerPos;
+        XMStoreFloat3(&godPos, godTransform->GetPosition());
+        XMStoreFloat3(&playerPos, playerTransform->GetPosition());
+        
+        wchar_t debugMsg[256];
+        swprintf_s(debugMsg, L"[TigerMockup] GOD collision detected! GOD pos: (%.1f, %.1f, %.1f), Player pos: (%.1f, %.1f, %.1f)\n", 
+                   godPos.x, godPos.y, godPos.z, playerPos.x, playerPos.y, playerPos.z);
+        OutputDebugString(debugMsg);
+        
+        m_hasCollided = true;  // 충돌 플래그 설정
+        
+        // Hunting Stage로 전환
         m_scene->SetStage(L"Hunting");
+        
+        // 서버에 호랑이 재생성 요청을 보내기 위해 로그 출력
+        OutputDebugString(L"[TigerMockup] GOD collision detected, requesting tiger respawn from server\n");
+        
+        // 네트워크 매니저를 통해 서버에 호랑이 재생성 요청
+        Framework* framework = m_scene->GetFramework();
+        if (framework) {
+            OutputDebugString(L"[TigerMockup] Framework found\n");
+            if (framework->IsNetworkEnabled()) {
+                OutputDebugString(L"[TigerMockup] Network is enabled\n");
+                NetworkManager& networkManager = framework->GetNetworkManager();
+                if (networkManager.IsLoggedIn()) {
+                    OutputDebugString(L"[TigerMockup] Network manager is logged in\n");
+                    // 서버에 호랑이 재생성 요청 패킷 전송
+                    networkManager.SendTigerRespawnRequest();
+                    OutputDebugString(L"[TigerMockup] Tiger respawn request sent to server\n");
+                } else {
+                    OutputDebugString(L"[TigerMockup] Network manager is not logged in\n");
+                }
+            } else {
+                OutputDebugString(L"[TigerMockup] Network is not enabled\n");
+            }
+        } else {
+            OutputDebugString(L"[TigerMockup] Framework not found\n");
+        }
     }
 
     Transform* transform = GetComponent<Transform>();
@@ -818,4 +882,53 @@ void TigerLeather::OnProcessCollision(Object& other, XMVECTOR collisionNormal, f
 {
     PlayerObject* player = dynamic_cast<PlayerObject*>(&other);
     if (player) Delete();
+}
+
+void RotFenceObject::OnUpdate(GameTimer& gTimer)
+{
+    Transform* transform = GetComponent<Transform>();
+    XMFLOAT3 rot{};
+    XMStoreFloat3(&rot, transform->GetRotation());
+    rot.z += 30.0f * gTimer.DeltaTime();
+    transform->SetRotation(XMLoadFloat3(&rot));
+    Object::OnUpdate(gTimer);
+}
+
+void AxeObject::OnUpdate(GameTimer& gTimer)
+{
+    Transform* transform = GetComponent<Transform>();
+    if (m_parent_id != -1)
+    {
+        XMMATRIX finalM = transform->GetTransformM();
+        if (m_parent_id != -1) {
+            Object* parentObj = m_scene->GetObjFromId(m_parent_id);
+            if (parentObj) {
+                Transform* parentTransform = parentObj->GetComponent<Transform>();
+                finalM = finalM * parentTransform->GetFinalM();
+            }
+        }
+        transform->SetFinalM(finalM);
+
+        Collider* collider = GetComponent<Collider>();
+        if (collider) {
+            collider->UpdateOBB(finalM);
+        }
+    }
+    else
+    {
+        Object::OnUpdate(gTimer);
+    }
+}
+
+void AxeObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration)
+{
+    PlayerObject* player = dynamic_cast<PlayerObject*>(&other);
+    if (player)
+    {
+        m_parent_id = player->GetId();
+        Transform* transform = GetComponent<Transform>();
+        transform->SetPosition({ 0.0f, 6.0f, -2.0f });
+        transform->SetRotation({ 0.0f, 90.0f, 0.0f });
+    }
+    Object::OnProcessCollision(other, collisionNormal, penetration);
 }

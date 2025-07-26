@@ -156,6 +156,28 @@ void NetworkManager::SendPlayerDisconnect() {
     }
 }
 
+void NetworkManager::SendTigerRespawnRequest() {
+    if (!m_isRunning || !m_isLoggedIn) return;
+
+    try {
+        PacketTigerRespawnRequest pkt;
+        pkt.header.size = sizeof(PacketTigerRespawnRequest);
+        pkt.header.type = PACKET_TIGER_RESPAWN_REQUEST;
+        pkt.clientID = m_myClientID;
+
+        int sendResult = send(sock, (char*)&pkt, sizeof(pkt), 0);
+        if (sendResult == SOCKET_ERROR) {
+            int error = WSAGetLastError();
+            LogToFile("[Error] Failed to send tiger respawn request: " + std::to_string(error));
+        } else {
+            LogToFile("[Tiger] Sent tiger respawn request to server");
+        }
+    }
+    catch (const std::exception& e) {
+        LogToFile("[Error] Exception in SendTigerRespawnRequest: " + std::string(e.what()));
+    }
+}
+
 void NetworkManager::SetLoginSuccessCallback(std::function<void(int, const std::string&)> callback) {
     m_loginSuccessCallback = callback;
 }

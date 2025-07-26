@@ -92,6 +92,11 @@ void Framework::OnUpdate()
 
 void Framework::OnProcessCollision()
 {
+    if (m_isInLoginScreen) {
+        // 로그인 화면에서는 충돌 감지 하지 않음
+        return;
+    }
+    
     m_scenes.at(L"BaseScene")->OnProcessCollision();
 }
 

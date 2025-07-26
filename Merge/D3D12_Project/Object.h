@@ -13,10 +13,10 @@ public:
 	virtual void OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration);
 	virtual void LateUpdate(GameTimer& gTimer);
 	virtual void OnRender(ID3D12Device* device, ID3D12GraphicsCommandList * commandList);
+	void ProcessAnimation(GameTimer& gTimer);
 	void BuildConstantBuffer(ID3D12Device* device);
 	void AddComponent(Component* component);
 	Scene* GetScene() { return m_scene; }
-	void ProcessAnimation(GameTimer& gTimer);
 	uint32_t GetId();
 	bool GetValid();
 	void Delete();
@@ -199,6 +199,7 @@ public:
 private:
 	float mSearchTime = 0.0f;
 	float mWalkSpeed = 20.0f;
+	bool m_hasCollided = false;  // 충돌 플래그 추가
 };
 
 class TigerLeather : public Object
@@ -221,5 +222,22 @@ class GodObject : public Object
 {
 public:
 	Object::Object;
+private:
+};
+
+class RotFenceObject : public Object
+{
+public:
+	Object::Object;
+	void OnUpdate(GameTimer& gTimer) override;
+private:
+};
+
+class AxeObject : public Object
+{
+public:
+	Object::Object;
+	void OnUpdate(GameTimer& gTimer) override;
+	void OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration) override;
 private:
 };

@@ -216,7 +216,7 @@ void GameServer::HandlePacket(IOContext* ioContext, int clientID, DWORD bytesTra
         
         // 패킷 헤더 유효성 검사
         if (header->size < sizeof(PacketHeader) || header->size > MAX_PACKET_SIZE || 
-            header->type <= 0 || header->type > 10) {
+            header->type <= 0 || header->type > 11) {
             std::cout << "[Error] Invalid packet header - Size: " << header->size 
                       << ", Type: " << header->type << ", Client: " << clientID << std::endl;
             
@@ -258,9 +258,7 @@ void GameServer::HandlePacket(IOContext* ioContext, int clientID, DWORD bytesTra
 void GameServer::ProcessSinglePacket(char* buffer, int clientID, int packetSize) {
     PacketHeader* header = (PacketHeader*)buffer;
     
-    std::cout << "\n[Receive] From client " << clientID << std::endl;
-    std::cout << "  -> Packet type: " << header->type << std::endl;
-    std::cout << "  -> Packet size: " << header->size << std::endl;
+    // Receive 로그 제거 (주기적으로 나오므로)
 
     switch (header->type) {
         case PACKET_LOGIN_REQUEST: {
@@ -368,9 +366,7 @@ void GameServer::ProcessSinglePacket(char* buffer, int clientID, int packetSize)
             pkt->clientID = clientID;
             clientIt->second.lastUpdate = *pkt;
             
-            // 애니메이션 정보 로그 (디버깅용)
-            std::cout << "[PlayerUpdate] Client " << clientID << " at (" << pkt->x << ", " << pkt->y << ", " << pkt->z 
-                      << ") animation: " << pkt->animationFile << " time: " << pkt->animationTime << std::endl;
+            // PlayerUpdate 로그 제거 (주기적으로 나오므로)
             
             BroadcastPacket(pkt, sizeof(PacketPlayerUpdate), clientID);
             break;
@@ -400,6 +396,49 @@ void GameServer::ProcessSinglePacket(char* buffer, int clientID, int packetSize)
             }
             PacketTigerUpdate* pkt = (PacketTigerUpdate*)buffer;
             BroadcastPacket(pkt, sizeof(PacketTigerUpdate));
+            break;
+        }
+        case PACKET_TIGER_ATTACK: {
+            if (header->size != sizeof(PacketTigerAttack)) {
+                std::cout << "[Error] Invalid TIGER_ATTACK packet size" << std::endl;
+                break;
+            }
+            PacketTigerAttack* pkt = (PacketTigerAttack*)buffer;
+            BroadcastPacket(pkt, sizeof(PacketTigerAttack));
+            break;
+        }
+        
+        case PACKET_TIGER_RESPAWN_REQUEST: {
+            std::cout << "[TigerRespawn] Received PACKET_TIGER_RESPAWN_REQUEST from client " << clientID << std::endl;
+            std::cout << "[TigerRespawn] Packet size: " << header->size << ", Expected: " << sizeof(PacketTigerRespawnRequest) << std::endl;
+            if (header->size != sizeof(PacketTigerRespawnRequest)) {
+                std::cout << "[Error] Invalid TIGER_RESPAWN_REQUEST packet size" << std::endl;
+                break;
+            }
+            PacketTigerRespawnRequest* pkt = (PacketTigerRespawnRequest*)buffer;
+            std::cout << "[TigerRespawn] Client " << clientID << " requested tiger respawn" << std::endl;
+            
+            // 클라이언트에게 모든 호랑이 스폰 패킷을 다시 전송
+            for (const auto& [tigerID, tiger] : m_tigers) {
+                PacketTigerSpawn tigerPacket;
+                tigerPacket.header.type = PACKET_TIGER_SPAWN;
+                tigerPacket.header.size = sizeof(PacketTigerSpawn);
+                tigerPacket.tigerID = tiger.tigerID;
+                tigerPacket.x = tiger.x;
+                tigerPacket.y = tiger.y;
+                tigerPacket.z = tiger.z;
+                
+                if (!SendPacket(m_clients[clientID].socket, &tigerPacket, sizeof(PacketTigerSpawn))) {
+                    std::cout << "[Error] Failed to send tiger respawn packet for ID: " << tiger.tigerID << std::endl;
+                    break;
+                }
+                std::cout << "[Success] Sent tiger respawn packet for ID: " << tiger.tigerID << std::endl;
+                
+                // 각 호랑이 스폰 사이에 짧은 지연 추가
+                Sleep(50);
+            }
+            
+            std::cout << "[TigerRespawn] Completed sending all tiger respawn packets to client " << clientID << std::endl;
             break;
         }
         case PACKET_CLIENT_READY: {
@@ -511,7 +550,7 @@ void GameServer::BroadcastPacket(const void* packet, int size, int excludeID) {
             continue;
             
         if (!SendPacket(client.socket, packet, size)) {
-            std::cout << "[Broadcast] Failed to send packet to client " << id << std::endl;
+            // 주기적 로그 제거 - 에러 상황에서만 로그 출력
             continue;
         }
     }
@@ -888,15 +927,7 @@ void GameServer::BroadcastTigerUpdates() {
         return;
     }
     
-    // 호랑이 업데이트 전송 (매번 전송)
-    // static int updateCounter = 0;
-    // updateCounter++;
-    
-    // 매번 업데이트 전송 (더 부드러운 움직임)
-    // if (updateCounter % 2 != 0) {
-    //     return;
-    // }
-    
+    // 호랑이 업데이트 전송 (로그 제거)
     for (const auto& tigerPair : m_tigers) {
         const auto& tiger = tigerPair.second;
         PacketTigerUpdate updatePacket;

@@ -146,7 +146,33 @@ void Scene::BuildBaseStage()
         objectPtr->AddComponent(new Texture{ L"longTree", 1.0f, 0.4f });
         AddObj(objectPtr);
     }
+    // ������
+    {
+        float scale = 0.1f;
+        objectPtr = new SisterObject(this, AllocateId());
+        objectPtr->AddComponent(new Transform{ {300.f, 20.0f, 350.f}, {0.0f, 90.0f, 0.0f} });
+        objectPtr->AddComponent(new AdjustTransform{ {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {scale, scale, scale} });
+        objectPtr->AddComponent(new Mesh{ "sister_idle_fix.fbx" });
+        objectPtr->AddComponent(new Texture{ L"sister" , 1.0f, 0.4f });
+        objectPtr->AddComponent(new Animation{ "sister_idle_fix.fbx" });
+        objectPtr->AddComponent(new Gravity);
+        objectPtr->AddComponent(new Collider{ {0.0f, 80.0f * scale, 0.0f}, {30.0f * scale, 80.0f * scale, 30.0f * scale} });
+        AddObj(objectPtr);
+    }
 
+    // ��ŷ�
+    {
+        float scale = 0.1f;
+        objectPtr = new SisterObject(this, AllocateId());
+        objectPtr->AddComponent(new Transform{ {500.f, 20.0f, 600.f}, {0.0f, 180.0f, 0.0f} });
+        objectPtr->AddComponent(new AdjustTransform{ {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {scale, scale, scale} });
+        objectPtr->AddComponent(new Mesh{ "god_idle.fbx" });
+        objectPtr->AddComponent(new Texture{ L"god" , 1.0f, 0.4f });
+        objectPtr->AddComponent(new Animation{ "god_idle.fbx" });
+        objectPtr->AddComponent(new Gravity);
+        objectPtr->AddComponent(new Collider{ {0.0f, 80.0f * scale, 0.0f}, {30.0f * scale, 80.0f * scale, 30.0f * scale} });
+        AddObj(objectPtr);
+    }
     // ���
     {
         objectPtr = new TestObject(this, AllocateId());
@@ -1140,6 +1166,9 @@ void Scene::LoadMeshAnimationTexture()
     m_resourceManager->LoadFbx("boy_attack(45).fbx", true, true);
     m_resourceManager->LoadFbx("boy_hit.fbx", true, true);
     m_resourceManager->LoadFbx("boy_dying_fix.fbx", true, true);
+
+    m_resourceManager->LoadFbx("god_idle.fbx", false, true);
+    m_resourceManager->LoadFbx("sister_idle_fix.fbx", false, true);
 
     m_resourceManager->LoadFbx("0113_tiger.fbx", false, true);
     m_resourceManager->LoadFbx("0722_tiger_idle2.fbx", true, true);

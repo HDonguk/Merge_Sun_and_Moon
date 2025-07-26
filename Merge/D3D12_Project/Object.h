@@ -209,3 +209,17 @@ public:
 	void OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration) override;
 private:
 };
+
+class SisterObject : public Object
+{
+public:
+	Object::Object;
+private:
+};
+
+class GodObject : public Object
+{
+public:
+	Object::Object;
+private:
+};

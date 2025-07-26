@@ -52,16 +52,16 @@ void Object::OnUpdate(GameTimer& gTimer)
 
 void Object::OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration)
 {
-    //float similarity = XMVectorGetX(XMVector3Dot(XMVECTOR{ 0.0f, 1.0f, 0.0f, 0.0f }, -collisionNormal));
-    //Gravity* gravity = GetComponent<Gravity>();
-    //if (gravity && similarity > 0.80f) {
-    //    gravity->ResetElapseTime();
+    float similarity = XMVectorGetX(XMVector3Dot(XMVECTOR{ 0.0f, 1.0f, 0.0f, 0.0f }, -collisionNormal));
+    Gravity* gravity = GetComponent<Gravity>();
+    if (gravity && similarity > 0.80f) {
+        gravity->ResetElapseTime();
 
-    //    Transform* transform = GetComponent<Transform>();
-    //    XMVECTOR pos = transform->GetPosition();
-    //    pos -= collisionNormal * penetration;
-    //    transform->SetPosition(pos);
-    //}
+        Transform* transform = GetComponent<Transform>();
+        XMVECTOR pos = transform->GetPosition();
+        pos -= collisionNormal * penetration;
+        transform->SetPosition(pos);
+    }
 }
 
 void Object::LateUpdate(GameTimer& gTimer)

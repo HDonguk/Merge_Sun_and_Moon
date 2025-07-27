@@ -6,22 +6,20 @@ OtherPlayerManager* OtherPlayerManager::instance = nullptr;
 
 void OtherPlayerManager::SpawnOtherPlayer(int clientID) {
     if (otherPlayers.find(clientID) != otherPlayers.end()) {
-        if (m_networkManager) {
-            m_networkManager->LogToFile("[OtherPlayerManager] Player already exists: " + std::to_string(clientID));
-        }
+        wchar_t debugMsg[256];
+        swprintf_s(debugMsg, L"[OtherPlayerManager] Player already exists: %d\n", clientID);
+        OutputDebugString(debugMsg);
         return;
     }
 
     try {
-        if (m_networkManager) {
-            m_networkManager->LogToFile("[OtherPlayerManager] Spawning new player: " + std::to_string(clientID));
-        }
+        wchar_t debugMsg[256];
+        swprintf_s(debugMsg, L"[OtherPlayerManager] Spawning new player: %d\n", clientID);
+        OutputDebugString(debugMsg);
         
         // Scene이 없으면 생성 불가
         if (!m_currentScene) {
-            if (m_networkManager) {
-                m_networkManager->LogToFile("[OtherPlayerManager] Scene is null, cannot spawn player");
-            }
+            OutputDebugString(L"[OtherPlayerManager] Scene is null, cannot spawn player\n");
             return;
         }
         
@@ -43,19 +41,14 @@ void OtherPlayerManager::SpawnOtherPlayer(int clientID) {
         // 맵에 저장
         otherPlayers[clientID] = playerObj;
         
-        if (m_networkManager) {
-            m_networkManager->LogToFile("[OtherPlayerManager] Successfully created and registered player " + std::to_string(clientID));
-        }
+        swprintf_s(debugMsg, L"[OtherPlayerManager] Successfully created and registered player %d\n", clientID);
+        OutputDebugString(debugMsg);
     }
     catch (const std::exception& e) {
-        if (m_networkManager) {
-            m_networkManager->LogToFile("[OtherPlayerManager] Exception during spawn: " + std::string(e.what()));
-        }
+        OutputDebugString(L"[OtherPlayerManager] Exception during spawn\n");
     }
     catch (...) {
-        if (m_networkManager) {
-            m_networkManager->LogToFile("[OtherPlayerManager] Unknown exception during spawn");
-        }
+        OutputDebugString(L"[OtherPlayerManager] Unknown exception during spawn\n");
     }
 }
 

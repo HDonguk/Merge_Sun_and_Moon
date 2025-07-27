@@ -1,10 +1,15 @@
+#include "stdafx.h"
 #include "Scene.h"
+#include "Object.h"
+#include "Component.h"
+#include "NetworkManager.h"
+#include "OtherPlayerManager.h"
+#include "Framework.h"
 #include "DXSampleHelper.h"
 #include "GameTimer.h"
 #include "string"
 #include "info.h"
 #include <array>
-#include "Framework.h"
 
 Scene::~Scene()
 {
@@ -99,28 +104,104 @@ void Scene::BuildHuntingStage()
         }
     }
 
-    // ����
-    {
-        float scale = 30.0f;
-        float basePosX = 200.0f;
-        float basePosZ = 200.0f;
-        float offset = 200.0f;
-        int repeat = 6;
-        for (int i = 0; i < repeat; ++i) {
-            for (int j = 0; j < repeat; ++j) {
-                objectPtr = new TreeObject(this, AllocateId());
-                objectPtr->AddComponent(new Transform{ {basePosX + offset * j, -100.f, basePosZ + offset * i} });
-                objectPtr->AddComponent(new AdjustTransform{ {-0.8f * scale, 0.3f * scale, -2.5f * scale}, {0.0f, 0.0f, 0.0f}, {scale, scale, scale} });
-                objectPtr->AddComponent(new Mesh{ "long_tree.fbx" });
-                objectPtr->AddComponent(new Texture{ L"longTree", 1.0f, 0.4f });
-                objectPtr->AddComponent(new Collider{ {0.0f, 20.0f, 0.0f}, {4.0f, 20.0f, 4.0f} });
-                AddObj(objectPtr);
-            }
-        }
-    }
-
     // 호랑이들은 서버에서 관리되므로 로컬에서는 생성하지 않음
     // 서버에서 PACKET_TIGER_SPAWN 패킷을 통해 호랑이들이 생성됨
+    
+    // 기존 다른 플레이어들을 다시 생성
+    OutputDebugString(L"[Scene] Recreating other players for Hunting Stage...\n");
+    if (m_parent) {
+        OutputDebugString(L"[Scene] m_parent found, accessing OtherPlayerManager...\n");
+        auto& otherPlayers = OtherPlayerManager::GetInstance()->GetPlayers();
+        OutputDebugString(L"[Scene] Got other players map, size: ");
+        
+        wchar_t debugMsg[256];
+        swprintf_s(debugMsg, L"%zu\n", otherPlayers.size());
+        OutputDebugString(debugMsg);
+        
+        if (otherPlayers.empty()) {
+            OutputDebugString(L"[Scene] No other players found in OtherPlayerManager\n");
+        } else {
+            OutputDebugString(L"[Scene] Found other players, recreating them...\n");
+            for (auto& pair : otherPlayers) {
+                int clientID = pair.first;
+                PlayerObject* existingPlayer = pair.second;
+                
+                swprintf_s(debugMsg, L"[Scene] Processing player ID: %d, existingPlayer: %p\n", clientID, existingPlayer);
+                OutputDebugString(debugMsg);
+                
+                if (existingPlayer) {
+                    // 기존 플레이어의 위치 정보 가져오기
+                    Transform* transform = existingPlayer->GetComponent<Transform>();
+                    if (transform) {
+                        XMFLOAT3 position;
+                        XMStoreFloat3(&position, transform->GetPosition());
+                        
+                        // 새로운 플레이어 객체 생성
+                        float scale = 0.1f;
+                        Object* newPlayer = new PlayerObject(this, AllocateId());
+                        dynamic_cast<PlayerObject*>(newPlayer)->SetIsNetworkPlayer(true);  // 네트워크 플레이어로 설정
+                        newPlayer->AddComponent(new Transform{ {position.x, position.y, position.z} });
+                        newPlayer->AddComponent(new AdjustTransform{ {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {scale, scale, scale} });
+                        newPlayer->AddComponent(new Mesh{ "1P(boy-idle).fbx" });
+                        newPlayer->AddComponent(new Texture{ L"boy" , 1.0f, 0.4f });
+                        newPlayer->AddComponent(new Animation{ "1P(boy-idle).fbx" });
+                        newPlayer->AddComponent(new Gravity);
+                        newPlayer->AddComponent(new Collider{ {0.0f, 8.0f, 0.0f}, {2.0f, 8.0f, 2.0f} });
+                        AddObj(newPlayer);
+                        
+                        // OtherPlayerManager에서 참조 업데이트
+                        pair.second = dynamic_cast<PlayerObject*>(newPlayer);
+                        
+                        swprintf_s(debugMsg, L"[Scene] Recreated other player ID: %d at position (%.1f, %.1f, %.1f)\n", 
+                                  clientID, position.x, position.y, position.z);
+                        OutputDebugString(debugMsg);
+                    } else {
+                        swprintf_s(debugMsg, L"[Scene] Transform component not found for player ID: %d\n", clientID);
+                        OutputDebugString(debugMsg);
+                    }
+                } else {
+                    // 플레이어가 nullptr이면 새로 생성 (기본 위치 + 기본 애니메이션)
+                    swprintf_s(debugMsg, L"[Scene] Creating new player for ID: %d (was null)\n", clientID);
+                    OutputDebugString(debugMsg);
+                    
+                    float scale = 0.1f;
+                    Object* newPlayer = new PlayerObject(this, AllocateId());
+                    dynamic_cast<PlayerObject*>(newPlayer)->SetIsNetworkPlayer(true);  // 네트워크 플레이어로 설정
+                    newPlayer->AddComponent(new Transform{ {300.0f, 0.0f, 300.0f} });  // 기본 위치
+                    newPlayer->AddComponent(new AdjustTransform{ {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {scale, scale, scale} });
+                    newPlayer->AddComponent(new Mesh{ "1P(boy-idle).fbx" });
+                    newPlayer->AddComponent(new Texture{ L"boy" , 1.0f, 0.4f });
+                    
+                    // 기본 애니메이션 설정 (idle 애니메이션)
+                    Animation* anim = new Animation{ "1P(boy-idle).fbx" };
+                    anim->mAnimationTime = 0.0f;  // 애니메이션 시작 시간
+                    newPlayer->AddComponent(anim);
+                    
+                    newPlayer->AddComponent(new Gravity);
+                    newPlayer->AddComponent(new Collider{ {0.0f, 8.0f, 0.0f}, {2.0f, 8.0f, 2.0f} });
+                    AddObj(newPlayer);
+                    
+                    // OtherPlayerManager에서 참조 업데이트
+                    pair.second = dynamic_cast<PlayerObject*>(newPlayer);
+                    
+                    swprintf_s(debugMsg, L"[Scene] Created new player ID: %d with default idle animation\n", clientID);
+                    OutputDebugString(debugMsg);
+                }
+            }
+        }
+        OutputDebugString(L"[Scene] Other players recreation completed\n");
+        
+        // 서버에 다른 플레이어들의 최신 정보 요청
+        if (m_parent && m_parent->IsNetworkEnabled()) {
+            OutputDebugString(L"[Scene] Requesting latest player info from server...\n");
+            // 여기서 서버에 플레이어 정보 요청 패킷을 보낼 수 있습니다
+            // 현재는 NetworkManager에 별도 함수가 없으므로, 
+            // 다음 플레이어 업데이트 패킷을 기다리게 됩니다
+        }
+    } else {
+        OutputDebugString(L"[Scene] m_parent is null, cannot access OtherPlayerManager\n");
+    }
+    
     OutputDebugString(L"[Scene] Processing object queue...\n");
     ProcessObjectQueue();
     OutputDebugString(L"[Scene] BuildHuntingStage completed successfully\n");
@@ -159,7 +240,7 @@ void Scene::BuildBaseStage()
         objectPtr->AddComponent(new Texture{ L"longTree", 1.0f, 0.4f });
         AddObj(objectPtr);
     }
-    // ������
+    // 
     {
         float scale = 0.1f;
         objectPtr = new SisterObject(this, AllocateId());
@@ -173,11 +254,11 @@ void Scene::BuildBaseStage()
         AddObj(objectPtr);
     }
 
-    // ��ŷ�
+    // 
     {
         float scale = 0.1f;
         objectPtr = new SisterObject(this, AllocateId());
-        objectPtr->AddComponent(new Transform{ {500.f, 20.0f, 600.f}, {0.0f, 180.0f, 0.0f} });
+        objectPtr->AddComponent(new Transform{ {500.f, 20.0f, 600.0f}, {0.0f, 180.0f, 0.0f} });
         objectPtr->AddComponent(new AdjustTransform{ {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {scale, scale, scale} });
         objectPtr->AddComponent(new Mesh{ "god_idle.fbx" });
         objectPtr->AddComponent(new Texture{ L"god" , 1.0f, 0.4f });
@@ -186,7 +267,7 @@ void Scene::BuildBaseStage()
         objectPtr->AddComponent(new Collider{ {0.0f, 80.0f * scale, 0.0f}, {30.0f * scale, 80.0f * scale, 30.0f * scale} });
         AddObj(objectPtr);
     }
-    // ���
+    // 
     {
         objectPtr = new TestObject(this, AllocateId());
         objectPtr->AddComponent(new Transform{ {0.0f, 0.0f, 0.0f} });
@@ -196,7 +277,7 @@ void Scene::BuildBaseStage()
     }
 
 
-    // ���̺�
+    // 
     {
         float scale = 4.0f;
         objectPtr = new TestObject(this, AllocateId());
@@ -221,7 +302,7 @@ void Scene::BuildBaseStage()
         AddObj(objectPtr);
     }
 
-    // ��
+    // 
     {
         float scale = 0.1f;
         objectPtr = new TestObject(this, AllocateId());
@@ -290,7 +371,7 @@ void Scene::BuildBaseStage()
         objectPtr->AddComponent(new Gravity);
         AddObj(objectPtr);
     }
-    // ���� ������
+    //  
     {
         float scale = 0.04f;
         objectPtr = new TestObject(this, AllocateId());
@@ -364,7 +445,7 @@ void Scene::BuildBaseStage()
             AddObj(objectPtr);
         }
     }
-    // ����2
+    // 
 
     {
         float scale = 20.0f;
@@ -406,7 +487,7 @@ void Scene::BuildBaseStage()
 
     };
 
-    // ȣ���� ����
+    // 
    
 
     {
@@ -428,7 +509,7 @@ void Scene::BuildBaseStage()
         AddObj(objectPtr);
     }
 
-    // �潺
+    // 
     {
         float scale = 0.05f;
         int repeat = 15;
@@ -552,14 +633,14 @@ void Scene::BuildGodStage()
     m_current_stage = L"God";
     Object* objectPtr = nullptr;
 
-    // ī�޶�
+    // 
     {
         objectPtr = new CameraObject(this, AllocateId());
         objectPtr->AddComponent(new Transform{ {0.0f, 0.0f, 0.0f} });
         AddObj(objectPtr);
     }
 
-    // �÷��̾�
+    // 
     {
         float scale = 0.1f;
         objectPtr = new PlayerObject(this, AllocateId());
@@ -573,7 +654,7 @@ void Scene::BuildGodStage()
         AddObj(objectPtr);
     }
 
-    // ���
+    // 
     {
         objectPtr = new TestObject(this, AllocateId());
         objectPtr->AddComponent(new Transform{ {0.0f, 0.0f, 0.0f} });
@@ -582,7 +663,7 @@ void Scene::BuildGodStage()
         AddObj(objectPtr);
     }
 
-    // �߾ӳ���
+    // 
     {
         float scale = 5.0f;
         objectPtr = new TestObject(this, AllocateId());
@@ -595,7 +676,7 @@ void Scene::BuildGodStage()
         AddObj(objectPtr);
     }
 
-    // ����
+    // 
     {
         float scale = 20.0f;
         objectPtr = new AxeObject(this, AllocateId());
@@ -608,7 +689,7 @@ void Scene::BuildGodStage()
         AddObj(objectPtr);
     }
 
-    // ����
+    // 
     {
         float offsetZ = 100.0f;
         float offsetX = 100.0f;
@@ -774,7 +855,7 @@ char Scene::ClampToBounds(XMVECTOR& pos, XMVECTOR offset)
 
 std::tuple<float, float, float, float, float> Scene::GetBounds(float x, float z)
 {
-    // ���� stage�� �´� �ٿ�� ��ȯ�ϱ�
+    //   stage  ٿ ȯϱ
     float minX = 0.0f;
     float minY = 0.0f;
     float minZ = 0.0f;
@@ -967,6 +1048,16 @@ void Scene::DeleteCurrentObjects()
     OutputDebugString(L"[Scene] DeleteCurrentObjects: Starting cleanup\n");
     
     try {
+        // OtherPlayerManager의 플레이어 참조 정리
+        OutputDebugString(L"[Scene] DeleteCurrentObjects: Clearing OtherPlayerManager references\n");
+        if (m_parent) {
+            auto& otherPlayers = OtherPlayerManager::GetInstance()->GetPlayers();
+            for (auto& pair : otherPlayers) {
+                pair.second = nullptr;  // 참조를 nullptr로 설정
+            }
+            OutputDebugString(L"[Scene] DeleteCurrentObjects: OtherPlayerManager references cleared\n");
+        }
+        
         for (Object* obj : m_objects) {
             if (obj != nullptr) {
                 delete obj;
@@ -1016,7 +1107,7 @@ void Scene::BuildRootSignature(ID3D12Device* device)
     descPtr->AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
     descPtr->AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
     descPtr->MipLODBias = 0;
-    descPtr->MaxAnisotropy = 0; // filter �� type �� anisotropy �϶��� ���
+    descPtr->MaxAnisotropy = 0; // filter  type  anisotropy ϶
     descPtr->ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
     descPtr->BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
     descPtr->MinLOD = 0.0f;
@@ -1031,7 +1122,7 @@ void Scene::BuildRootSignature(ID3D12Device* device)
     descPtr->AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
     descPtr->AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
     descPtr->MipLODBias = 0;
-    descPtr->MaxAnisotropy = 0; // filter �� type �� anisotropy �϶��� ���
+    descPtr->MaxAnisotropy = 0; // filter  type  anisotropy ϶
     descPtr->ComparisonFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
     descPtr->BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;
     descPtr->MinLOD = 0.0f;
@@ -1164,7 +1255,7 @@ void Scene::BuildIndexBufferView()
 void Scene::BuildDescriptorHeap(ID3D12Device* device)
 {
     D3D12_DESCRIPTOR_HEAP_DESC HeapDesc = {};
-    HeapDesc.NumDescriptors = static_cast<UINT>(1 + m_DDSFileName.size() + 2); // ���� 1�� cbv �ڿ� 1�� shdowmap��
+    HeapDesc.NumDescriptors = static_cast<UINT>(1 + m_DDSFileName.size() + 2); //  1 cbv  1 shdowmap
     HeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
     HeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     ThrowIfFailed(device->CreateDescriptorHeap(&HeapDesc, IID_PPV_ARGS(m_descriptorHeap.GetAddressOf())));
@@ -1212,17 +1303,17 @@ void Scene::BuildTextureBuffer(ID3D12Device* device, ID3D12GraphicsCommandList* 
         ComPtr<ID3D12Resource> defaultBuffer;
         ComPtr<ID3D12Resource> uploadBuffer;
 
-        // DDSTexture �� ����ϴ� ���
+        // DDSTexture  
         unique_ptr<uint8_t[]> ddsData;
         vector<D3D12_SUBRESOURCE_DATA> subresources;
         ThrowIfFailed(LoadDDSTextureFromFile(device, fileName.c_str(), defaultBuffer.GetAddressOf(), ddsData, subresources));
 
-        //// DirectTex�� ����ϴ� ���
+        //// DirectTex  
         //ScratchImage image;
         //TexMetadata metadata;
 
         //ThrowIfFailed(LoadFromDDSFile(L"./Textures/grass.dds", DDS_FLAGS_NONE, &metadata, image));
-        ////metadata = image.GetMetadata(); // ���ڵ带 ����ϰ� �� �ڵ��� 3��° ���ڸ� nullptr�� �ص� �ȴ�.
+        ////metadata = image.GetMetadata(); //  ڵ带 ڰ ڵ 3  nullptrص ȴ.
 
         //ThrowIfFailed(CreateTexture(device, metadata, m_textureBuffer_default.GetAddressOf()));
         //ThrowIfFailed(PrepareUpload(device, image.GetImages(), image.GetImageCount(), metadata, subresources));
@@ -1262,7 +1353,7 @@ void Scene::BuildTextureBufferView(ID3D12Device* device)
         srvDesc.Texture2D.MipLevels = m_textureBuffer_defaults[i]->GetDesc().MipLevels;
 
         CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(m_descriptorHeap->GetCPUDescriptorHandleForHeapStart());
-        hDescriptor.Offset(1 + i, m_cbvsrvuavDescriptorSize); // 1 + i  ���� 1�� �ǹ̴� ������ ������� constant buffer view�� �� �̴�. ���� �� ���� ���� 
+        hDescriptor.Offset(1 + i, m_cbvsrvuavDescriptorSize); // 1 + i  1  constant buffer view   .  
 
         device->CreateShaderResourceView(m_textureBuffer_defaults[i].Get(), &srvDesc, hDescriptor);
     }
@@ -1285,7 +1376,7 @@ UINT Scene::GetNumOfTexture()
 
 void Scene::AddObj(Object* object)
 {
-    if (m_object_queue_index > MAX_QUEUE - 1) throw; // ��������
+    if (m_object_queue_index > MAX_QUEUE - 1) throw; // 
     m_object_queue[m_object_queue_index++] = object;
 }
 
@@ -1426,7 +1517,7 @@ void Scene::OnUpdate(GameTimer& gTimer)
         networkManager.Update(gTimer, this);
     }
 
-    // ̴
+    // 
     memcpy(static_cast<UINT8*>(m_mappedData) + sizeof(XMMATRIX), &XMMatrixTranspose(XMLoadFloat4x4(&m_proj)), sizeof(XMMATRIX)); // ó Ű ּ
 }
 
@@ -1517,7 +1608,7 @@ ResourceManager& Scene::GetResourceManager()
 
 void* Scene::GetConstantBufferMappedData()
 {
-    // TODO: ���⿡ return ���� �����մϴ�.
+    // TODO:  մϴ.
     return m_mappedData;
 }
 

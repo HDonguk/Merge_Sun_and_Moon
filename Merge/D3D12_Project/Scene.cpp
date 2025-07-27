@@ -630,17 +630,20 @@ void Scene::BuildBaseStage()
 
 void Scene::BuildGodStage()
 {
+    OutputDebugString(L"[Scene] BuildGodStage() called - Building God Stage\n");
     m_current_stage = L"God";
+    OutputDebugString(L"[Scene] Current stage set to: God\n");
+    
     Object* objectPtr = nullptr;
 
-    // 
+    // 카메라
     {
         objectPtr = new CameraObject(this, AllocateId());
         objectPtr->AddComponent(new Transform{ {0.0f, 0.0f, 0.0f} });
         AddObj(objectPtr);
     }
 
-    // 
+    // 플레이어
     {
         float scale = 0.1f;
         objectPtr = new PlayerObject(this, AllocateId());
@@ -654,7 +657,99 @@ void Scene::BuildGodStage()
         AddObj(objectPtr);
     }
 
-    // 
+    // 기존 다른 플레이어들을 다시 생성
+    OutputDebugString(L"[Scene] Recreating other players for God Stage...\n");
+    if (m_parent) {
+        OutputDebugString(L"[Scene] m_parent found, accessing OtherPlayerManager...\n");
+        auto& otherPlayers = OtherPlayerManager::GetInstance()->GetPlayers();
+        OutputDebugString(L"[Scene] Got other players map, size: ");
+        
+        wchar_t debugMsg[256];
+        swprintf_s(debugMsg, L"%zu\n", otherPlayers.size());
+        OutputDebugString(debugMsg);
+        
+        if (otherPlayers.empty()) {
+            OutputDebugString(L"[Scene] No other players found in OtherPlayerManager\n");
+        } else {
+            OutputDebugString(L"[Scene] Found other players, recreating them...\n");
+            for (auto& pair : otherPlayers) {
+                int clientID = pair.first;
+                PlayerObject* existingPlayer = pair.second;
+                
+                swprintf_s(debugMsg, L"[Scene] Processing player ID: %d, existingPlayer: %p\n", clientID, existingPlayer);
+                OutputDebugString(debugMsg);
+                
+                if (existingPlayer) {
+                    // 기존 플레이어의 위치 정보 가져오기
+                    Transform* transform = existingPlayer->GetComponent<Transform>();
+                    if (transform) {
+                        XMFLOAT3 position;
+                        XMStoreFloat3(&position, transform->GetPosition());
+                        
+                        // 새로운 플레이어 객체 생성
+                        float scale = 0.1f;
+                        Object* newPlayer = new PlayerObject(this, AllocateId());
+                        dynamic_cast<PlayerObject*>(newPlayer)->SetIsNetworkPlayer(true);  // 네트워크 플레이어로 설정
+                        newPlayer->AddComponent(new Transform{ {position.x, position.y, position.z} });
+                        newPlayer->AddComponent(new AdjustTransform{ {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {scale, scale, scale} });
+                        newPlayer->AddComponent(new Mesh{ "1P(boy-idle).fbx" });
+                        newPlayer->AddComponent(new Texture{ L"boy" , 1.0f, 0.4f });
+                        newPlayer->AddComponent(new Animation{ "1P(boy-idle).fbx" });
+                        newPlayer->AddComponent(new Gravity);
+                        newPlayer->AddComponent(new Collider{ {0.0f, 8.0f, 0.0f}, {2.0f, 8.0f, 2.0f} });
+                        AddObj(newPlayer);
+                        
+                        // OtherPlayerManager에서 참조 업데이트
+                        pair.second = dynamic_cast<PlayerObject*>(newPlayer);
+                        
+                        swprintf_s(debugMsg, L"[Scene] Recreated other player ID: %d at position (%.1f, %.1f, %.1f)\n", 
+                                  clientID, position.x, position.y, position.z);
+                        OutputDebugString(debugMsg);
+                    } else {
+                        swprintf_s(debugMsg, L"[Scene] Transform component not found for player ID: %d\n", clientID);
+                        OutputDebugString(debugMsg);
+                    }
+                } else {
+                    // 플레이어가 nullptr이면 새로 생성 (기본 위치 + 기본 애니메이션)
+                    swprintf_s(debugMsg, L"[Scene] Creating new player for ID: %d (was null)\n", clientID);
+                    OutputDebugString(debugMsg);
+                    
+                    float scale = 0.1f;
+                    Object* newPlayer = new PlayerObject(this, AllocateId());
+                    dynamic_cast<PlayerObject*>(newPlayer)->SetIsNetworkPlayer(true);  // 네트워크 플레이어로 설정
+                    newPlayer->AddComponent(new Transform{ {300.0f, 0.0f, 300.0f} });  // 기본 위치
+                    newPlayer->AddComponent(new AdjustTransform{ {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {scale, scale, scale} });
+                    newPlayer->AddComponent(new Mesh{ "1P(boy-idle).fbx" });
+                    newPlayer->AddComponent(new Texture{ L"boy" , 1.0f, 0.4f });
+                    
+                    // 기본 애니메이션 설정 (idle 애니메이션)
+                    Animation* anim = new Animation{ "1P(boy-idle).fbx" };
+                    anim->mAnimationTime = 0.0f;  // 애니메이션 시작 시간
+                    newPlayer->AddComponent(anim);
+                    
+                    newPlayer->AddComponent(new Gravity);
+                    newPlayer->AddComponent(new Collider{ {0.0f, 8.0f, 0.0f}, {2.0f, 8.0f, 2.0f} });
+                    AddObj(newPlayer);
+                    
+                    // OtherPlayerManager에서 참조 업데이트
+                    pair.second = dynamic_cast<PlayerObject*>(newPlayer);
+                    
+                    swprintf_s(debugMsg, L"[Scene] Created new player ID: %d with default idle animation\n", clientID);
+                    OutputDebugString(debugMsg);
+                }
+            }
+        }
+        OutputDebugString(L"[Scene] Other players recreation completed\n");
+        
+        // 서버에 다른 플레이어들의 최신 정보 요청
+        if (m_parent && m_parent->IsNetworkEnabled()) {
+            OutputDebugString(L"[Scene] Requesting latest player info from server...\n");
+        }
+    } else {
+        OutputDebugString(L"[Scene] m_parent is null, cannot access OtherPlayerManager\n");
+    }
+
+    // 지형
     {
         objectPtr = new TestObject(this, AllocateId());
         objectPtr->AddComponent(new Transform{ {0.0f, 0.0f, 0.0f} });
@@ -663,7 +758,7 @@ void Scene::BuildGodStage()
         AddObj(objectPtr);
     }
 
-    // 
+    // 나무
     {
         float scale = 5.0f;
         objectPtr = new TestObject(this, AllocateId());
@@ -676,7 +771,7 @@ void Scene::BuildGodStage()
         AddObj(objectPtr);
     }
 
-    // 
+    // 도끼
     {
         float scale = 20.0f;
         objectPtr = new AxeObject(this, AllocateId());
@@ -689,7 +784,7 @@ void Scene::BuildGodStage()
         AddObj(objectPtr);
     }
 
-    // 
+    // 울타리들
     {
         float offsetZ = 100.0f;
         float offsetX = 100.0f;
@@ -743,8 +838,9 @@ void Scene::BuildGodStage()
         objectPtr->AddComponent(new Texture{ L"Brown", 1.0f, 0.4f });
         objectPtr->AddComponent(new Collider{ {0.0f, 0.0f, 0.0f}, {100.0f * scale, 15.0f * scale, 150.0f * scale } });
         AddObj(objectPtr);
-
     }
+    
+    OutputDebugString(L"[Scene] BuildGodStage completed successfully\n");
 }
 
 

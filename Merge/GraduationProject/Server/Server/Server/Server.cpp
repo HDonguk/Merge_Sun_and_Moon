@@ -707,23 +707,45 @@ void GameServer::BroadcastNewPlayer(int newClientID) {
 void GameServer::InitializeTigers() {
     std::cout << "\n[InitializeTigers] Starting tiger initialization..." << std::endl;
     
-    // 성능 개선을 위해 호랑이 수를 5마리로 줄임
+    // 호랑이 수를 15마리로 늘림
     float basePosX = 500.0f;
     float basePosZ = 500.0f;
-    float offset = 150.0f;  // 간격을 좀 더 넓게
+    float offset = 200.0f;  // 간격을 더 넓게
     
-    // 5마리 호랑이를 적절히 배치
+    // 15마리 호랑이를 넓게 배치
     std::vector<std::pair<float, float>> positions = {
+        // 중앙 근처 5마리
         {basePosX - offset, basePosZ - offset},      // 좌상단
         {basePosX + offset, basePosZ - offset},      // 우상단
         {basePosX, basePosZ},                        // 중앙
         {basePosX - offset, basePosZ + offset},      // 좌하단
-        {basePosX + offset, basePosZ + offset}       // 우하단
+        {basePosX + offset, basePosZ + offset},      // 우하단
+        
+        // 외곽 10마리 추가
+        {basePosX - offset * 2, basePosZ - offset * 2},  // 좌상단 외곽
+        {basePosX + offset * 2, basePosZ - offset * 2},  // 우상단 외곽
+        {basePosX - offset * 2, basePosZ + offset * 2},  // 좌하단 외곽
+        {basePosX + offset * 2, basePosZ + offset * 2},  // 우하단 외곽
+        {basePosX - offset * 1.5f, basePosZ},            // 좌측 중앙
+        {basePosX + offset * 1.5f, basePosZ},            // 우측 중앙
+        {basePosX, basePosZ - offset * 1.5f},            // 상단 중앙
+        {basePosX, basePosZ + offset * 1.5f},            // 하단 중앙
+        {basePosX - offset * 1.5f, basePosZ - offset * 1.5f},  // 좌상 대각선
+        {basePosX + offset * 1.5f, basePosZ + offset * 1.5f}   // 우하 대각선
     };
     
-    // 고정된 값들을 사용하여 모든 클라이언트가 동일한 호랑이를 보도록 함
-    std::vector<float> fixedRotations = {0.0f, 90.0f, 180.0f, 270.0f, 45.0f};  // 고정된 회전값
-    std::vector<float> fixedMoveTimers = {1.0f, 1.5f, 2.0f, 0.5f, 1.2f};       // 고정된 이동 타이머
+    // 15개의 고정된 값들을 사용하여 모든 클라이언트가 동일한 호랑이를 보도록 함
+    std::vector<float> fixedRotations = {
+        0.0f, 90.0f, 180.0f, 270.0f, 45.0f,           // 첫 5마리
+        30.0f, 120.0f, 210.0f, 300.0f, 60.0f,         // 다음 5마리
+        150.0f, 240.0f, 330.0f, 15.0f, 75.0f          // 마지막 5마리
+    };
+    
+    std::vector<float> fixedMoveTimers = {
+        1.0f, 1.5f, 2.0f, 0.5f, 1.2f,                 // 첫 5마리
+        0.8f, 1.8f, 1.3f, 0.7f, 1.6f,                 // 다음 5마리
+        1.1f, 0.9f, 1.4f, 1.7f, 0.6f                  // 마지막 5마리
+    };
     
     for (size_t i = 0; i < positions.size(); ++i) {
         TigerInfo tiger;
@@ -743,9 +765,9 @@ void GameServer::InitializeTigers() {
         tiger.elapseTime = 0.0f;     // 초기 애니메이션 경과 시간
         tiger.isFired = false;       // 초기 공격 발사 상태
         
-        // 고정된 초기 목표 위치 설정
-        float moveAngle = (i * 72.0f) * (3.141592f / 180.0f);  // 72도씩 회전 (360/5)
-        float moveDistance = 60.0f;  // 고정된 거리
+        // 고정된 초기 목표 위치 설정 (24도씩 회전으로 15마리 분산)
+        float moveAngle = (i * 24.0f) * (3.141592f / 180.0f);  // 24도씩 회전 (360/15)
+        float moveDistance = 80.0f;  // 고정된 거리
         tiger.targetX = tiger.x + cos(moveAngle) * moveDistance;
         tiger.targetZ = tiger.z + sin(moveAngle) * moveDistance;
         

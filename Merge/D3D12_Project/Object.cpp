@@ -204,6 +204,7 @@ void PlayerObject::OnUpdate(GameTimer& gTimer)
     if (!m_isNetworkPlayer) {
         ProcessInput(gTimer);
     }
+    ProcessRicecakeMockUp();
     Object::OnUpdate(gTimer);
 }
 
@@ -221,9 +222,24 @@ void PlayerObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, f
         return;
     }
 
+    TigerLeather* leather = dynamic_cast<TigerLeather*>(&other);
+    if (leather)
+    {
+        m_scene->IncreaseLeatherCount();
+        return;
+    }
+
+
     AxeObject* axe = dynamic_cast<AxeObject*>(&other);
     if (axe)
     {
+        return;
+    }
+
+    RicecakeObject* ricecake = dynamic_cast<RicecakeObject*>(&other);
+    if (ricecake)
+    {
+        ++mRicecake;
         return;
     }
 
@@ -236,6 +252,11 @@ void PlayerObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, f
     if (gravity && similarity > 0.80f) {
         gravity->ResetElapseTime();
     }
+}
+
+int PlayerObject::GetRicecakeCount()
+{
+    return mRicecake;
 }
 
 void PlayerObject::ProcessInput(const GameTimer& gTimer)
@@ -265,6 +286,7 @@ void PlayerObject::ProcessInput(const GameTimer& gTimer)
     }
 
     if ((keyState[VK_LBUTTON] & 0x88) == 0x80)  Attack();
+    if ((keyState[VK_RBUTTON] & 0x88) == 0x80)  Throw();
 
 
     if ((keyState[VK_SPACE] & 0x88) == 0x80) {
@@ -282,6 +304,7 @@ void PlayerObject::Move(XMVECTOR dir, float speed,float deltaTime)
 {
     Animation* anim = GetComponent<Animation>();
     if (anim->mCurrentFileName == "boy_attack(45).fbx") return;
+    if (anim->mCurrentFileName == "boy_throw.fbx") return;
     if (anim->mCurrentFileName == "boy_hit.fbx") return;
     if (anim->mCurrentFileName == "boy_dying_fix.fbx") return;
     if (mAttackTime < 1.0) return;
@@ -299,6 +322,7 @@ void PlayerObject::Move(XMVECTOR dir, float speed,float deltaTime)
     dir = XMVector3TransformNormal(dir, cameraTransform->GetRotationM());
 
     dir = XMVector3Normalize(XMVectorSetY(dir, 0.0f));
+    XMStoreFloat3(&mDir, dir);
 
     XMVECTOR pos = transform->GetPosition();
     pos += dir * speed * deltaTime;
@@ -313,6 +337,7 @@ void PlayerObject::Idle()
 {
     Animation* anim = GetComponent<Animation>();
     if (anim->mCurrentFileName == "boy_attack(45).fbx") return;
+    if (anim->mCurrentFileName == "boy_throw.fbx") return;
     if (anim->mCurrentFileName == "boy_hit.fbx") return;
     if (anim->mCurrentFileName == "boy_dying_fix.fbx") return;
 
@@ -337,16 +362,28 @@ void PlayerObject::Jump()
 void PlayerObject::Attack()
 {
     Animation* anim = GetComponent<Animation>();
+    if (anim->mCurrentFileName == "boy_throw.fbx") return;
     if (anim->mCurrentFileName == "boy_hit.fbx") return;
     if (anim->mCurrentFileName == "boy_dying_fix.fbx") return;
 
     ChangeState("boy_attack(45).fbx");
 }
 
+void PlayerObject::Throw()
+{
+    Animation* anim = GetComponent<Animation>();
+    if (anim->mCurrentFileName == "boy_attack(45).fbx") return;
+    if (anim->mCurrentFileName == "boy_hit.fbx") return;
+    if (anim->mCurrentFileName == "boy_dying_fix.fbx") return;
+    if (mAttackTime < 1.0) return;
+    if (mRicecake < 1) return;
+    ChangeState("boy_throw.fbx");
+}
+
 void PlayerObject::TimeOut()
 {
     Animation* anim = GetComponent<Animation>();
-    if (anim->mCurrentFileName == "boy_attack(45).fbx") 
+    if (anim->mCurrentFileName == "boy_attack(45).fbx" || anim->mCurrentFileName == "boy_throw.fbx")
     {
         mIsFired = false;
         mAttackTime = 0.0f;
@@ -363,9 +400,8 @@ void PlayerObject::TimeOut()
 
     if (anim->mCurrentFileName == "boy_dying_fix.fbx")
     {
-        mIsHitted = false;
-        mLife = 3;
-        ChangeState("1P(boy-idle).fbx");
+        m_scene->ResetLeatherCount();
+        m_scene->SetStage(L"Base");
         return;
     }
 
@@ -378,12 +414,33 @@ void PlayerObject::Fire()
 
     mIsFired = true;
 
-    Object* obj = new PlayerAttackObject(m_scene, m_scene->AllocateId(), m_id);
-    obj->AddComponent(new Transform{ {0.0f, 8.0f, 8.0f} });
-    obj->AddComponent(new Collider{ {0.0f, 0.0f, 0.0f}, {6.0f, 8.0f, 6.0f} });
-    m_scene->AddObj(obj);
+    Animation* anim = GetComponent<Animation>();
+    if (anim->mCurrentFileName == "boy_attack(45).fbx")
+    {
+        Object* obj = new PlayerAttackObject(m_scene, m_scene->AllocateId(), m_id);
+        obj->AddComponent(new Transform{ {0.0f, 8.0f, 8.0f} });
+        obj->AddComponent(new Collider{ {0.0f, 0.0f, 0.0f}, {6.0f, 8.0f, 6.0f} });
+        m_scene->AddObj(obj);
+    }
 
-    // ����ü �߰� ����
+    if (anim->mCurrentFileName == "boy_throw.fbx")
+    {
+        --mRicecake;
+
+        Transform* transform = GetComponent<Transform>();
+        XMVECTOR pos = transform->GetPosition();
+        XMVECTOR offset = XMVector3TransformNormal(XMVECTOR{ 4.0f, 10.0f, 10.0f }, transform->GetRotationM());
+        float scale = 0.03f;
+        RicecakeObject* obj = new RicecakeObject(m_scene, m_scene->AllocateId());
+        obj->SetDir(XMLoadFloat3(&mDir));
+        obj->AddComponent(new Transform{ pos + offset });
+        obj->AddComponent(new AdjustTransform{ {-20.0f * scale, 22.0f * scale, 0.0f}, {0.0f, 0.0f, -90.0f}, {scale, scale, scale} });
+        obj->AddComponent(new Mesh{ "ricecake.fbx" });
+        obj->AddComponent(new Texture{ L"ricecake", 1.0f, 0.4f });
+        obj->AddComponent(new Gravity);
+        obj->AddComponent(new Collider{ {0.0f, 30.0f * scale, 0.0f}, {25.0f * scale, 30.0f * scale, 25.0f * scale} });
+        m_scene->AddObj(obj);
+    }
 }
 
 void PlayerObject::Hit()
@@ -401,7 +458,6 @@ void PlayerObject::Hit()
 
 void PlayerObject::Dead()
 {
-    Animation* anim = GetComponent<Animation>();
     ChangeState("boy_dying_fix.fbx");
 }
 
@@ -412,6 +468,12 @@ void PlayerObject::CalcTime(float deltaTime)
     {
         mElapseTime += deltaTime;
         if (mElapseTime > 0.5f) Fire();
+        if (mElapseTime > 1.0f) TimeOut();
+    }
+    else if (anim->mCurrentFileName == "boy_throw.fbx")
+    {
+        mElapseTime += deltaTime;
+        if (mElapseTime > 0.7f) Fire();
         if (mElapseTime > 1.0f) TimeOut();
     }
     else
@@ -439,6 +501,23 @@ void PlayerObject::CalcTime(float deltaTime)
             mJumped = false;
         }
     }
+}
+
+void PlayerObject::ProcessRicecakeMockUp()
+{
+    if (mRicecake > 0 && !mHasRicecake)
+    {
+        mHasRicecake = true;
+        float scale = 0.03f;
+        Object* obj = new RicecakeMockup(m_scene, m_scene->AllocateId(), m_id);
+        obj->AddComponent(new Transform{ {1.5f, 5.0f, -0.2f} });
+        obj->AddComponent(new AdjustTransform{ {-20.0f * scale, 22.0f * scale, 0.0f}, {0.0f, 0.0f, -90.0f}, {scale, scale, scale} });
+        obj->AddComponent(new Mesh{ "ricecake.fbx" });
+        obj->AddComponent(new Texture{ L"ricecake", 1.0f, 0.4f });
+        m_scene->AddObj(obj);
+    }
+
+    if (mRicecake <= 0) mHasRicecake = false;
 }
 
 
@@ -549,7 +628,8 @@ void TigerObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, fl
     if (ta) return;
 
     PlayerAttackObject* pa = dynamic_cast<PlayerAttackObject*>(&other);
-    if (pa)
+    RicecakeObject* rc = dynamic_cast<RicecakeObject*>(&other);
+    if (pa || rc)
     {
         Hit();
         return;
@@ -759,12 +839,6 @@ void TigerAttackObject::OnUpdate(GameTimer& gTimer)
     Object::OnUpdate(gTimer);
 }
 
-void QuadObject::OnUpdate(GameTimer& gTimer)
-{
-    CameraObject* camera = m_scene->GetObj<CameraObject>();
-    m_parent_id = camera->GetId();
-    Object::OnUpdate(gTimer);
-}
 
 void PlayerAttackObject::OnUpdate(GameTimer& gTimer)
 {
@@ -929,6 +1003,194 @@ void AxeObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, floa
         Transform* transform = GetComponent<Transform>();
         transform->SetPosition({ 0.0f, 6.0f, -2.0f });
         transform->SetRotation({ 0.0f, 90.0f, 0.0f });
+        Object* obj = new QuadObject(m_scene, m_scene->AllocateId());
+        obj->AddComponent(new Transform{ {-0.5f * 1.77f, -0.5f, 1.0f}, {-90.0f, 0.0f, 0.0f}, {1.77f, 1.0f, 1.0f} });
+        obj->AddComponent(new Mesh{ "Quad" });
+        obj->AddComponent(new Texture{ L"End", 1.0f, 0.4f });
+        m_scene->AddObj(obj);
     }
     Object::OnProcessCollision(other, collisionNormal, penetration);
+}
+
+void RicecakeObject::SetDir(XMVECTOR dir)
+{
+    XMStoreFloat3(&mDir, dir);
+}
+
+void RicecakeObject::OnUpdate(GameTimer& gTimer)
+{
+    Transform* transform = GetComponent<Transform>();
+    XMVECTOR pos = transform->GetPosition();
+    pos += XMLoadFloat3(&mDir) * mSpeed * gTimer.DeltaTime();
+    transform->SetPosition(pos);
+
+    Object::OnUpdate(gTimer);
+}
+
+void RicecakeObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration)
+{
+    PlayerAttackObject* pa = dynamic_cast<PlayerAttackObject*>(&other);
+    if (pa) return;
+    TigerAttackObject* ta = dynamic_cast<TigerAttackObject*>(&other);
+    if (ta) return;
+    RicecakeObject* ricecake = dynamic_cast<RicecakeObject*>(&other);
+    if (ricecake)
+    {
+        Transform* transform = GetComponent<Transform>();
+        XMVECTOR pos = transform->GetPosition();
+        pos -= collisionNormal * penetration;
+        transform->SetPosition(pos);
+        return;
+    }
+    Delete();
+    Object::OnProcessCollision(other, collisionNormal, penetration);
+}
+
+void RicecakeObject::LateUpdate(GameTimer& gTimer)
+{
+    Transform* transform = GetComponent<Transform>();
+    XMVECTOR pos = transform->GetPosition();
+    char outstatus = m_scene->ClampToBounds(pos, { 0.0f, 0.0f, 0.0f });
+    transform->SetPosition(pos);
+
+    bool CreatedByTree = XMVector3Equal(XMLoadFloat3(&mDir), XMVectorZero());
+
+    if (outstatus)
+    {
+        if (CreatedByTree)
+        {
+            Gravity* gravity = GetComponent<Gravity>();
+            gravity->ResetElapseTime();
+        }
+        else
+        {
+            Delete();
+        }
+    }
+
+    transform->SetFinalM(transform->GetTransformM());
+
+    XMMATRIX world = transform->GetFinalM();
+    XMMATRIX adjustM = XMMatrixIdentity();
+    AdjustTransform* adjustTrnasform = GetComponent<AdjustTransform>();
+    if (adjustTrnasform) {
+        adjustM = adjustTrnasform->GetTransformM();
+    }
+    memcpy(m_mappedData, &XMMatrixTranspose(adjustM * world), sizeof(XMMATRIX));
+
+    ProcessAnimation(gTimer);
+
+    Texture* texture = GetComponent<Texture>();
+    float powValue = 1.0f;
+    float ambiantValue = 0.4f;
+    if (texture) {
+        ambiantValue = texture->mAmbiantValue;
+        powValue = texture->mPowValue;
+    }
+    memcpy(m_mappedData + sizeof(XMFLOAT4X4) * 91 + sizeof(int) * 4, &powValue, sizeof(float));
+    memcpy(m_mappedData + sizeof(XMFLOAT4X4) * 91 + sizeof(int) * 4 + sizeof(float), &ambiantValue, sizeof(float));
+}
+
+void TreeObject::OnUpdate(GameTimer& gTimer)
+{
+    mElapseTime += gTimer.DeltaTime();
+    Object::OnUpdate(gTimer);
+}
+
+void TreeObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration)
+{
+    PlayerAttackObject* pa = dynamic_cast<PlayerAttackObject*>(&other);
+    if (pa && mElapseTime > 1.0f)
+    {
+        mElapseTime = 0.0f;
+
+        Transform* transform = GetComponent<Transform>();
+        XMVECTOR pos = transform->GetPosition();
+        float yaw = uid(dre);
+        XMVECTOR offset = XMVector3TransformNormal(XMVECTOR{ 0.0f, 50.0f, 20.0f }, XMMatrixRotationY(yaw));
+        float scale = 0.03f;
+        RicecakeObject* obj = new RicecakeObject(m_scene, m_scene->AllocateId());
+        obj->AddComponent(new Transform{ pos + offset });
+        obj->AddComponent(new AdjustTransform{ {-20.0f * scale, 22.0f * scale, 0.0f}, {0.0f, 0.0f, -90.0f}, {scale, scale, scale} });
+        obj->AddComponent(new Mesh{ "ricecake.fbx" });
+        obj->AddComponent(new Texture{ L"ricecake", 1.0f, 0.4f });
+        obj->AddComponent(new Gravity);
+        obj->AddComponent(new Collider{ {0.0f, 30.0f * scale, 0.0f}, {25.0f * scale, 30.0f * scale, 25.0f * scale} });
+        m_scene->AddObj(obj);
+    }
+    Object::OnProcessCollision(other, collisionNormal, penetration);
+}
+
+void RicecakeMockup::OnUpdate(GameTimer& gTimer)
+{
+    PlayerObject* player = m_scene->GetObj<PlayerObject>();
+    int ricecakeCount = player->GetRicecakeCount();
+    if (ricecakeCount <= 0) Delete();
+    Object::OnUpdate(gTimer);
+}
+
+void GoToBaseObject::OnUpdate(GameTimer& gTimer)
+{
+    Texture* texture = GetComponent<Texture>();
+    if (texture && m_scene->HasEnoughLeather())
+    {
+        mElapseTime += gTimer.DeltaTime();
+        texture->mAmbiantValue = ((sinf(mElapseTime) + 1.0f) * 2.0f) + 0.4;
+    }
+    Object::OnUpdate(gTimer);
+}
+
+void GoToBaseObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration)
+{
+    PlayerObject* player = dynamic_cast<PlayerObject*>(&other);
+    if (player && m_scene->HasEnoughLeather())
+    {
+        m_scene->SetStage(L"Base");
+    }
+    Object::OnProcessCollision(other, collisionNormal, penetration);
+}
+
+
+void GodObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration)
+{
+    PlayerObject* player = dynamic_cast<PlayerObject*>(&other);
+    if (player && m_scene->HasEnoughLeather())
+    {
+        m_scene->SetStage(L"God");
+    }
+    Object::OnProcessCollision(other, collisionNormal, penetration);
+}
+
+void TitleObject::OnUpdate(GameTimer& gTimer)
+{
+    CameraObject* camera = m_scene->GetObj<CameraObject>();
+    m_parent_id = camera->GetId();
+
+    BYTE* keyState = m_scene->GetFramework()->GetKeyState();
+    if ((keyState[VK_RETURN] & 0x88) == 0x80)
+    {
+        m_scene->SetStage(L"Base");
+    }
+}
+
+void SisterObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration)
+{
+    PlayerObject* player = dynamic_cast<PlayerObject*>(&other);
+    if (player && !mIsQuadAble)
+    {
+        mIsQuadAble = true;
+        QuadObject* obj = new QuadObject(m_scene, m_scene->AllocateId(), m_id);
+        obj->AddComponent(new Transform{ {-5.0f, 10.0f, 0.0f}, {-90.0f, 180.0f, 0.0f}, {30.0f, 0.0f, 25.0f} });
+        obj->AddComponent(new Mesh{ "Quad" });
+        obj->AddComponent(new Texture{ L"Quest", 1.0f, 0.4f });
+        m_scene->AddObj(obj);
+    }
+    Object::OnProcessCollision(other, collisionNormal, penetration);
+}
+
+void QuadObject::OnUpdate(GameTimer& gTimer)
+{
+    CameraObject* camera = m_scene->GetObj<CameraObject>();
+    m_parent_id = camera->GetId();
+
 }

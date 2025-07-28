@@ -54,6 +54,7 @@ public:
     // 콜백 설정
     void SetLoginSuccessCallback(std::function<void(int, const std::string&)> callback);
     void SetLoginFailedCallback(std::function<void(const std::string&)> callback);
+    void SetStageTransitioning(bool transitioning); // 스테이지 전환 상태 설정
 
 private:
     static DWORD WINAPI NetworkThread(LPVOID arg);

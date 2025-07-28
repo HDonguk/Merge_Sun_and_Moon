@@ -5,6 +5,15 @@
 OtherPlayerManager* OtherPlayerManager::instance = nullptr;
 
 void OtherPlayerManager::SpawnOtherPlayer(int clientID) {
+    // 스테이지 전환 중이면 플레이어 생성 차단
+    if (m_isStageTransitioning) {
+        OutputDebugString(L"[OtherPlayerManager] Stage transitioning, blocking spawn for player\n");
+        if (m_networkManager) {
+            m_networkManager->LogToFile("[OtherPlayerManager] Stage transitioning, blocking spawn for player " + std::to_string(clientID));
+        }
+        return;
+    }
+    
     if (otherPlayers.find(clientID) != otherPlayers.end()) {
         wchar_t debugMsg[256];
         swprintf_s(debugMsg, L"[OtherPlayerManager] Player already exists: %d\n", clientID);
@@ -53,6 +62,15 @@ void OtherPlayerManager::SpawnOtherPlayer(int clientID) {
 }
 
 void OtherPlayerManager::UpdateOtherPlayer(int clientID, float x, float y, float z, float rotY, const std::string& animationFile, float animationTime) {
+    // 스테이지 전환 중이면 업데이트도 차단
+    if (m_isStageTransitioning) {
+        OutputDebugString(L"[OtherPlayerManager] Stage transitioning, blocking update for player\n");
+        if (m_networkManager) {
+            m_networkManager->LogToFile("[OtherPlayerManager] Stage transitioning, blocking update for player " + std::to_string(clientID));
+        }
+        return;
+    }
+    
     auto it = otherPlayers.find(clientID);
     if (it == otherPlayers.end()) {
         // 플레이어가 없으면 새로 생성
@@ -126,5 +144,46 @@ void OtherPlayerManager::RemoveOtherPlayer(int clientID) {
         if (m_networkManager) {
             m_networkManager->LogToFile("[OtherPlayerManager] Removed player: " + std::to_string(clientID));
         }
+    }
+}
+
+void OtherPlayerManager::ClearAllPlayers() {
+    OutputDebugString(L"[OtherPlayerManager] Clearing all other players\n");
+    
+    if (m_networkManager) {
+        m_networkManager->LogToFile("[OtherPlayerManager] Clearing all other players");
+    }
+    
+    // 모든 플레이어 객체 삭제
+    for (auto& pair : otherPlayers) {
+        PlayerObject* playerObj = pair.second;
+        if (playerObj) {
+            // Scene에서 제거
+            if (m_currentScene) {
+                playerObj->Delete();
+            }
+            
+            if (m_networkManager) {
+                m_networkManager->LogToFile("[OtherPlayerManager] Deleted player object: " + std::to_string(pair.first));
+            }
+        }
+    }
+    
+    // 맵 비우기
+    otherPlayers.clear();
+    
+    OutputDebugString(L"[OtherPlayerManager] All other players cleared\n");
+    
+    if (m_networkManager) {
+        m_networkManager->LogToFile("[OtherPlayerManager] All other players cleared successfully");
+    }
+}
+
+void OtherPlayerManager::SetStageTransitioning(bool transitioning) {
+    m_isStageTransitioning = transitioning;
+    OutputDebugString(transitioning ? L"[OtherPlayerManager] Stage transition started\n" : L"[OtherPlayerManager] Stage transition ended\n");
+    
+    if (m_networkManager) {
+        m_networkManager->LogToFile("[OtherPlayerManager] Stage transition " + std::string(transitioning ? "started" : "ended"));
     }
 } 

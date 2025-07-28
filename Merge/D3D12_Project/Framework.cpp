@@ -596,7 +596,7 @@ void Framework::DisableNetwork()
 }
 
 void Framework::OnLoginSuccess(int clientID, const std::string& username) {
-    // 로그인 성공 시 게임 화면으로 전환
+    // 로그인 성공 시 Title 화면으로 전환
     m_isInLoginScreen = false;
     m_loginUI.SetState(UIState::CONNECTED);
     
@@ -607,9 +607,11 @@ void Framework::OnLoginSuccess(int clientID, const std::string& username) {
     ShowCursor(FALSE);
     SetCursor(nullptr); // 커서 핸들 제거
     
-    // 게임 씬으로 전환
+    // Title 화면으로 전환
     if (m_scenes.find(L"BaseScene") != m_scenes.end()) {
         m_currentSceneName = L"BaseScene";
+        m_scenes[L"BaseScene"]->SetStage(L"Title"); // Title 스테이지로 설정
+        OutputDebugString(L"[Framework] Switching to Title stage after login success\n");
     }
     
     // 윈도우 완전 리셋

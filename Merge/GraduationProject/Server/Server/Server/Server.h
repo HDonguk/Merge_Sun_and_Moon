@@ -102,10 +102,6 @@ private:
     void UpdateTigers(float deltaTime);
     void BroadcastTigerUpdates();
     void UpdateTigerBehavior(TigerInfo& tiger, float deltaTime);
-    void UpdateTigerTimers(TigerInfo& tiger, float deltaTime);
-    void TigerAttack(TigerInfo& tiger);
-    void TigerRun(TigerInfo& tiger);
-    void TigerTimeOut(TigerInfo& tiger);
     float GetRandomFloat(float min, float max);
     bool IsPlayerNearby(const TigerInfo& tiger, float radius);
     void GetNearestPlayerPosition(const TigerInfo& tiger, float& targetX, float& targetZ);

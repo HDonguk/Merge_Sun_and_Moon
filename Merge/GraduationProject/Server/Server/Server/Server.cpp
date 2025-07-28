@@ -819,71 +819,16 @@ void GameServer::InitializeTrees() {
     std::cout << "[InitializeTrees] Note: Tree positions will be sent when clients log in" << std::endl;
 }
 
-// Original의 CalcTime과 동일한 함수
-void GameServer::UpdateTigerTimers(TigerInfo& tiger, float deltaTime) {
-    // Original의 CalcTime과 동일한 로직
-    if (tiger.currentAnimation == "0113_tiger_walk.fbx") {
-        tiger.searchTime += deltaTime;
-    }
-
-    if (tiger.currentAnimation == "0208_tiger_attack.fbx") {
-        tiger.elapseTime += deltaTime;
-        if (tiger.elapseTime >= 0.4f && !tiger.isFired) {
-            tiger.isFired = true;  // Original의 Fire()와 동일
-        }
-        if (tiger.elapseTime >= 0.8f) {
-            TigerTimeOut(tiger);  // Original의 TimeOut()과 동일
-        }
-    } else {
-        tiger.attackTime += deltaTime;  // 공격 애니메이션이 아닐 때만 증가
-    }
-}
-
-// Original의 Attack 함수와 동일한 함수
-void GameServer::TigerAttack(TigerInfo& tiger) {
-    // Original의 Attack() 함수와 동일한 조건들
-    if (tiger.currentAnimation == "0208_tiger_hit.fbx") return;
-    if (tiger.currentAnimation == "0208_tiger_dying.fbx") return;
-    if (tiger.attackTime < 2.0f) return;
-    
-    // 모든 조건을 만족하면 공격 애니메이션 시작 (Original의 ChangeState와 동일)
-    tiger.currentAnimation = "0208_tiger_attack.fbx";
-    tiger.animationTime = 0.0f;
-    tiger.elapseTime = 0.0f;  // Original의 ChangeState에서 mElapseTime = 0.0f와 동일
-    tiger.isFired = false;
-}
-
-// Original의 Run 함수와 동일한 함수
-void GameServer::TigerRun(TigerInfo& tiger) {
-    // Original의 Run() 함수와 동일한 조건들
-    if (tiger.currentAnimation == "0208_tiger_attack.fbx") return;
-    if (tiger.currentAnimation == "0208_tiger_hit.fbx") return;
-    if (tiger.currentAnimation == "0208_tiger_dying.fbx") return;
-    if (tiger.attackTime < 2.0f) return;
-    
-    // 모든 조건을 만족하면 달리기 애니메이션 시작 (Original의 ChangeState와 동일)
-    tiger.currentAnimation = "0722_tiger_run.fbx";
-    tiger.animationTime = 0.0f;
-}
-
-// Original의 TimeOut 함수와 동일한 함수
-void GameServer::TigerTimeOut(TigerInfo& tiger) {
-    if (tiger.currentAnimation == "0208_tiger_attack.fbx") {
-        tiger.isFired = false;
-        tiger.attackTime = 0.0f;
-        tiger.currentAnimation = "0722_tiger_idle2.fbx";
-        tiger.animationTime = 0.0f;
-        tiger.elapseTime = 0.0f;  // Original의 ChangeState에서 mElapseTime = 0.0f와 동일
-    }
-}
-
 void GameServer::UpdateTigerBehavior(TigerInfo& tiger, float deltaTime) {
     const float CHASE_RADIUS = 200.0f;
-    const float ATTACK_RADIUS = 17.0f; // Original과 동일한 공격 범위
+    const float ATTACK_RADIUS = 17.0f;
     const float MOVE_SPEED = 30.0f;
     
-    // Original의 OnUpdate와 동일: 먼저 타이머 업데이트
-    UpdateTigerTimers(tiger, deltaTime);
+    tiger.moveTimer -= deltaTime;
+    tiger.animationTime += deltaTime;
+    tiger.attackTime += deltaTime;
+    tiger.searchTime += deltaTime;
+    tiger.elapseTime += deltaTime;
     
     // 가장 가까운 플레이어 찾기
     float nearestDist = FLT_MAX;
@@ -907,14 +852,37 @@ void GameServer::UpdateTigerBehavior(TigerInfo& tiger, float deltaTime) {
         tiger.isChasing = true;
         
         if (dist < ATTACK_RADIUS) {
-            // Original의 TigerBehavior와 동일: Attack() 호출 (항상 호출)
-            TigerAttack(tiger);
-        } else {
-            // Original의 TigerBehavior와 동일: Run() 호출 (항상 호출)
-            TigerRun(tiger);
+            // 공격 상태
+            if (tiger.currentAnimation != "0208_tiger_attack.fbx" && tiger.attackTime >= 2.0f) {
+                tiger.currentAnimation = "0208_tiger_attack.fbx";
+                tiger.animationTime = 0.0f;
+                tiger.elapseTime = 0.0f;
+                tiger.isFired = false;
+                tiger.attackTime = 0.0f;
+            }
             
-            // 달리기 애니메이션 중일 때만 이동 (Original과 동일)
-            if (tiger.currentAnimation == "0722_tiger_run.fbx") {
+            // 공격 애니메이션 중일 때 공격 발사
+            if (tiger.currentAnimation == "0208_tiger_attack.fbx") {
+                if (tiger.elapseTime >= 0.4f && !tiger.isFired) {
+                    tiger.isFired = true;
+                }
+                
+                // 공격 애니메이션이 끝나면 대기 상태로 전환
+                if (tiger.elapseTime >= 0.8f) {
+                    tiger.currentAnimation = "0722_tiger_idle2.fbx";
+                    tiger.animationTime = 0.0f;
+                    tiger.elapseTime = 0.0f;
+                }
+            }
+        } else {
+            // 달리기 상태
+            if (tiger.currentAnimation != "0208_tiger_attack.fbx" && tiger.attackTime >= 2.0f) {
+                if (tiger.currentAnimation != "0722_tiger_run.fbx") {
+                    tiger.currentAnimation = "0722_tiger_run.fbx";
+                    tiger.animationTime = 0.0f;
+                }
+                
+                // 플레이어 방향으로 이동
                 float dx = targetX - tiger.x;
                 float dz = targetZ - tiger.z;
                 float moveDist = sqrt(dx * dx + dz * dz);
@@ -926,10 +894,10 @@ void GameServer::UpdateTigerBehavior(TigerInfo& tiger, float deltaTime) {
             }
         }
     } else {
-        // 탐색 상태 (Original의 Search와 동일)
+        // 탐색 상태
         tiger.isChasing = false;
         
-        if (tiger.searchTime > 2.0f) { // Original과 동일한 2초
+        if (tiger.searchTime > 4.0f) {
             tiger.searchTime = 0.0f;
             float angle = GetRandomFloat(0.0f, 360.0f) * (3.141592f / 180.0f);
             tiger.targetX = tiger.x + cos(angle) * GetRandomFloat(40.0f, 120.0f);
@@ -959,11 +927,11 @@ void GameServer::UpdateTigerBehavior(TigerInfo& tiger, float deltaTime) {
 
 void GameServer::UpdateTigers(float deltaTime) {
     m_tigerUpdateTimer += deltaTime;
-    if (m_tigerUpdateTimer < 0.05f) return; // 50ms마다 업데이트 (더 빠른 업데이트)
+    if (m_tigerUpdateTimer < 0.2f) return; // 200ms마다 업데이트
 
     for (auto& tigerPair : m_tigers) {
         auto& tiger = tigerPair.second;
-        UpdateTigerBehavior(tiger, 0.05f); // 고정된 시간 간격 사용 (50ms)
+        UpdateTigerBehavior(tiger, 0.2f); // 고정된 시간 간격 사용
     }
 
     BroadcastTigerUpdates();

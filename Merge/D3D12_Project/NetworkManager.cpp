@@ -715,7 +715,7 @@ void NetworkManager::ProcessPacket(char* buffer) {
                                 // 애니메이션 파일이 변경되면 시간을 0으로 리셋
                                 anim->ResetAnim(tigerUpdatePkt->animationFile, 0.0f);
                             }
-                            // 애니메이션 시간은 클라이언트에서 자체 관리 (서버 시간 사용하지 않음)
+                            // 애니메이션 시간은 클라이언트에서 자체 관리
                             break;
                         }
                     }

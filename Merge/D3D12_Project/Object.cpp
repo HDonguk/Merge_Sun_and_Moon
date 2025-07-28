@@ -169,7 +169,7 @@ void Object::ProcessAnimation(GameTimer& gTimer)
         vector<XMFLOAT4X4> finalTransforms{ 90 };
         SkinnedData& animData = m_scene->GetResourceManager().GetAnimationData(animation->mCurrentFileName);
         
-        // 네트워크 플레이어만 애니메이션 시간을 업데이트하지 않음 (호랑이는 업데이트)
+        // 네트워크 플레이어만 애니메이션 시간을 업데이트하지 않음
         PlayerObject* playerObj = dynamic_cast<PlayerObject*>(this);
         if (!playerObj || !playerObj->IsNetworkPlayer()) {
             animation->mAnimationTime += gTimer.DeltaTime();
@@ -786,6 +786,35 @@ void TigerObject::CalcTime(float deltaTime)
 {
     Animation* anim = GetComponent<Animation>();
 
+    // 네트워크 호랑이는 서버에서 관리되므로 타이머만 업데이트
+    if (m_isNetworkTiger) {
+        if (anim->mCurrentFileName == "0113_tiger_walk.fbx")
+        {
+            mSearchTime += deltaTime;
+        }
+
+        if (anim->mCurrentFileName == "0208_tiger_attack.fbx") 
+        {
+            mElapseTime += deltaTime;
+        }
+        else
+        {
+            mAttackTime += deltaTime;
+        }
+
+        if (anim->mCurrentFileName == "0208_tiger_hit.fbx")
+        {
+            mElapseTime += deltaTime;
+        }
+
+        if (anim->mCurrentFileName == "0208_tiger_dying.fbx")
+        {
+            mElapseTime += deltaTime;
+        }
+        return;
+    }
+
+    // 로컬 호랑이만 Fire()와 TimeOut() 호출
     if (anim->mCurrentFileName == "0113_tiger_walk.fbx")
     {
         mSearchTime += deltaTime;

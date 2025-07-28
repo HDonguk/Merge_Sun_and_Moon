@@ -707,75 +707,42 @@ void GameServer::BroadcastNewPlayer(int newClientID) {
 void GameServer::InitializeTigers() {
     std::cout << "\n[InitializeTigers] Starting tiger initialization..." << std::endl;
     
-    // 호랑이 수를 15마리로 늘림
+    // Original과 동일한 호랑이 생성 위치
     float basePosX = 500.0f;
     float basePosZ = 500.0f;
-    float offset = 200.0f;  // 간격을 더 넓게
+    float offset = 100.0f;
+    int repeat = 4;
     
-    // 15마리 호랑이를 넓게 배치
-    std::vector<std::pair<float, float>> positions = {
-        // 중앙 근처 5마리
-        {basePosX - offset, basePosZ - offset},      // 좌상단
-        {basePosX + offset, basePosZ - offset},      // 우상단
-        {basePosX, basePosZ},                        // 중앙
-        {basePosX - offset, basePosZ + offset},      // 좌하단
-        {basePosX + offset, basePosZ + offset},      // 우하단
-        
-        // 외곽 10마리 추가
-        {basePosX - offset * 2, basePosZ - offset * 2},  // 좌상단 외곽
-        {basePosX + offset * 2, basePosZ - offset * 2},  // 우상단 외곽
-        {basePosX - offset * 2, basePosZ + offset * 2},  // 좌하단 외곽
-        {basePosX + offset * 2, basePosZ + offset * 2},  // 우하단 외곽
-        {basePosX - offset * 1.5f, basePosZ},            // 좌측 중앙
-        {basePosX + offset * 1.5f, basePosZ},            // 우측 중앙
-        {basePosX, basePosZ - offset * 1.5f},            // 상단 중앙
-        {basePosX, basePosZ + offset * 1.5f},            // 하단 중앙
-        {basePosX - offset * 1.5f, basePosZ - offset * 1.5f},  // 좌상 대각선
-        {basePosX + offset * 1.5f, basePosZ + offset * 1.5f}   // 우하 대각선
-    };
-    
-    // 15개의 고정된 값들을 사용하여 모든 클라이언트가 동일한 호랑이를 보도록 함
-    std::vector<float> fixedRotations = {
-        0.0f, 90.0f, 180.0f, 270.0f, 45.0f,           // 첫 5마리
-        30.0f, 120.0f, 210.0f, 300.0f, 60.0f,         // 다음 5마리
-        150.0f, 240.0f, 330.0f, 15.0f, 75.0f          // 마지막 5마리
-    };
-    
-    std::vector<float> fixedMoveTimers = {
-        1.0f, 1.5f, 2.0f, 0.5f, 1.2f,                 // 첫 5마리
-        0.8f, 1.8f, 1.3f, 0.7f, 1.6f,                 // 다음 5마리
-        1.1f, 0.9f, 1.4f, 1.7f, 0.6f                  // 마지막 5마리
-    };
-    
-    for (size_t i = 0; i < positions.size(); ++i) {
-        TigerInfo tiger;
-        tiger.tigerID = m_nextTigerID++;
-        
-        // 위치에 배치
-        tiger.x = positions[i].first;
-        tiger.y = 0.0f;
-        tiger.z = positions[i].second;
-        tiger.rotY = fixedRotations[i];  // 고정된 회전값 사용
-        tiger.moveTimer = fixedMoveTimers[i];  // 고정된 이동 타이머 사용
-        tiger.isChasing = false;
-        tiger.currentAnimation = "0722_tiger_idle2.fbx";  // 초기 애니메이션
-        tiger.animationTime = 0.0f;  // 초기 애니메이션 시간
-        tiger.attackTime = 0.0f;     // 초기 공격 타이머
-        tiger.searchTime = 0.0f;     // 초기 탐색 타이머
-        tiger.elapseTime = 0.0f;     // 초기 애니메이션 경과 시간
-        tiger.isFired = false;       // 초기 공격 발사 상태
-        
-        // 고정된 초기 목표 위치 설정 (24도씩 회전으로 15마리 분산)
-        float moveAngle = (i * 24.0f) * (3.141592f / 180.0f);  // 24도씩 회전 (360/15)
-        float moveDistance = 80.0f;  // 고정된 거리
-        tiger.targetX = tiger.x + cos(moveAngle) * moveDistance;
-        tiger.targetZ = tiger.z + sin(moveAngle) * moveDistance;
-        
-        m_tigers[tiger.tigerID] = tiger;
+    // 4x4 그리드로 16마리 호랑이 생성 (Original과 동일)
+    for (int i = 0; i < repeat; ++i) {
+        for (int j = 0; j < repeat; ++j) {
+            TigerInfo tiger;
+            tiger.tigerID = m_nextTigerID++;
+            
+            // Original과 동일한 위치에 배치
+            tiger.x = basePosX + offset * j;
+            tiger.y = 0.0f;
+            tiger.z = basePosZ + offset * i;
+            tiger.rotY = 0.0f;  // 초기 회전값
+            tiger.moveTimer = 0.0f;
+            tiger.isChasing = false;
+            tiger.currentAnimation = "0113_tiger_walk.fbx";  // Original과 동일한 초기 애니메이션
+            tiger.animationTime = 0.0f;
+            tiger.attackTime = 0.0f;
+            tiger.searchTime = 0.0f;
+            tiger.elapseTime = 0.0f;
+            tiger.isFired = false;
+            
+            // 초기 목표 위치 설정
+            tiger.targetX = tiger.x;
+            tiger.targetZ = tiger.z;
+            
+            m_tigers[tiger.tigerID] = tiger;
 
-        std::cout << "[Tiger] Created tiger ID: " << tiger.tigerID 
-                  << " at position (" << tiger.x << ", " << tiger.y << ", " << tiger.z << ")"
-                  << " with rotation " << tiger.rotY << " degrees" << std::endl;
+            std::cout << "[Tiger] Created tiger ID: " << tiger.tigerID 
+                      << " at position (" << tiger.x << ", " << tiger.y << ", " << tiger.z << ")"
+                      << " with rotation " << tiger.rotY << " degrees" << std::endl;
+        }
     }
     
     std::cout << "[InitializeTigers] Completed. Total tigers created: " << m_tigers.size() << std::endl;

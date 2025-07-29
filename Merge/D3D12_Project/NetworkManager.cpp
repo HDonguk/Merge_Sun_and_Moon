@@ -183,6 +183,29 @@ void NetworkManager::SendTigerRespawnRequest() {
     }
 }
 
+void NetworkManager::SendTigerHit(int tigerID, int life) {
+    if (!m_isRunning || !m_isLoggedIn) return;
+
+    try {
+        PacketTigerHit pkt;
+        pkt.header.size = sizeof(PacketTigerHit);
+        pkt.header.type = PACKET_TIGER_HIT;
+        pkt.tigerID = tigerID;
+        pkt.life = life;
+
+        int sendResult = send(sock, (char*)&pkt, sizeof(pkt), 0);
+        if (sendResult == SOCKET_ERROR) {
+            int error = WSAGetLastError();
+            LogToFile("[Error] Failed to send tiger hit: " + std::to_string(error));
+        } else {
+            LogToFile("[Tiger] Sent tiger hit to server, tigerID: " + std::to_string(tigerID) + ", life: " + std::to_string(life));
+        }
+    }
+    catch (const std::exception& e) {
+        LogToFile("[Error] Exception in SendTigerHit: " + std::string(e.what()));
+    }
+}
+
 void NetworkManager::SetLoginSuccessCallback(std::function<void(int, const std::string&)> callback) {
     m_loginSuccessCallback = callback;
 }
@@ -705,17 +728,9 @@ void NetworkManager::ProcessPacket(char* buffer) {
                     for (Object* obj : m_scene->GetObjects()) {
                         TigerObject* tigerObj = dynamic_cast<TigerObject*>(obj);
                         if (tigerObj && tigerObj->IsNetworkTiger() && tigerObj->GetNetworkTigerID() == tigerUpdatePkt->tigerID) {
-                            // 목표 위치 설정 (보간을 위해)
-                            tigerObj->SetTargetPosition(tigerUpdatePkt->x, tigerUpdatePkt->y, tigerUpdatePkt->z);
-                            tigerObj->SetTargetRotationY(tigerUpdatePkt->rotY);
-                            
-                            // 애니메이션 정보 설정
-                            Animation* anim = tigerObj->GetComponent<Animation>();
-                            if (anim && strcmp(anim->mCurrentFileName.c_str(), tigerUpdatePkt->animationFile) != 0) {
-                                // 애니메이션 파일이 변경되면 시간을 0으로 리셋
-                                anim->ResetAnim(tigerUpdatePkt->animationFile, 0.0f);
-                            }
-                            // 애니메이션 시간은 클라이언트에서 자체 관리
+                            // 새로운 메서드 사용으로 개선
+                            tigerObj->SetNetworkTransform(tigerUpdatePkt->x, tigerUpdatePkt->y, tigerUpdatePkt->z, tigerUpdatePkt->rotY);
+                            tigerObj->SetNetworkAnimation(tigerUpdatePkt->animationFile, tigerUpdatePkt->animationTime);
                             break;
                         }
                     }
@@ -723,31 +738,58 @@ void NetworkManager::ProcessPacket(char* buffer) {
                 break;
             }
 
-            case PACKET_TREE_SPAWN: {
-                PacketTreeSpawn* treeSpawnPkt = (PacketTreeSpawn*)buffer;
-                LogToFile("[Tree] Received tree positions packet with " + std::to_string(treeSpawnPkt->treeCount) + " trees");
+
+            
+            case PACKET_TIGER_ATTACK: {
+                PacketTigerAttack* tigerAttackPkt = (PacketTigerAttack*)buffer;
                 
-                // 로그인 상태 확인 - 로그인 전에 받은 나무 스폰 패킷은 무시
+                // 로그인 상태 확인
                 if (!m_isLoggedIn) {
-                    LogToFile("[Tree] Ignoring tree spawn packet - not logged in yet");
                     break;
                 }
                 
-                // 나무 생성 요청을 큐에 추가 (스레드 안전)
-                {
-                    std::lock_guard<std::mutex> lock(m_treeSpawnMutex);
-                    for (int i = 0; i < treeSpawnPkt->treeCount; i++) {
-                        const TreePosition& treePos = treeSpawnPkt->trees[i];
-                        TreeSpawnRequest request;
-                        request.treeID = i + 1;
-                        request.x = treePos.x;
-                        request.y = treePos.y;
-                        request.z = treePos.z;
-                        request.rotY = treePos.rotY;
-                        request.treeType = treePos.treeType;
-                        m_treeSpawnQueue.push(request);
+                // Scene에서 해당 호랑이를 찾아서 공격 효과 처리
+                if (m_scene) {
+                    for (Object* obj : m_scene->GetObjects()) {
+                        TigerObject* tigerObj = dynamic_cast<TigerObject*>(obj);
+                        if (tigerObj && tigerObj->IsNetworkTiger() && tigerObj->GetNetworkTigerID() == tigerAttackPkt->tigerID) {
+                            // 네트워크 호랑이의 Fire() 메서드 호출
+                            tigerObj->Fire();
+                            
+                            LogToFile("[Tiger] Tiger " + std::to_string(tigerAttackPkt->tigerID) + " attacked at position (" + 
+                                     std::to_string(tigerAttackPkt->x) + ", " + std::to_string(tigerAttackPkt->y) + ", " + std::to_string(tigerAttackPkt->z) + ")");
+                            break;
+                        }
                     }
-                    LogToFile("[Tree] Added " + std::to_string(treeSpawnPkt->treeCount) + " tree spawn requests to queue");
+                }
+                break;
+            }
+            
+            case PACKET_TIGER_HIT: {
+                PacketTigerHit* tigerHitPkt = (PacketTigerHit*)buffer;
+                
+                // 로그인 상태 확인
+                if (!m_isLoggedIn) {
+                    break;
+                }
+                
+                // Scene에서 해당 호랑이를 찾아서 Hit 상태 동기화
+                if (m_scene) {
+                    for (Object* obj : m_scene->GetObjects()) {
+                        TigerObject* tigerObj = dynamic_cast<TigerObject*>(obj);
+                        if (tigerObj && tigerObj->IsNetworkTiger() && tigerObj->GetNetworkTigerID() == tigerHitPkt->tigerID) {
+                            // 호랑이 Hit 상태 동기화
+                            tigerObj->SetLife(tigerHitPkt->life);
+                            if (tigerHitPkt->life <= 0) {
+                                tigerObj->Dead();
+                            } else {
+                                tigerObj->Hit();
+                            }
+                            
+                            LogToFile("[Tiger] Tiger " + std::to_string(tigerHitPkt->tigerID) + " hit, remaining life: " + std::to_string(tigerHitPkt->life));
+                            break;
+                        }
+                    }
                 }
                 break;
             }
@@ -795,44 +837,7 @@ void NetworkManager::LogToFile(const std::string& message) {
     }
 }
 
-void NetworkManager::ProcessTreeSpawnQueue() {
-    // 큐에서 나무 생성 요청을 가져와서 처리
-    std::lock_guard<std::mutex> lock(m_treeSpawnMutex);
-    
-    if (m_treeSpawnQueue.empty()) {
-        return;
-    }
-    
-    LogToFile("[Tree] Processing tree spawn queue, size: " + std::to_string(m_treeSpawnQueue.size()));
-    
-    // 한 번에 최대 1개씩만 처리 (더욱 안전하게)
-    int processedCount = 0;
-    const int MAX_PROCESS_PER_FRAME = 1;
-    
-    while (!m_treeSpawnQueue.empty() && processedCount < MAX_PROCESS_PER_FRAME) {
-        TreeSpawnRequest request = m_treeSpawnQueue.front();
-        m_treeSpawnQueue.pop();
-        
-        LogToFile("[Tree] Processing tree spawn request for ID: " + std::to_string(request.treeID));
-        
-        try {
-            LogToFile("[Tree] Tree spawn request received for ID: " + std::to_string(request.treeID));
-            // 나무 생성 로직은 나중에 구현 (현재는 로그만 출력)
-        }
-        catch (const std::exception& e) {
-            LogToFile("[Tree] Failed to create tree " + std::to_string(request.treeID) + ": " + std::string(e.what()));
-        }
-        catch (...) {
-            LogToFile("[Tree] Unknown exception creating tree " + std::to_string(request.treeID));
-        }
-        
-        processedCount++;
-    }
-    
-    if (!m_treeSpawnQueue.empty()) {
-        LogToFile("[Tree] Queue still has " + std::to_string(m_treeSpawnQueue.size()) + " pending requests");
-    }
-}
+
 
 void NetworkManager::Update(GameTimer& gTimer, Scene* scene) {
     if (!m_scene) return;
@@ -856,8 +861,7 @@ void NetworkManager::Update(GameTimer& gTimer, Scene* scene) {
     //     LogToFile("[Update] NetworkManager::Update called - count: " + std::to_string(updateCount));
     // }
 
-    // 나무 생성 큐 처리 (메인 스레드에서 안전하게 처리)
-    ProcessTreeSpawnQueue();
+
 
     auto* player = scene->GetObj<PlayerObject>();
     if (!player) {

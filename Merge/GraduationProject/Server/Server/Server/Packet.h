@@ -12,13 +12,13 @@ enum PacketType {
     PACKET_PLAYER_SPAWN = 2,
     PACKET_TIGER_SPAWN = 3,    // 호랑이 스폰 패킷
     PACKET_TIGER_UPDATE = 4,   // 호랑이 업데이트 패킷
-    PACKET_TREE_SPAWN = 5,     // 나무 스폰 패킷
     PACKET_LOGIN_REQUEST = 6,  // 로그인 요청
     PACKET_LOGIN_RESPONSE = 7, // 로그인 응답
     PACKET_PLAYER_DISCONNECT = 8, // 플레이어 연결 해제
     PACKET_CLIENT_READY = 9,   // 클라이언트 준비 완료 신호
     PACKET_TIGER_ATTACK = 10,  // 호랑이 공격 패킷
-    PACKET_TIGER_RESPAWN_REQUEST = 11  // 호랑이 재생성 요청
+    PACKET_TIGER_RESPAWN_REQUEST = 11,  // 호랑이 재생성 요청
+    PACKET_TIGER_HIT = 12      // 호랑이 Hit 패킷
 };
 
 struct PacketPlayerUpdate {
@@ -51,17 +51,7 @@ struct PacketTigerUpdate {
     float animationTime;     // 애니메이션 시간
 };
 
-struct TreePosition {
-    float x, y, z;
-    float rotY;
-    int treeType;  // 0: long_tree, 1: normal_tree
-};
 
-struct PacketTreeSpawn {
-    PacketHeader header;
-    int treeCount;
-    TreePosition trees[20];  // 최대 20개 나무 위치 정보
-};
 
 struct PacketLoginRequest {
     PacketHeader header;
@@ -97,5 +87,11 @@ struct PacketTigerRespawnRequest {
     PacketHeader header;
     int clientID;
     // 추가 데이터가 필요하면 여기에 추가
+};
+
+struct PacketTigerHit {
+    PacketHeader header;
+    int tigerID;
+    int life;  // 남은 체력
 };
 #pragma pack(pop)

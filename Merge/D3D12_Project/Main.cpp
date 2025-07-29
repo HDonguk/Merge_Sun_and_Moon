@@ -30,10 +30,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
             framework.LateUpdate();
             framework.OnRender();
             
-            // 로그인 화면에서는 FPS 제한 (깜빡임 방지)
-            if (framework.IsInLoginScreen()) {
-                Sleep(16); // 약 60FPS
-            }
+            // 로그인 화면에서도 원본과 동일한 프레임레이트 사용 (애니메이션 속도 일치)
+            // if (framework.IsInLoginScreen()) {
+            //     Sleep(16); // 약 60FPS
+            // }
         }
     }
     return static_cast<int>(msg.wParam);

@@ -140,8 +140,39 @@ public:
 	void SetTargetPosition(float x, float y, float z) { m_targetPosition = {x, y, z, 1.0f}; }
 	void SetTargetRotationY(float rotY) { m_targetRotationY = rotY; }
 	
+	// 네트워크 호랑이 애니메이션 상태 설정
+	void SetNetworkAnimation(const std::string& animationFile, float animationTime) {
+		if (m_isNetworkTiger) {
+			Animation* anim = GetComponent<Animation>();
+			if (anim) {
+				// 애니메이션 파일이 다르거나 강제 업데이트가 필요한 경우
+				if (anim->mCurrentFileName != animationFile) {
+					anim->ResetAnim(animationFile, animationTime);
+				}
+				// 애니메이션 시간은 클라이언트에서 자연스럽게 업데이트되도록 함
+				// 서버에서 받은 시간은 초기값으로만 사용
+			}
+		}
+	}
+	
+	// 네트워크 호랑이 위치 및 회전 설정
+	void SetNetworkTransform(float x, float y, float z, float rotY) {
+		if (m_isNetworkTiger) {
+			Transform* transform = GetComponent<Transform>();
+			if (transform) {
+				m_targetPosition = {x, y, z, 1.0f};
+				m_targetRotationY = rotY;
+			}
+		}
+	}
+	
 	// 공격 받기 메서드 (public으로 변경)
 	void Hit();
+	void Dead();
+	void SetLife(int life) { mLife = life; }
+	
+	// 네트워크 호랑이를 위해 Fire() 메서드를 public으로 변경
+	void Fire();
 	
 private:
 	void TigerBehavior(GameTimer& gTimer);
@@ -150,8 +181,6 @@ private:
 	void Run();
 	void Attack();
 	void TimeOut();
-	void Fire();
-	void Dead();
 	void CalcTime(float deltaTime);
 	void CreateLeather();
 	float mWalkSpeed = 25.0f;
@@ -170,7 +199,7 @@ private:
 	// 보간을 위한 목표 위치
 	XMVECTOR m_targetPosition = {0.0f, 0.0f, 0.0f, 1.0f};
 	float m_targetRotationY = 0.0f;
-	float m_interpolationSpeed = 10.0f; // 보간 속도
+	float m_interpolationSpeed = 10.0f; // 보간 속도 (더 빠르게)
 };
 
 

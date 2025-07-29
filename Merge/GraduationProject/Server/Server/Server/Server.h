@@ -24,7 +24,6 @@ private:
     static constexpr int MAX_CLIENTS = 2;
     static constexpr int MAX_PACKET_SIZE = 1024;
     static constexpr int MAX_TIGERS = 5;   // 성능 개선을 위해 5마리로 줄임
-    static constexpr int MAX_TREES = 289;  // 17x17 나무
 
     struct ClientInfo {
         SOCKET socket;
@@ -34,6 +33,7 @@ private:
         PacketPlayerUpdate lastUpdate;
         int sendFailCount = 0; // 송신 실패 횟수
         int connectionErrorCount = 0; // 연결 에러 횟수
+        bool connectionErrorLogged = false; // 연결 에러 로그 출력 여부
         
         // 패킷 버퍼링을 위한 추가 필드
         char packetBuffer[MAX_PACKET_SIZE * 4];  // 여러 패킷을 저장할 수 있는 버퍼
@@ -53,14 +53,11 @@ private:
         float searchTime;        // 탐색 타이머
         float elapseTime;        // 애니메이션 경과 시간
         bool isFired;           // 공격 발사 여부
+        bool isHitted;          // 피격 상태 (Original과 동일)
+        int life;               // 생명력 (Original과 동일)
     };
 
-    struct TreeInfo {
-        int treeID;
-        float x, y, z;
-        float rotY;
-        int treeType;  // 0: long_tree, 1: normal_tree
-    };
+
 
     struct IOContext {
         OVERLAPPED overlapped;
@@ -74,10 +71,8 @@ private:
     HANDLE m_hIOCP;
     int m_nextClientID;
     int m_nextTigerID;
-    int m_nextTreeID;
     std::unordered_map<int, ClientInfo> m_clients;
     std::unordered_map<int, TigerInfo> m_tigers;
-    std::unordered_map<int, TreeInfo> m_trees;
     SOCKET m_listenSocket;
     std::vector<HANDLE> m_workerThreads;
     bool m_isRunning;
@@ -106,7 +101,5 @@ private:
     bool IsPlayerNearby(const TigerInfo& tiger, float radius);
     void GetNearestPlayerPosition(const TigerInfo& tiger, float& targetX, float& targetZ);
     
-    // 나무 관련 메서드
-    void InitializeTrees();
-    void SendTreePositions(int clientID);
+
 }; 

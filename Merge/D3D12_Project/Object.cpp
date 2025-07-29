@@ -175,6 +175,12 @@ void Object::ProcessAnimation(GameTimer& gTimer)
             animation->mAnimationTime += gTimer.DeltaTime();
         }
         
+        // 호랑이 애니메이션 속도 조절 (로컬, 네트워크 모두)
+        TigerObject* tigerObj = dynamic_cast<TigerObject*>(this);
+        if (tigerObj) {
+            animation->mAnimationTime += gTimer.DeltaTime(); // 애니메이션 속도 관리 
+        }
+        
         string clipName = "Take 001";
         if (animation->mAnimationTime >= animData.GetClipEndTime(clipName)) animation->mAnimationTime = 0.0f;
         animData.GetFinalTransforms(clipName, animation->mAnimationTime, finalTransforms);
@@ -588,6 +594,7 @@ TigerObject::TigerObject(Scene* scene, uint32_t id, uint32_t parentId) : Object(
 
 void TigerObject::OnUpdate(GameTimer& gTimer)
 {
+    // 모든 호랑이(로컬, 네트워크)에 대해 CalcTime 호출
     CalcTime(gTimer.DeltaTime());
     
     // 네트워크 호랑이는 서버에서 관리되므로 클라이언트 AI 로직을 사용하지 않음
@@ -600,11 +607,11 @@ void TigerObject::OnUpdate(GameTimer& gTimer)
             XMVECTOR currentPos = transform->GetPosition();
             XMVECTOR targetPos = m_targetPosition;
             
-            // 위치 보간
+            // 위치 보간 (더 부드러운 보간)
             XMVECTOR newPos = XMVectorLerp(currentPos, targetPos, m_interpolationSpeed * gTimer.DeltaTime());
             transform->SetPosition(newPos);
             
-            // 회전 보간
+            // 회전 보간 (가장 짧은 경로로)
             XMVECTOR currentRot = transform->GetRotation();
             float currentY = XMVectorGetY(currentRot);
             float targetY = m_targetRotationY;
@@ -703,7 +710,6 @@ void TigerObject::Search(float deltaTime)
         transform->SetRotation({ 0.0f, randYaw, 0.0f });
     }
 
-
     XMVECTOR dir = XMVector3TransformNormal({ 0.0f, 0.0f, 1.0f }, transform->GetRotationM());
     dir = XMVector3Normalize(dir);
     XMVECTOR pos = transform->GetPosition();
@@ -727,7 +733,7 @@ void TigerObject::Attack()
     Animation* anim = GetComponent<Animation>();
     if (anim->mCurrentFileName == "0208_tiger_hit.fbx") return;
     if (anim->mCurrentFileName == "0208_tiger_dying.fbx") return;
-    if (mAttackTime < 3.0f) return;  // 2초에서 3초로 증가
+    if (mAttackTime < 2.0f) return;  // Original과 동일한 2초
     ChangeState("0208_tiger_attack.fbx");
 }
 void TigerObject::TimeOut()
@@ -758,6 +764,7 @@ void TigerObject::Fire()
     if (mIsFired) return;
     mIsFired = true;
 
+    // Original과 동일하게 로컬 좌표계로 공격 오브젝트 생성
     Object* obj = new TigerAttackObject(m_scene, m_scene->AllocateId(), m_id);
     obj->AddComponent(new Transform{ {0.0f, 6.0f, 18.0f} });
     obj->AddComponent(new Collider{ {0.0f, 0.0f, 0.0f}, {4.0f, 6.0f, 8.0f} });
@@ -769,6 +776,7 @@ void TigerObject::Hit()
     if (mIsHitted) return;
     mIsHitted = true;
     --mLife;
+    
     if (mLife == 0)
     {
         Dead();
@@ -786,35 +794,37 @@ void TigerObject::CalcTime(float deltaTime)
 {
     Animation* anim = GetComponent<Animation>();
 
-    // 네트워크 호랑이는 서버에서 관리되므로 타이머만 업데이트
-    if (m_isNetworkTiger) {
-        if (anim->mCurrentFileName == "0113_tiger_walk.fbx")
-        {
-            mSearchTime += deltaTime;
-        }
-
-        if (anim->mCurrentFileName == "0208_tiger_attack.fbx") 
-        {
-            mElapseTime += deltaTime;
-        }
-        else
-        {
-            mAttackTime += deltaTime;
-        }
-
-        if (anim->mCurrentFileName == "0208_tiger_hit.fbx")
-        {
-            mElapseTime += deltaTime;
-        }
-
-        if (anim->mCurrentFileName == "0208_tiger_dying.fbx")
-        {
-            mElapseTime += deltaTime;
-        }
-        return;
+    // 네트워크 호랑이도 Original과 동일한 로직 적용
+    if (anim->mCurrentFileName == "0113_tiger_walk.fbx")
+    {
+        mSearchTime += deltaTime;
     }
 
-    // 로컬 호랑이만 Fire()와 TimeOut() 호출
+    if (anim->mCurrentFileName == "0208_tiger_attack.fbx") 
+    {
+        mElapseTime += deltaTime;
+        // 네트워크 호랑이도 Original과 동일한 로직 적용
+        if (mElapseTime >= 0.4f) Fire();
+        if (mElapseTime >= 0.8f) TimeOut();
+    }
+    else
+    {
+        mAttackTime += deltaTime;
+    }
+
+    if (anim->mCurrentFileName == "0208_tiger_hit.fbx")
+    {
+        mElapseTime += deltaTime;
+        if (mElapseTime > 0.8f) TimeOut();
+    }
+
+    if (anim->mCurrentFileName == "0208_tiger_dying.fbx")
+    {
+        mElapseTime += deltaTime;
+        if (mElapseTime > 1.9f) TimeOut();
+    }
+
+    // 로컬 호랑이만 Fire()와 TimeOut() 호출 (Original과 동일)
     if (anim->mCurrentFileName == "0113_tiger_walk.fbx")
     {
         mSearchTime += deltaTime;

@@ -9,7 +9,6 @@
 GameServer::GameServer()
     : m_nextClientID(1)
     , m_nextTigerID(1)
-    , m_nextTreeID(1)
     , m_isRunning(false)
     , m_hIOCP(NULL)
     , m_listenSocket(INVALID_SOCKET)
@@ -60,9 +59,8 @@ bool GameServer::Initialize(int port) {
         return false;
     }
 
-    // 호랑이와 나무 초기화
+    // 호랑이 초기화
     InitializeTigers();
-    InitializeTrees();
     return true;
 }
 
@@ -142,6 +140,12 @@ DWORD GameServer::WorkerThread() {
                     // 연결 에러 카운트만 증가하고 연결은 유지
                     clientIt->second.connectionErrorCount++;
                     
+                    // 연결 에러 로그를 한 번만 출력
+                    if (!clientIt->second.connectionErrorLogged) {
+                        std::cout << "[Connection] Client " << clientID << " connection error (Error: " << error << ")" << std::endl;
+                        clientIt->second.connectionErrorLogged = true;
+                    }
+                    
                     // 에러 카운트가 너무 많으면 연결 제거
                     if (clientIt->second.connectionErrorCount > 10) {
                         std::cout << "[Warning] Client " << clientID << " has too many connection errors, removing" << std::endl;
@@ -216,7 +220,7 @@ void GameServer::HandlePacket(IOContext* ioContext, int clientID, DWORD bytesTra
         
         // 패킷 헤더 유효성 검사
         if (header->size < sizeof(PacketHeader) || header->size > MAX_PACKET_SIZE || 
-            header->type <= 0 || header->type > 11) {
+            header->type <= 0 || header->type > 12) {
             std::cout << "[Error] Invalid packet header - Size: " << header->size 
                       << ", Type: " << header->type << ", Client: " << clientID << std::endl;
             
@@ -241,8 +245,9 @@ void GameServer::HandlePacket(IOContext* ioContext, int clientID, DWORD bytesTra
         ProcessSinglePacket(client.packetBuffer + processedBytes, clientID, header->size);
         processedBytes += header->size;
         
-        // 성공적인 패킷 수신 시 연결 에러 카운트 리셋
+        // 성공적인 패킷 수신 시 연결 에러 카운트와 로그 상태 리셋
         client.connectionErrorCount = 0;
+        client.connectionErrorLogged = false;
     }
     
     // 처리된 데이터를 버퍼에서 제거
@@ -408,6 +413,42 @@ void GameServer::ProcessSinglePacket(char* buffer, int clientID, int packetSize)
             break;
         }
         
+        case PACKET_TIGER_HIT: {
+            if (header->size != sizeof(PacketTigerHit)) {
+                std::cout << "[Error] Invalid TIGER_HIT packet size" << std::endl;
+                break;
+            }
+            PacketTigerHit* pkt = (PacketTigerHit*)buffer;
+            
+            // 해당 호랑이의 상태 업데이트
+            auto tigerIt = m_tigers.find(pkt->tigerID);
+            if (tigerIt != m_tigers.end()) {
+                TigerInfo& tiger = tigerIt->second;
+                tiger.life = pkt->life;
+                tiger.isHitted = true;
+                
+                if (tiger.life <= 0) {
+                    // 호랑이 사망
+                    tiger.currentAnimation = "0208_tiger_dying.fbx";
+                    tiger.animationTime = 0.0f;
+                    tiger.elapseTime = 0.0f;
+                    std::cout << "[TigerHit] Tiger " << pkt->tigerID << " died" << std::endl;
+                } else {
+                    // 호랑이 피격
+                    tiger.currentAnimation = "0208_tiger_hit.fbx";
+                    tiger.animationTime = 0.0f;
+                    tiger.elapseTime = 0.0f;
+                    std::cout << "[TigerHit] Tiger " << pkt->tigerID << " hit, remaining life: " << pkt->life << std::endl;
+                }
+                
+                // 다른 클라이언트들에게 호랑이 상태 업데이트 브로드캐스트
+                BroadcastPacket(pkt, sizeof(PacketTigerHit));
+            } else {
+                std::cout << "[Error] Tiger " << pkt->tigerID << " not found for hit update" << std::endl;
+            }
+            break;
+        }
+        
         case PACKET_TIGER_RESPAWN_REQUEST: {
             std::cout << "[TigerRespawn] Received PACKET_TIGER_RESPAWN_REQUEST from client " << clientID << std::endl;
             std::cout << "[TigerRespawn] Packet size: " << header->size << ", Expected: " << sizeof(PacketTigerRespawnRequest) << std::endl;
@@ -490,9 +531,6 @@ void GameServer::ProcessSinglePacket(char* buffer, int clientID, int packetSize)
             }
             
             std::cout << "[ClientReady] Completed sending all tiger spawn packets to client " << clientID << std::endl;
-            
-            // 나무 위치 정보 전송
-            SendTreePositions(clientID);
             
             // 모든 패킷 전송 완료 후 짧은 지연 (클라이언트 처리 시간 확보)
             Sleep(100);  // 100ms로 줄임
@@ -603,7 +641,16 @@ bool GameServer::SendPacket(SOCKET socket, const void* packet, int size) {
         
         // 연결 관련 에러는 즉시 false 반환
         if (err == WSAECONNRESET || err == WSAECONNABORTED || err == WSAENOTSOCK) {
-            std::cout << "[SendPacket] Connection error (socket: " << socket << ", Error: " << err << ")" << std::endl;
+            // 클라이언트 ID를 찾아서 연결 에러 로그 상태 확인
+            for (auto& [id, client] : m_clients) {
+                if (client.socket == socket) {
+                    if (!client.connectionErrorLogged) {
+                        std::cout << "[SendPacket] Connection error (Client: " << id << ", Error: " << err << ")" << std::endl;
+                        client.connectionErrorLogged = true;
+                    }
+                    break;
+                }
+            }
             return false;
         }
         
@@ -732,6 +779,8 @@ void GameServer::InitializeTigers() {
             tiger.searchTime = 0.0f;
             tiger.elapseTime = 0.0f;
             tiger.isFired = false;
+            tiger.isHitted = false;  // Original과 동일
+            tiger.life = 3;          // Original과 동일
             
             // 초기 목표 위치 설정
             tiger.targetX = tiger.x;
@@ -749,55 +798,70 @@ void GameServer::InitializeTigers() {
     std::cout << "[InitializeTigers] Note: Tiger spawn packets will be sent when clients log in" << std::endl;
 }
 
-void GameServer::InitializeTrees() {
-    std::cout << "\n[InitializeTrees] Starting tree position initialization..." << std::endl;
-    
-    // 플레이어 주변에 3개의 나무를 고정된 위치에 생성
-    const int TREE_COUNT = 3;
-    
-    // 고정된 나무 위치들
-    std::vector<std::tuple<float, float, float>> treePositions = {
-        {500.0f + 100.0f, 0.0f, 500.0f + 50.0f},   // 우측 앞
-        {500.0f - 80.0f, 0.0f, 500.0f + 120.0f},   // 좌측 뒤
-        {500.0f + 60.0f, 0.0f, 500.0f - 90.0f}     // 우측 뒤
-    };
-    
-    std::vector<float> fixedRotations = {45.0f, 180.0f, 270.0f};  // 고정된 회전값
-    
-    for (int i = 0; i < TREE_COUNT; ++i) {
-        TreeInfo tree;
-        tree.treeID = m_nextTreeID++;
-        
-        // 고정된 위치에 배치
-        tree.x = std::get<0>(treePositions[i]);
-        tree.y = std::get<1>(treePositions[i]);
-        tree.z = std::get<2>(treePositions[i]);
-        tree.rotY = fixedRotations[i];  // 고정된 회전값 사용
-        tree.treeType = 0; // long_tree
-        
-        m_trees[tree.treeID] = tree;
-        
-        std::cout << "[Tree] Created tree ID: " << tree.treeID 
-                  << " at position (" << tree.x << ", " << tree.y << ", " << tree.z << ")"
-                  << " with rotation " << tree.rotY << " degrees" << std::endl;
-    }
-    
-    std::cout << "[InitializeTrees] Completed. Total tree positions created: " << m_trees.size() << std::endl;
-    std::cout << "[InitializeTrees] Note: Tree positions will be sent when clients log in" << std::endl;
-}
+
 
 void GameServer::UpdateTigerBehavior(TigerInfo& tiger, float deltaTime) {
+    // Original과 동일한 상수값 사용
     const float CHASE_RADIUS = 200.0f;
     const float ATTACK_RADIUS = 17.0f;
-    const float MOVE_SPEED = 30.0f;
+    const float WALK_SPEED = 25.0f;  // Original과 동일
+    const float RUN_SPEED = 45.0f;   // Original과 동일
     
-    tiger.moveTimer -= deltaTime;
+    // 애니메이션 시간 업데이트 (모든 애니메이션에 대해)
     tiger.animationTime += deltaTime;
-    tiger.attackTime += deltaTime;
-    tiger.searchTime += deltaTime;
-    tiger.elapseTime += deltaTime;
     
-    // 가장 가까운 플레이어 찾기
+    // 타이머 업데이트 (Original CalcTime과 동일)
+    if (tiger.currentAnimation == "0113_tiger_walk.fbx") {
+        tiger.searchTime += deltaTime;
+    }
+    
+    if (tiger.currentAnimation == "0208_tiger_attack.fbx") {
+        tiger.elapseTime += deltaTime;
+        // 공격 발사 타이밍 (Original과 동일)
+        if (tiger.elapseTime >= 0.4f && !tiger.isFired) {
+            tiger.isFired = true;
+            // 공격 패킷 전송
+            PacketTigerAttack attackPacket;
+            attackPacket.header.type = PACKET_TIGER_ATTACK;
+            attackPacket.header.size = sizeof(PacketTigerAttack);
+            attackPacket.tigerID = tiger.tigerID;
+            attackPacket.x = tiger.x;
+            attackPacket.y = tiger.y;
+            attackPacket.z = tiger.z;
+            attackPacket.rotY = tiger.rotY;
+            BroadcastPacket(&attackPacket, sizeof(attackPacket));
+        }
+        // 공격 종료 타이밍 (Original과 동일)
+        if (tiger.elapseTime >= 0.8f) {
+            tiger.currentAnimation = "0722_tiger_idle2.fbx";
+            tiger.animationTime = 0.0f;
+            tiger.elapseTime = 0.0f;
+            tiger.isFired = false;
+            tiger.attackTime = 0.0f;
+        }
+    } else {
+        tiger.attackTime += deltaTime;
+    }
+    
+    if (tiger.currentAnimation == "0208_tiger_hit.fbx") {
+        tiger.elapseTime += deltaTime;
+        if (tiger.elapseTime > 0.8f) {
+            tiger.currentAnimation = "0722_tiger_idle2.fbx";
+            tiger.animationTime = 0.0f;
+            tiger.elapseTime = 0.0f;
+            tiger.isHitted = false;
+        }
+    }
+    
+    if (tiger.currentAnimation == "0208_tiger_dying.fbx") {
+        tiger.elapseTime += deltaTime;
+        if (tiger.elapseTime > 1.9f) {
+            // 호랑이 사망 처리 (가죽 생성 등은 클라이언트에서 처리)
+            tiger.life = 0;
+        }
+    }
+    
+    // 가장 가까운 플레이어 찾기 (Original과 동일한 로직)
     float nearestDist = FLT_MAX;
     float targetX = tiger.x, targetZ = tiger.z;
     for (const auto& [id, client] : m_clients) {
@@ -815,90 +879,88 @@ void GameServer::UpdateTigerBehavior(TigerInfo& tiger, float deltaTime) {
     
     float dist = sqrt(nearestDist);
     
-    if (dist < CHASE_RADIUS) {
+    // Original TigerBehavior 로직과 동일하게 구현
+    if (dist < CHASE_RADIUS) {  // 플레이어가 탐색 범위 안에 있을 때
         tiger.isChasing = true;
         
-        if (dist < ATTACK_RADIUS) {
-            // 공격 상태
-            if (tiger.currentAnimation != "0208_tiger_attack.fbx" && tiger.attackTime >= 2.0f) {
-                tiger.currentAnimation = "0208_tiger_attack.fbx";
-                tiger.animationTime = 0.0f;
-                tiger.elapseTime = 0.0f;
-                tiger.isFired = false;
-                tiger.attackTime = 0.0f;
-            }
-            
-            // 공격 애니메이션 중일 때 공격 발사
-            if (tiger.currentAnimation == "0208_tiger_attack.fbx") {
-                if (tiger.elapseTime >= 0.4f && !tiger.isFired) {
-                    tiger.isFired = true;
-                }
+        if (dist < ATTACK_RADIUS) {  // 공격 범위 안이면
+            // Attack() 함수 로직 (Original과 동일)
+            if (tiger.currentAnimation != "0208_tiger_hit.fbx" && 
+                tiger.currentAnimation != "0208_tiger_dying.fbx" && 
+                tiger.attackTime >= 2.0f) {
                 
-                // 공격 애니메이션이 끝나면 대기 상태로 전환
-                if (tiger.elapseTime >= 0.8f) {
-                    tiger.currentAnimation = "0722_tiger_idle2.fbx";
+                if (tiger.currentAnimation != "0208_tiger_attack.fbx") {
+                    tiger.currentAnimation = "0208_tiger_attack.fbx";
                     tiger.animationTime = 0.0f;
                     tiger.elapseTime = 0.0f;
+                    tiger.isFired = false;
                 }
             }
-        } else {
-            // 달리기 상태
-            if (tiger.currentAnimation != "0208_tiger_attack.fbx" && tiger.attackTime >= 2.0f) {
+            
+            // 공격 애니메이션 중 방향 설정 (Original과 동일)
+            if (tiger.currentAnimation == "0208_tiger_attack.fbx" && tiger.elapseTime == 0.0f) {
+                float dx = targetX - tiger.x;
+                float dz = targetZ - tiger.z;
+                tiger.rotY = atan2(dx, dz) * (180.0f / 3.141592f);
+            }
+        } else {  // 공격 범위 밖이면
+            // Run() 함수 로직 (Original과 동일)
+            if (tiger.currentAnimation != "0208_tiger_attack.fbx" && 
+                tiger.currentAnimation != "0208_tiger_hit.fbx" && 
+                tiger.currentAnimation != "0208_tiger_dying.fbx" && 
+                tiger.attackTime >= 2.0f) {
+                
                 if (tiger.currentAnimation != "0722_tiger_run.fbx") {
                     tiger.currentAnimation = "0722_tiger_run.fbx";
                     tiger.animationTime = 0.0f;
                 }
-                
-                // 플레이어 방향으로 이동
+            }
+            
+            // 달리기 애니메이션 중일 때만 이동 (Original과 동일)
+            if (tiger.currentAnimation == "0722_tiger_run.fbx") {
                 float dx = targetX - tiger.x;
                 float dz = targetZ - tiger.z;
                 float moveDist = sqrt(dx * dx + dz * dz);
                 if (moveDist > 0.1f) {
-                    tiger.x += (dx / moveDist) * MOVE_SPEED * deltaTime;
-                    tiger.z += (dz / moveDist) * MOVE_SPEED * deltaTime;
+                    tiger.x += (dx / moveDist) * RUN_SPEED * deltaTime;
+                    tiger.z += (dz / moveDist) * RUN_SPEED * deltaTime;
                     tiger.rotY = atan2(dx, dz) * (180.0f / 3.141592f);
                 }
             }
         }
-    } else {
-        // 탐색 상태
+    } else {  // 플레이어가 탐색 범위 밖에 있을 때
+        // Search() 함수 로직 (Original과 동일)
         tiger.isChasing = false;
         
-        if (tiger.searchTime > 4.0f) {
+        if (tiger.searchTime > 2.0f) {  // Original과 동일한 2초
             tiger.searchTime = 0.0f;
-            float angle = GetRandomFloat(0.0f, 360.0f) * (3.141592f / 180.0f);
-            tiger.targetX = tiger.x + cos(angle) * GetRandomFloat(40.0f, 120.0f);
-            tiger.targetZ = tiger.z + sin(angle) * GetRandomFloat(40.0f, 120.0f);
+            // 랜덤 방향 설정
+            float randYaw = GetRandomFloat(-180.0f, 180.0f);
+            tiger.rotY = randYaw;
         }
         
-        // 목표 지점으로 이동
-        float dx = tiger.targetX - tiger.x;
-        float dz = tiger.targetZ - tiger.z;
-        float moveDist = sqrt(dx * dx + dz * dz);
-        if (moveDist > 0.1f) {
-            tiger.x += (dx / moveDist) * MOVE_SPEED * 0.7f * deltaTime;
-            tiger.z += (dz / moveDist) * MOVE_SPEED * 0.7f * deltaTime;
-            tiger.rotY = atan2(dx, dz) * (180.0f / 3.141592f);
-            if (tiger.currentAnimation != "0113_tiger_walk.fbx") {
-                tiger.currentAnimation = "0113_tiger_walk.fbx";
-                tiger.animationTime = 0.0f;
-            }
-        } else {
-            if (tiger.currentAnimation != "0722_tiger_idle2.fbx") {
-                tiger.currentAnimation = "0722_tiger_idle2.fbx";
-                tiger.animationTime = 0.0f;
-            }
+        // 현재 방향으로 이동 (Original과 동일한 로직)
+        float angleRad = tiger.rotY * (3.141592f / 180.0f);
+        float dirX = sin(angleRad);
+        float dirZ = cos(angleRad);
+        
+        tiger.x += dirX * WALK_SPEED * deltaTime;
+        tiger.z += dirZ * WALK_SPEED * deltaTime;
+        
+        if (tiger.currentAnimation != "0113_tiger_walk.fbx") {
+            tiger.currentAnimation = "0113_tiger_walk.fbx";
+            tiger.animationTime = 0.0f;
         }
     }
 }
 
 void GameServer::UpdateTigers(float deltaTime) {
     m_tigerUpdateTimer += deltaTime;
-    if (m_tigerUpdateTimer < 0.2f) return; // 200ms마다 업데이트
+    if (m_tigerUpdateTimer < 0.05f) return; // 20fps (50ms)마다 업데이트
 
     for (auto& tigerPair : m_tigers) {
         auto& tiger = tigerPair.second;
-        UpdateTigerBehavior(tiger, 0.2f); // 고정된 시간 간격 사용
+        UpdateTigerBehavior(tiger, m_tigerUpdateTimer); // 실제 누적된 시간 사용
     }
 
     BroadcastTigerUpdates();
@@ -919,7 +981,7 @@ void GameServer::BroadcastTigerUpdates() {
         return;
     }
     
-    // 호랑이 업데이트 전송 (로그 제거)
+    // 호랑이 업데이트 전송
     for (const auto& tigerPair : m_tigers) {
         const auto& tiger = tigerPair.second;
         PacketTigerUpdate updatePacket;
@@ -931,7 +993,7 @@ void GameServer::BroadcastTigerUpdates() {
         updatePacket.z = tiger.z;
         updatePacket.rotY = tiger.rotY;
         
-        // 애니메이션 정보 추가
+        // 애니메이션 정보 추가 (Original과 동일한 애니메이션 파일명)
         strcpy_s(updatePacket.animationFile, sizeof(updatePacket.animationFile), tiger.currentAnimation.c_str());
         updatePacket.animationTime = tiger.animationTime;
         
@@ -939,40 +1001,7 @@ void GameServer::BroadcastTigerUpdates() {
     }
 }
 
-void GameServer::SendTreePositions(int clientID) {
-    std::cout << "[Tree] Starting to send tree positions to client " << clientID << std::endl;
-    std::cout << "[Tree] Total trees to send: " << m_trees.size() << std::endl;
-    
-    // 클라이언트 소켓 상태 확인
-    if (m_clients[clientID].socket == INVALID_SOCKET) {
-        std::cout << "[Tree] Client socket is invalid" << std::endl;
-        return;
-    }
-    
-    // 모든 나무 위치 정보를 하나의 패킷으로 묶어서 전송
-    PacketTreeSpawn treePacket;
-    treePacket.header.type = PACKET_TREE_SPAWN;
-    treePacket.header.size = sizeof(PacketTreeSpawn);
-    treePacket.treeCount = 0;
-    
-    for (const auto& [treeID, tree] : m_trees) {
-        if (treePacket.treeCount >= 3) break; // 최대 3개까지만 (안정성을 위해)
-        
-        treePacket.trees[treePacket.treeCount].x = tree.x;
-        treePacket.trees[treePacket.treeCount].y = tree.y;
-        treePacket.trees[treePacket.treeCount].z = tree.z;
-        treePacket.trees[treePacket.treeCount].rotY = tree.rotY;
-        treePacket.trees[treePacket.treeCount].treeType = tree.treeType;
-        treePacket.treeCount++;
-    }
-    
-    if (!SendPacket(m_clients[clientID].socket, &treePacket, sizeof(PacketTreeSpawn))) {
-        std::cout << "[Tree] Failed to send tree positions packet" << std::endl;
-        return;
-    }
-    
-    std::cout << "[Tree] Successfully sent " << treePacket.treeCount << " tree positions to client " << clientID << std::endl;
-}
+
 
 float GameServer::GetRandomFloat(float min, float max) {
     std::uniform_real_distribution<float> dist(min, max);

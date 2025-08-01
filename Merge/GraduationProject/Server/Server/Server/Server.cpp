@@ -424,25 +424,34 @@ void GameServer::ProcessSinglePacket(char* buffer, int clientID, int packetSize)
             auto tigerIt = m_tigers.find(pkt->tigerID);
             if (tigerIt != m_tigers.end()) {
                 TigerInfo& tiger = tigerIt->second;
-                tiger.life = pkt->life;
-                tiger.isHitted = true;
                 
-                if (tiger.life <= 0) {
-                    // 호랑이 사망
-                    tiger.currentAnimation = "0208_tiger_dying.fbx";
-                    tiger.animationTime = 0.0f;
-                    tiger.elapseTime = 0.0f;
-                    std::cout << "[TigerHit] Tiger " << pkt->tigerID << " died" << std::endl;
+                // 서버에서 직접 생명력 감소 (클라이언트 생명력 신뢰하지 않음)
+                if (tiger.life > 0) {
+                    tiger.life--;
+                    tiger.isHitted = true;
+                    
+                    if (tiger.life <= 0) {
+                        // 호랑이 사망
+                        tiger.currentAnimation = "0208_tiger_dying.fbx";
+                        tiger.animationTime = 0.0f;
+                        tiger.elapseTime = 0.0f;
+                        std::cout << "[TigerHit] Tiger " << pkt->tigerID << " died" << std::endl;
+                    } else {
+                        // 호랑이 피격
+                        tiger.currentAnimation = "0208_tiger_hit.fbx";
+                        tiger.animationTime = 0.0f;
+                        tiger.elapseTime = 0.0f;
+                        std::cout << "[TigerHit] Tiger " << pkt->tigerID << " hit, remaining life: " << tiger.life << std::endl;
+                    }
+                    
+                    // 서버에서 계산된 생명력으로 패킷 업데이트
+                    pkt->life = tiger.life;
+                    
+                    // 다른 클라이언트들에게 호랑이 상태 업데이트 브로드캐스트
+                    BroadcastPacket(pkt, sizeof(PacketTigerHit));
                 } else {
-                    // 호랑이 피격
-                    tiger.currentAnimation = "0208_tiger_hit.fbx";
-                    tiger.animationTime = 0.0f;
-                    tiger.elapseTime = 0.0f;
-                    std::cout << "[TigerHit] Tiger " << pkt->tigerID << " hit, remaining life: " << pkt->life << std::endl;
+                    std::cout << "[TigerHit] Tiger " << pkt->tigerID << " already dead, ignoring hit" << std::endl;
                 }
-                
-                // 다른 클라이언트들에게 호랑이 상태 업데이트 브로드캐스트
-                BroadcastPacket(pkt, sizeof(PacketTigerHit));
             } else {
                 std::cout << "[Error] Tiger " << pkt->tigerID << " not found for hit update" << std::endl;
             }
@@ -956,7 +965,7 @@ void GameServer::UpdateTigerBehavior(TigerInfo& tiger, float deltaTime) {
 
 void GameServer::UpdateTigers(float deltaTime) {
     m_tigerUpdateTimer += deltaTime;
-    if (m_tigerUpdateTimer < 0.05f) return; // 20fps (50ms)마다 업데이트
+    if (m_tigerUpdateTimer < 0.016667f) return; // 60fps (16.67ms)마다 업데이트
 
     for (auto& tigerPair : m_tigers) {
         auto& tiger = tigerPair.second;

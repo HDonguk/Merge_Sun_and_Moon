@@ -58,7 +58,10 @@ public:
 	
 private:
 	void ProcessInput(const GameTimer& gTimer);
+public:
+	// 네트워크 플레이어를 위해 ChangeState() 메서드를 public으로 변경
 	void ChangeState(string fileName);
+private:
 	void Move(XMVECTOR dir, float speed, float deltatime);
 	void Idle();
 	void Jump();
@@ -66,6 +69,7 @@ private:
 	void Throw();
 	void TimeOut();
 	void Fire();
+public:
 	void Hit();
 	void Dead();
 	void CalcTime(float deltaTime);
@@ -145,12 +149,17 @@ public:
 		if (m_isNetworkTiger) {
 			Animation* anim = GetComponent<Animation>();
 			if (anim) {
-				// 애니메이션 파일이 다르거나 강제 업데이트가 필요한 경우
+				// 애니메이션 파일이 변경된 경우에만 리셋
 				if (anim->mCurrentFileName != animationFile) {
 					anim->ResetAnim(animationFile, animationTime);
+					mElapseTime = 0.0f;
+				} else {
+					// 같은 애니메이션인 경우 서버와의 시간 차이를 보정
+					// 서버에서 받은 시간이 현재 시간보다 작으면 애니메이션이 리셋된 것으로 간주
+					if (animationTime < anim->mAnimationTime) {
+						anim->mAnimationTime = animationTime;
+					}
 				}
-				// 애니메이션 시간은 클라이언트에서 자연스럽게 업데이트되도록 함
-				// 서버에서 받은 시간은 초기값으로만 사용
 			}
 		}
 	}
@@ -160,7 +169,9 @@ public:
 		if (m_isNetworkTiger) {
 			Transform* transform = GetComponent<Transform>();
 			if (transform) {
-				m_targetPosition = {x, y, z, 1.0f};
+				// Y-위치는 Gravity 컴포넌트가 관리하므로 X, Z만 서버에서 동기화
+				XMVECTOR currentPos = transform->GetPosition();
+				m_targetPosition = {x, XMVectorGetY(currentPos), z, 1.0f};
 				m_targetRotationY = rotY;
 			}
 		}
@@ -170,13 +181,17 @@ public:
 	void Hit();
 	void Dead();
 	void SetLife(int life) { mLife = life; }
+	int GetLife() const { return mLife; }
+	void ResetHitTimer() { mElapseTime = 0.0f; }
+	void ResetHitState() { mIsHitted = false; }
 	
 	// 네트워크 호랑이를 위해 Fire() 메서드를 public으로 변경
 	void Fire();
+	// 네트워크 호랑이를 위해 ChangeState() 메서드를 public으로 변경
+	void ChangeState(string fileName);
 	
 private:
 	void TigerBehavior(GameTimer& gTimer);
-	void ChangeState(string fileName);
 	void Search(float deltaTime);
 	void Run();
 	void Attack();
@@ -199,7 +214,7 @@ private:
 	// 보간을 위한 목표 위치
 	XMVECTOR m_targetPosition = {0.0f, 0.0f, 0.0f, 1.0f};
 	float m_targetRotationY = 0.0f;
-	float m_interpolationSpeed = 10.0f; // 보간 속도 (더 빠르게)
+	float m_interpolationSpeed = 8.0f; // 보간 속도 (60fps에 맞게 조정)
 };
 
 
@@ -208,6 +223,7 @@ class TigerAttackObject : public Object
 public:
 	using Object::Object;
 	void OnUpdate(GameTimer& gTimer) override;
+	void OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration) override;
 private:
 	float mElapseTime = 0.0f;
 };

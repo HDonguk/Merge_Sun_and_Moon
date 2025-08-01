@@ -169,22 +169,14 @@ void Object::ProcessAnimation(GameTimer& gTimer)
         vector<XMFLOAT4X4> finalTransforms{ 90 };
         SkinnedData& animData = m_scene->GetResourceManager().GetAnimationData(animation->mCurrentFileName);
         
-        // 네트워크 플레이어만 애니메이션 시간을 업데이트하지 않음
-        PlayerObject* playerObj = dynamic_cast<PlayerObject*>(this);
-        if (!playerObj || !playerObj->IsNetworkPlayer()) {
-            animation->mAnimationTime += gTimer.DeltaTime();
-        }
-        
-        // 호랑이 애니메이션 속도 조절 (로컬, 네트워크 모두)
-        TigerObject* tigerObj = dynamic_cast<TigerObject*>(this);
-        if (tigerObj) {
-            animation->mAnimationTime += gTimer.DeltaTime(); // 애니메이션 속도 관리 
-        }
+        // 모든 오브젝트의 애니메이션 시간 증가 (네트워크 호랑이도 포함)
+        // 네트워크 호랑이의 경우 SetNetworkAnimation에서 서버 시간으로 동기화됨
+        animation->mAnimationTime += gTimer.DeltaTime();
         
         string clipName = "Take 001";
         if (animation->mAnimationTime >= animData.GetClipEndTime(clipName)) animation->mAnimationTime = 0.0f;
         animData.GetFinalTransforms(clipName, animation->mAnimationTime, finalTransforms);
-        memcpy(m_mappedData + sizeof(XMMATRIX), finalTransforms.data(), sizeof(XMMATRIX) * 90); // ó Ű ּ
+        memcpy(m_mappedData + sizeof(XMMATRIX), finalTransforms.data(), sizeof(XMMATRIX) * 90);
     }
     memcpy(m_mappedData + sizeof(XMMATRIX) * 91, &isAnimate, sizeof(int));
 }
@@ -410,8 +402,6 @@ void PlayerObject::TimeOut()
         m_scene->SetStage(L"Base");
         return;
     }
-
-
 }
 
 void PlayerObject::Fire()
@@ -482,7 +472,7 @@ void PlayerObject::CalcTime(float deltaTime)
         if (mElapseTime > 0.7f) Fire();
         if (mElapseTime > 1.0f) TimeOut();
     }
-    else
+    else 
     {
         mAttackTime += deltaTime;
     }
@@ -601,15 +591,26 @@ void TigerObject::OnUpdate(GameTimer& gTimer)
     if (!m_isNetworkTiger) {
         TigerBehavior(gTimer);
     } else {
-        // 네트워크 호랑이는 서버에서 받은 위치로 보간
+        // 네트워크 호랑이는 서버에서 받은 위치로 보간 (Y-위치는 Gravity 컴포넌트가 관리)
         Transform* transform = GetComponent<Transform>();
         if (transform) {
             XMVECTOR currentPos = transform->GetPosition();
             XMVECTOR targetPos = m_targetPosition;
             
-            // 위치 보간 (더 부드러운 보간)
-            XMVECTOR newPos = XMVectorLerp(currentPos, targetPos, m_interpolationSpeed * gTimer.DeltaTime());
-            transform->SetPosition(newPos);
+            // X, Z 위치만 보간 (Y는 Gravity 컴포넌트가 관리)
+            XMVECTOR currentXZ = {XMVectorGetX(currentPos), 0.0f, XMVectorGetZ(currentPos), 1.0f};
+            XMVECTOR targetXZ = {XMVectorGetX(targetPos), 0.0f, XMVectorGetZ(targetPos), 1.0f};
+            
+            float distance = XMVectorGetX(XMVector3Length(targetXZ - currentXZ));
+            if (distance > 0.1f) {  // 충분히 가까우면 보간 중단
+                XMVECTOR newXZ = XMVectorLerp(currentXZ, targetXZ, m_interpolationSpeed * gTimer.DeltaTime());
+                XMVECTOR newPos = {XMVectorGetX(newXZ), XMVectorGetY(currentPos), XMVectorGetZ(newXZ), 1.0f};
+                transform->SetPosition(newPos);
+            } else {
+                // Y-위치는 현재 값 유지, X, Z만 서버 값으로 설정
+                XMVECTOR newPos = {XMVectorGetX(targetPos), XMVectorGetY(currentPos), XMVectorGetZ(targetPos), 1.0f};
+                transform->SetPosition(newPos);
+            }
             
             // 회전 보간 (가장 짧은 경로로)
             XMVECTOR currentRot = transform->GetRotation();
@@ -621,8 +622,12 @@ void TigerObject::OnUpdate(GameTimer& gTimer)
             if (angleDiff > 180.0f) angleDiff -= 360.0f;
             if (angleDiff < -180.0f) angleDiff += 360.0f;
             
-            float newY = currentY + angleDiff * m_interpolationSpeed * gTimer.DeltaTime();
-            transform->SetRotation({0.0f, newY, 0.0f});
+            if (abs(angleDiff) > 1.0f) {  // 충분히 가까우면 회전 중단
+                float newY = currentY + angleDiff * m_interpolationSpeed * gTimer.DeltaTime();
+                transform->SetRotation({0.0f, newY, 0.0f});
+            } else {
+                transform->SetRotation({0.0f, targetY, 0.0f});
+            }
         }
     }
     
@@ -720,6 +725,9 @@ void TigerObject::Search(float deltaTime)
 
 void TigerObject::Run()
 {
+    // 네트워크 호랑이는 서버에서 애니메이션을 관리하므로 클라이언트에서 변경하지 않음
+    if (m_isNetworkTiger) return;
+    
     Animation* anim = GetComponent<Animation>();
     if (anim->mCurrentFileName == "0208_tiger_attack.fbx") return;
     if (anim->mCurrentFileName == "0208_tiger_hit.fbx") return;
@@ -730,6 +738,9 @@ void TigerObject::Run()
 
 void TigerObject::Attack()
 {
+    // 네트워크 호랑이는 서버에서 애니메이션을 관리하므로 클라이언트에서 변경하지 않음
+    if (m_isNetworkTiger) return;
+    
     Animation* anim = GetComponent<Animation>();
     if (anim->mCurrentFileName == "0208_tiger_hit.fbx") return;
     if (anim->mCurrentFileName == "0208_tiger_dying.fbx") return;
@@ -742,7 +753,10 @@ void TigerObject::TimeOut()
     
     if (anim->mCurrentFileName == "0208_tiger_attack.fbx") 
     {
-        mIsFired = false;
+        // 로컬 호랑이만 mIsFired 플래그를 리셋 (네트워크 호랑이는 Fire()에서 처리)
+        if (!m_isNetworkTiger) {
+            mIsFired = false;
+        }
         mAttackTime = 0.0f;
         ChangeState("0722_tiger_idle2.fbx");
     }
@@ -755,26 +769,71 @@ void TigerObject::TimeOut()
 
     if (anim->mCurrentFileName == "0208_tiger_dying.fbx")
     {
-        CreateLeather();
-        Delete();
+        // 로컬 호랑이만 가죽 생성 및 삭제
+        if (!m_isNetworkTiger) {
+            CreateLeather();
+            Delete();
+        }
+        // 네트워크 호랑이는 CalcTime에서 애니메이션 끝나면 처리
     }
 }
 void TigerObject::Fire()
 {
-    if (mIsFired) return;
-    mIsFired = true;
+    // 네트워크 호랑이는 서버에서 공격 패킷을 받을 때마다 공격 오브젝트를 생성해야 함
+    if (!m_isNetworkTiger && mIsFired) return;
+    
+    if (!m_isNetworkTiger) {
+        mIsFired = true;
+    }
 
-    // Original과 동일하게 로컬 좌표계로 공격 오브젝트 생성
-    Object* obj = new TigerAttackObject(m_scene, m_scene->AllocateId(), m_id);
-    obj->AddComponent(new Transform{ {0.0f, 6.0f, 18.0f} });
-    obj->AddComponent(new Collider{ {0.0f, 0.0f, 0.0f}, {4.0f, 6.0f, 8.0f} });
-    m_scene->AddObj(obj);
+    // 호랑이의 실제 위치를 고려한 공격 오브젝트 생성
+    Transform* tigerTransform = GetComponent<Transform>();
+    if (tigerTransform) {
+        // 호랑이의 회전 행렬을 사용하여 공격 오브젝트의 위치 계산
+        XMVECTOR tigerPos = tigerTransform->GetPosition();
+        XMVECTOR attackOffset = XMVector3TransformNormal(XMVECTOR{0.0f, 6.0f, 18.0f}, tigerTransform->GetRotationM());
+        XMVECTOR attackPos = tigerPos + attackOffset;
+        
+        Object* obj = new TigerAttackObject(m_scene, m_scene->AllocateId(), m_id);
+        obj->AddComponent(new Transform{ attackPos });
+        obj->AddComponent(new Collider{ {0.0f, 0.0f, 0.0f}, {4.0f, 6.0f, 8.0f} });
+        m_scene->AddObj(obj);
+    } else {
+        // Transform이 없는 경우 기본 위치 사용
+        Object* obj = new TigerAttackObject(m_scene, m_scene->AllocateId(), m_id);
+        obj->AddComponent(new Transform{ {0.0f, 6.0f, 18.0f} });
+        obj->AddComponent(new Collider{ {0.0f, 0.0f, 0.0f}, {4.0f, 6.0f, 8.0f} });
+        m_scene->AddObj(obj);
+    }
+    
+    // 네트워크 호랑이의 경우 Fire() 호출 후 mIsFired를 즉시 리셋하여 다음 공격을 받을 수 있도록 함
+    //if (m_isNetworkTiger) {
+    //    mIsFired = false;
+   // }
 }
 
 void TigerObject::Hit()
 {
     if (mIsHitted) return;
     mIsHitted = true;
+    
+    // 네트워크 호랑이는 서버에만 히트 이벤트 전송 (생명력 감소는 서버에서 처리)
+    if (m_isNetworkTiger) {
+        Framework* framework = m_scene->GetFramework();
+        if (framework && framework->IsNetworkEnabled()) {
+            NetworkManager& networkManager = framework->GetNetworkManager();
+            if (networkManager.IsLoggedIn()) {
+                networkManager.SendTigerHit(m_networkTigerID, mLife); // 현재 생명력 전송
+                OutputDebugString(L"[Tiger] Network tiger hit event sent to server\n");
+            }
+        }
+        // 네트워크 호랑이는 서버 응답을 기다리므로 여기서 애니메이션도 재생하지 않음
+        // 애니메이션은 NetworkManager에서 서버 응답을 받은 후 재생
+        mElapseTime = 0.0f;
+        return;
+    }
+    
+    // 로컬 호랑이만 즉시 생명력 감소 및 애니메이션 재생
     --mLife;
     
     if (mLife == 0)
@@ -794,34 +853,46 @@ void TigerObject::CalcTime(float deltaTime)
 {
     Animation* anim = GetComponent<Animation>();
 
-    // 네트워크 호랑이도 Original과 동일한 로직 적용
-    if (anim->mCurrentFileName == "0113_tiger_walk.fbx")
-    {
-        mSearchTime += deltaTime;
-    }
+    // 네트워크 호랑이는 서버에서 관리되므로 타이머만 업데이트
+    if (m_isNetworkTiger) {
+        if (anim->mCurrentFileName == "0113_tiger_walk.fbx")
+        {
+            mSearchTime += deltaTime;
+        }
 
-    if (anim->mCurrentFileName == "0208_tiger_attack.fbx") 
-    {
-        mElapseTime += deltaTime;
-        // 네트워크 호랑이도 Original과 동일한 로직 적용
-        if (mElapseTime >= 0.4f) Fire();
-        if (mElapseTime >= 0.8f) TimeOut();
-    }
-    else
-    {
-        mAttackTime += deltaTime;
-    }
+        if (anim->mCurrentFileName == "0722_tiger_run.fbx")
+        {
+            // run 애니메이션 중에는 별도 타이머 업데이트 없음 (서버에서 관리)
+        }
 
-    if (anim->mCurrentFileName == "0208_tiger_hit.fbx")
-    {
-        mElapseTime += deltaTime;
-        if (mElapseTime > 0.8f) TimeOut();
-    }
+        if (anim->mCurrentFileName == "0208_tiger_attack.fbx") 
+        {
+            mElapseTime += deltaTime;
+            // 네트워크 호랑이는 서버에서 공격 패킷을 받을 때만 공격 오브젝트 생성
+            // TimeOut() 호출하지 않음 (서버에서 애니메이션 관리)
+        }
+        else
+        {
+            mAttackTime += deltaTime;
+        }
 
-    if (anim->mCurrentFileName == "0208_tiger_dying.fbx")
-    {
-        mElapseTime += deltaTime;
-        if (mElapseTime > 1.9f) TimeOut();
+        if (anim->mCurrentFileName == "0208_tiger_hit.fbx")
+        {
+            mElapseTime += deltaTime;
+            // 네트워크 호랑이도 hit 애니메이션이 끝나면 TimeOut() 호출
+            if (mElapseTime > 0.8f) TimeOut();
+        }
+
+        if (anim->mCurrentFileName == "0208_tiger_dying.fbx")
+        {
+            mElapseTime += deltaTime;
+            // 네트워크 호랑이의 죽는 애니메이션이 끝나면 가죽 생성 후 삭제
+            if (mElapseTime > 1.9f) {
+                CreateLeather();
+                Delete();
+            }
+        }
+        return;
     }
 
     // 로컬 호랑이만 Fire()와 TimeOut() 호출 (Original과 동일)
@@ -874,8 +945,25 @@ void TigerObject::CreateLeather()
 void TigerAttackObject::OnUpdate(GameTimer& gTimer)
 {
     mElapseTime += gTimer.DeltaTime();
-    if (mElapseTime >= 0.05) Delete();
+    if (mElapseTime >= 0.2) Delete();  // 수명을 0.05초에서 0.2초로 연장
     Object::OnUpdate(gTimer);
+}
+
+void TigerAttackObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration)
+{
+    PlayerObject* player = dynamic_cast<PlayerObject*>(&other);
+    if (player)
+    {
+        player->Hit();
+        Delete();  // 공격 오브젝트 삭제
+        return;
+    }
+
+    // 다른 오브젝트와의 충돌 처리
+    Transform* transform = GetComponent<Transform>();
+    XMVECTOR pos = transform->GetPosition();
+    pos += -collisionNormal * penetration;
+    transform->SetPosition(pos);
 }
 
 
@@ -1231,5 +1319,4 @@ void QuadObject::OnUpdate(GameTimer& gTimer)
 {
     CameraObject* camera = m_scene->GetObj<CameraObject>();
     m_parent_id = camera->GetId();
-
 }

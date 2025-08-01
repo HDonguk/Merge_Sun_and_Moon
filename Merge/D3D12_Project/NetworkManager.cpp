@@ -778,15 +778,24 @@ void NetworkManager::ProcessPacket(char* buffer) {
                     for (Object* obj : m_scene->GetObjects()) {
                         TigerObject* tigerObj = dynamic_cast<TigerObject*>(obj);
                         if (tigerObj && tigerObj->IsNetworkTiger() && tigerObj->GetNetworkTigerID() == tigerHitPkt->tigerID) {
-                            // 호랑이 Hit 상태 동기화
-                            tigerObj->SetLife(tigerHitPkt->life);
-                            if (tigerHitPkt->life <= 0) {
-                                tigerObj->Dead();
-                            } else {
-                                tigerObj->Hit();
+                            // 서버에서 받은 생명력으로 업데이트
+                            int currentLife = tigerObj->GetLife();
+                            if (currentLife != tigerHitPkt->life) {  // 생명력이 변경된 경우에만 처리
+                                tigerObj->SetLife(tigerHitPkt->life);
+                                
+                                if (tigerHitPkt->life <= 0) {
+                                    tigerObj->Dead();
+                                } else {
+                                    // Hit 애니메이션 강제 재생 (생명력 감소는 이미 서버에서 처리됨)
+                                    tigerObj->ChangeState("0208_tiger_hit.fbx");
+                                    // 타이머 리셋하지 않음 (애니메이션이 끊기지 않도록)
+                                    // mIsHitted 플래그를 false로 설정하여 다음 hit를 받을 수 있도록 함
+                                    tigerObj->ResetHitState();
+                                    LogToFile("[Tiger] Hit animation started for tiger " + std::to_string(tigerHitPkt->tigerID));
+                                }
+                                
+                                LogToFile("[Tiger] Tiger " + std::to_string(tigerHitPkt->tigerID) + " hit, remaining life: " + std::to_string(tigerHitPkt->life));
                             }
-                            
-                            LogToFile("[Tiger] Tiger " + std::to_string(tigerHitPkt->tigerID) + " hit, remaining life: " + std::to_string(tigerHitPkt->life));
                             break;
                         }
                     }
@@ -879,7 +888,7 @@ void NetworkManager::Update(GameTimer& gTimer, Scene* scene) {
     XMVECTOR rot = transform->GetRotation();
     
     m_updateTimer += gTimer.DeltaTime();
-    const float UPDATE_INTERVAL = 0.1f;  // 100ms마다 업데이트 (성능 개선)
+    const float UPDATE_INTERVAL = 0.016667f;  // 60fps (16.67ms)마다 업데이트
 
     if (m_updateTimer >= UPDATE_INTERVAL) {
         // 로그 제거로 성능 개선

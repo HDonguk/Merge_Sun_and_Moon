@@ -165,17 +165,7 @@ public:
 	}
 	
 	// 네트워크 호랑이 위치 및 회전 설정
-	void SetNetworkTransform(float x, float y, float z, float rotY) {
-		if (m_isNetworkTiger) {
-			Transform* transform = GetComponent<Transform>();
-			if (transform) {
-				// Y-위치는 Gravity 컴포넌트가 관리하므로 X, Z만 서버에서 동기화
-				XMVECTOR currentPos = transform->GetPosition();
-				m_targetPosition = {x, XMVectorGetY(currentPos), z, 1.0f};
-				m_targetRotationY = rotY;
-			}
-		}
-	}
+	void SetNetworkTransform(float x, float y, float z, float rotY);
 	
 	// 공격 받기 메서드 (public으로 변경)
 	void Hit();
@@ -223,7 +213,6 @@ class TigerAttackObject : public Object
 public:
 	using Object::Object;
 	void OnUpdate(GameTimer& gTimer) override;
-	void OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration) override;
 private:
 	float mElapseTime = 0.0f;
 };

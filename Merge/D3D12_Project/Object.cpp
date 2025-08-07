@@ -214,9 +214,35 @@ void PlayerObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, f
     if (pa) return;
 
     TigerAttackObject* ta = dynamic_cast<TigerAttackObject*>(&other);
-    if (ta) // ȣ���� ���ݿ� ������...
+    if (ta) // 호랑이 공격과 충돌했을 때...
     {
+        // 위치 정보 로그 추가
+        Transform* playerTransform = GetComponent<Transform>();
+        Transform* attackTransform = ta->GetComponent<Transform>();
+        
+        XMFLOAT3 playerPos, attackPos;
+        XMStoreFloat3(&playerPos, playerTransform->GetPosition());
+        XMStoreFloat3(&attackPos, attackTransform->GetPosition());
+        
+        // 충돌 법선과 penetration 정보도 추가
+        XMFLOAT3 normal;
+        XMStoreFloat3(&normal, collisionNormal);
+        
+        wchar_t debugMsg[512];
+        swprintf_s(debugMsg, L"[PlayerObject] TigerAttack collision detected!\n"
+                               L"  Player pos: (%.1f, %.1f, %.1f)\n"
+                               L"  Attack pos: (%.1f, %.1f, %.1f)\n"
+                               L"  Collision normal: (%.3f, %.3f, %.3f)\n"
+                               L"  Penetration: %.3f\n"
+                               L"  Calling Hit() method...\n", 
+                               playerPos.x, playerPos.y, playerPos.z, 
+                               attackPos.x, attackPos.y, attackPos.z,
+                               normal.x, normal.y, normal.z,
+                               penetration);
+        OutputDebugString(debugMsg);
+        
         Hit();
+        OutputDebugString(L"[PlayerObject] Hit() method completed\n");
         return;
     }
 
@@ -591,42 +617,23 @@ void TigerObject::OnUpdate(GameTimer& gTimer)
     if (!m_isNetworkTiger) {
         TigerBehavior(gTimer);
     } else {
-        // 네트워크 호랑이는 서버에서 받은 위치로 보간 (Y-위치는 Gravity 컴포넌트가 관리)
+        // 네트워크 호랑이는 SetNetworkTransform에서 이미 위치가 설정되었으므로
+        // 여기서는 추가 업데이트만 수행
         Transform* transform = GetComponent<Transform>();
         if (transform) {
-            XMVECTOR currentPos = transform->GetPosition();
-            XMVECTOR targetPos = m_targetPosition;
-            
-            // X, Z 위치만 보간 (Y는 Gravity 컴포넌트가 관리)
-            XMVECTOR currentXZ = {XMVectorGetX(currentPos), 0.0f, XMVectorGetZ(currentPos), 1.0f};
-            XMVECTOR targetXZ = {XMVectorGetX(targetPos), 0.0f, XMVectorGetZ(targetPos), 1.0f};
-            
-            float distance = XMVectorGetX(XMVector3Length(targetXZ - currentXZ));
-            if (distance > 0.1f) {  // 충분히 가까우면 보간 중단
-                XMVECTOR newXZ = XMVectorLerp(currentXZ, targetXZ, m_interpolationSpeed * gTimer.DeltaTime());
-                XMVECTOR newPos = {XMVectorGetX(newXZ), XMVectorGetY(currentPos), XMVectorGetZ(newXZ), 1.0f};
-                transform->SetPosition(newPos);
-            } else {
-                // Y-위치는 현재 값 유지, X, Z만 서버 값으로 설정
-                XMVECTOR newPos = {XMVectorGetX(targetPos), XMVectorGetY(currentPos), XMVectorGetZ(targetPos), 1.0f};
-                transform->SetPosition(newPos);
-            }
-            
-            // 회전 보간 (가장 짧은 경로로)
-            XMVECTOR currentRot = transform->GetRotation();
-            float currentY = XMVectorGetY(currentRot);
-            float targetY = m_targetRotationY;
-            
-            // 각도 보간 (가장 짧은 경로로)
-            float angleDiff = targetY - currentY;
-            if (angleDiff > 180.0f) angleDiff -= 360.0f;
-            if (angleDiff < -180.0f) angleDiff += 360.0f;
-            
-            if (abs(angleDiff) > 1.0f) {  // 충분히 가까우면 회전 중단
-                float newY = currentY + angleDiff * m_interpolationSpeed * gTimer.DeltaTime();
-                transform->SetRotation({0.0f, newY, 0.0f});
-            } else {
-                transform->SetRotation({0.0f, targetY, 0.0f});
+            // OBB가 최신 상태인지 확인하고 필요시 업데이트
+            Collider* collider = GetComponent<Collider>();
+            if (collider) {
+                XMMATRIX finalM = transform->GetTransformM();
+                if (m_parent_id != -1) {
+                    Object* parentObj = m_scene->GetObjFromId(m_parent_id);
+                    if (parentObj) {
+                        Transform* parentTransform = parentObj->GetComponent<Transform>();
+                        finalM = finalM * parentTransform->GetFinalM();
+                    }
+                }
+                transform->SetFinalM(finalM);
+                collider->UpdateOBB(finalM);
             }
         }
     }
@@ -786,24 +793,47 @@ void TigerObject::Fire()
         mIsFired = true;
     }
 
+    OutputDebugString(L"[TigerObject] Fire() called - creating attack object\n");
+
     // 호랑이의 실제 위치를 고려한 공격 오브젝트 생성
     Transform* tigerTransform = GetComponent<Transform>();
     if (tigerTransform) {
-        // 호랑이의 회전 행렬을 사용하여 공격 오브젝트의 위치 계산
-        XMVECTOR tigerPos = tigerTransform->GetPosition();
-        XMVECTOR attackOffset = XMVector3TransformNormal(XMVECTOR{0.0f, 6.0f, 18.0f}, tigerTransform->GetRotationM());
-        XMVECTOR attackPos = tigerPos + attackOffset;
+        // Original과 동일하게 호랑이의 Transform을 기준으로 상대적 위치 사용
+        Object* obj = new TigerAttackObject(m_scene, m_scene->AllocateId(), m_id);
+        obj->AddComponent(new Transform{ {0.0f, 6.0f, 18.0f} });  // Original과 동일한 상대적 위치
+        obj->AddComponent(new Collider{ {0.0f, 0.0f, 0.0f}, {4.0f, 6.0f, 8.0f} });
+        m_scene->AddObj(obj);
         
-        Object* obj = new TigerAttackObject(m_scene, m_scene->AllocateId(), m_id);
-        obj->AddComponent(new Transform{ attackPos });
-        obj->AddComponent(new Collider{ {0.0f, 0.0f, 0.0f}, {4.0f, 6.0f, 8.0f} });
-        m_scene->AddObj(obj);
+        // 위치 정보 로그 추가 (플레이어 위치 포함)
+        XMFLOAT3 tigerPosFloat;
+        XMStoreFloat3(&tigerPosFloat, tigerTransform->GetPosition());
+        
+        // 플레이어 위치 가져오기
+        PlayerObject* player = m_scene->GetObj<PlayerObject>();
+        XMFLOAT3 playerPosFloat = {0.0f, 0.0f, 0.0f};
+        if (player) {
+            Transform* playerTransform = player->GetComponent<Transform>();
+            if (playerTransform) {
+                XMVECTOR playerPos = playerTransform->GetPosition();
+                XMStoreFloat3(&playerPosFloat, playerPos);
+            }
+        }
+        
+        wchar_t debugMsg[256];
+        swprintf_s(debugMsg, L"[TigerObject] Tiger pos: (%.1f, %.1f, %.1f), Player pos: (%.1f, %.1f, %.1f)\n", 
+                   tigerPosFloat.x, tigerPosFloat.y, tigerPosFloat.z,
+                   playerPosFloat.x, playerPosFloat.y, playerPosFloat.z);
+        OutputDebugString(debugMsg);
+        
+        OutputDebugString(L"[TigerObject] Attack object created and added to scene\n");
     } else {
-        // Transform이 없는 경우 기본 위치 사용
+        // Transform이 없는 경우에도 Original과 동일한 상대적 위치 사용
         Object* obj = new TigerAttackObject(m_scene, m_scene->AllocateId(), m_id);
-        obj->AddComponent(new Transform{ {0.0f, 6.0f, 18.0f} });
+        obj->AddComponent(new Transform{ {0.0f, 6.0f, 18.0f} });  // Original과 동일한 상대적 위치
         obj->AddComponent(new Collider{ {0.0f, 0.0f, 0.0f}, {4.0f, 6.0f, 8.0f} });
         m_scene->AddObj(obj);
+        
+        OutputDebugString(L"[TigerObject] Attack object created with default position\n");
     }
     
     // 네트워크 호랑이의 경우 Fire() 호출 후 mIsFired를 즉시 리셋하여 다음 공격을 받을 수 있도록 함
@@ -945,26 +975,37 @@ void TigerObject::CreateLeather()
 void TigerAttackObject::OnUpdate(GameTimer& gTimer)
 {
     mElapseTime += gTimer.DeltaTime();
-    if (mElapseTime >= 0.2) Delete();  // 수명을 0.05초에서 0.2초로 연장
+
+    // OBB 업데이트 상태 확인
+    Transform* transform = GetComponent<Transform>();
+    Collider* collider = GetComponent<Collider>();
+    if (transform && collider) {
+        XMFLOAT3 pos;
+        XMStoreFloat3(&pos, transform->GetPosition());
+        
+        // OBB 정보 출력
+        auto& obb = collider->GetOBB();
+        XMFLOAT3 center;
+        XMStoreFloat3(&center, XMLoadFloat3(&obb.Center));
+        
+        // 부모 Transform 정보도 출력
+        XMMATRIX finalM = transform->GetFinalM();
+        XMFLOAT4X4 finalMatrix;
+        XMStoreFloat4x4(&finalMatrix, finalM);
+        
+        wchar_t debugMsg[512];
+        swprintf_s(debugMsg, L"[TigerAttackObject] Update - pos: (%.1f, %.1f, %.1f), OBB center: (%.1f, %.1f, %.1f), extents: (%.1f, %.1f, %.1f), elapsed: %.3f\n"
+                               L"  Final matrix translation: (%.1f, %.1f, %.1f)\n",
+                               pos.x, pos.y, pos.z, center.x, center.y, center.z, obb.Extents.x, obb.Extents.y, obb.Extents.z, mElapseTime,
+                               finalMatrix._41, finalMatrix._42, finalMatrix._43);
+        OutputDebugString(debugMsg);
+    }
+
+    if (mElapseTime >= 0.05) Delete();  // Original 수명으로 복원
     Object::OnUpdate(gTimer);
 }
 
-void TigerAttackObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration)
-{
-    PlayerObject* player = dynamic_cast<PlayerObject*>(&other);
-    if (player)
-    {
-        player->Hit();
-        Delete();  // 공격 오브젝트 삭제
-        return;
-    }
 
-    // 다른 오브젝트와의 충돌 처리
-    Transform* transform = GetComponent<Transform>();
-    XMVECTOR pos = transform->GetPosition();
-    pos += -collisionNormal * penetration;
-    transform->SetPosition(pos);
-}
 
 
 void PlayerAttackObject::OnUpdate(GameTimer& gTimer)
@@ -1319,4 +1360,37 @@ void QuadObject::OnUpdate(GameTimer& gTimer)
 {
     CameraObject* camera = m_scene->GetObj<CameraObject>();
     m_parent_id = camera->GetId();
+}
+
+void TigerObject::SetNetworkTransform(float x, float y, float z, float rotY)
+{
+    if (m_isNetworkTiger) {
+        Transform* transform = GetComponent<Transform>();
+        if (transform) {
+            // Y-위치는 Gravity 컴포넌트가 관리하므로 X, Z만 서버에서 동기화
+            XMVECTOR currentPos = transform->GetPosition();
+            m_targetPosition = {x, XMVectorGetY(currentPos), z, 1.0f};
+            m_targetRotationY = rotY;
+            
+            // 즉시 위치를 설정하고 OBB 업데이트 (보간 대신 즉시 적용)
+            XMVECTOR newPos = {x, XMVectorGetY(currentPos), z, 1.0f};
+            transform->SetPosition(newPos);
+            transform->SetRotation({0.0f, rotY, 0.0f});
+            
+            // OBB 즉시 업데이트
+            Collider* collider = GetComponent<Collider>();
+            if (collider) {
+                XMMATRIX finalM = transform->GetTransformM();
+                if (m_parent_id != -1) {
+                    Object* parentObj = m_scene->GetObjFromId(m_parent_id);
+                    if (parentObj) {
+                        Transform* parentTransform = parentObj->GetComponent<Transform>();
+                        finalM = finalM * parentTransform->GetFinalM();
+                    }
+                }
+                transform->SetFinalM(finalM);
+                collider->UpdateOBB(finalM);
+            }
+        }
+    }
 }

@@ -1725,14 +1725,75 @@ void Scene::OnProcessCollision()
         auto& OBB = collider->GetOBB();
         for (int j = i + 1; j < objCount; ++j)
         {
-            if (!m_objects[i]->GetValid()) break;
             if (!m_objects[j]->GetValid()) continue;
             Object* otherObj = m_objects[j];
             Collider* otherCollider = otherObj->GetComponent<Collider>();
             if (!otherCollider) continue;
             auto& otherOBB = otherCollider->GetOBB();
-            if (!OBB.Intersects(otherOBB)) continue;
+            
+            // TigerAttackObject와 PlayerObject 조합에 대한 상세 디버그
+            TigerAttackObject* tigerAttack = dynamic_cast<TigerAttackObject*>(obj);
+            PlayerObject* player = dynamic_cast<PlayerObject*>(otherObj);
+            
+            if (tigerAttack && player) {
+                Transform* attackTransform = tigerAttack->GetComponent<Transform>();
+                Transform* playerTransform = player->GetComponent<Transform>();
+                
+                XMFLOAT3 attackPos, playerPos;
+                XMStoreFloat3(&attackPos, attackTransform->GetPosition());
+                XMStoreFloat3(&playerPos, playerTransform->GetPosition());
+                
+                // OBB 정보 출력
+                XMFLOAT3 attackCenter, playerCenter;
+                XMStoreFloat3(&attackCenter, XMLoadFloat3(&OBB.Center));
+                XMStoreFloat3(&playerCenter, XMLoadFloat3(&otherOBB.Center));
+                
+                wchar_t debugMsg[512];
+                swprintf_s(debugMsg, L"[Scene] Checking TigerAttack vs Player collision:\n"
+                                   L"  Attack pos: (%.1f, %.1f, %.1f), OBB center: (%.1f, %.1f, %.1f), extents: (%.1f, %.1f, %.1f)\n"
+                                   L"  Player pos: (%.1f, %.1f, %.1f), OBB center: (%.1f, %.1f, %.1f), extents: (%.1f, %.1f, %.1f)\n",
+                                   attackPos.x, attackPos.y, attackPos.z,
+                                   attackCenter.x, attackCenter.y, attackCenter.z,
+                                   OBB.Extents.x, OBB.Extents.y, OBB.Extents.z,
+                                   playerPos.x, playerPos.y, playerPos.z,
+                                   playerCenter.x, playerCenter.y, playerCenter.z,
+                                   otherOBB.Extents.x, otherOBB.Extents.y, otherOBB.Extents.z);
+                OutputDebugString(debugMsg);
+            }
+            
+            if (!OBB.Intersects(otherOBB)) {
+                // TigerAttackObject와 PlayerObject 조합에서 충돌이 감지되지 않은 경우
+                if (tigerAttack && player) {
+                    // OBB 정보 출력
+                    XMFLOAT3 attackCenter, playerCenter;
+                    XMStoreFloat3(&attackCenter, XMLoadFloat3(&OBB.Center));
+                    XMStoreFloat3(&playerCenter, XMLoadFloat3(&otherOBB.Center));
+                    
+                    wchar_t debugMsg[512];
+                    swprintf_s(debugMsg, L"[Scene] TigerAttack and Player OBBs do NOT intersect:\n"
+                                       L"  Attack OBB center: (%.1f, %.1f, %.1f), extents: (%.1f, %.1f, %.1f)\n"
+                                       L"  Player OBB center: (%.1f, %.1f, %.1f), extents: (%.1f, %.1f, %.1f)\n",
+                                       attackCenter.x, attackCenter.y, attackCenter.z,
+                                       OBB.Extents.x, OBB.Extents.y, OBB.Extents.z,
+                                       playerCenter.x, playerCenter.y, playerCenter.z,
+                                       otherOBB.Extents.x, otherOBB.Extents.y, otherOBB.Extents.z);
+                    OutputDebugString(debugMsg);
+                }
+                continue;
+            }
+            
+            // TigerAttackObject와 PlayerObject 조합에서 충돌이 감지된 경우
+            if (tigerAttack && player) {
+                OutputDebugString(L"[Scene] TigerAttack and Player OBBs DO intersect - processing collision!\n");
+            }
+            
             auto [normal, penetration] = GetCollisionData(OBB, otherOBB);
+            
+            // TigerAttackObject와 PlayerObject 충돌 감지 로그
+            if (tigerAttack && player) {
+                OutputDebugString(L"[Scene] TigerAttackObject collision with Player detected!\n");
+            }
+            
             obj->OnProcessCollision(*otherObj, normal, penetration);
             otherObj->OnProcessCollision(*obj, -normal, penetration);
         }

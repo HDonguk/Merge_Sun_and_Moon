@@ -1764,20 +1764,7 @@ void Scene::OnProcessCollision()
             if (!OBB.Intersects(otherOBB)) {
                 // TigerAttackObject와 PlayerObject 조합에서 충돌이 감지되지 않은 경우
                 if (tigerAttack && player) {
-                    // OBB 정보 출력
-                    XMFLOAT3 attackCenter, playerCenter;
-                    XMStoreFloat3(&attackCenter, XMLoadFloat3(&OBB.Center));
-                    XMStoreFloat3(&playerCenter, XMLoadFloat3(&otherOBB.Center));
-                    
-                    wchar_t debugMsg[512];
-                    swprintf_s(debugMsg, L"[Scene] TigerAttack and Player OBBs do NOT intersect:\n"
-                                       L"  Attack OBB center: (%.1f, %.1f, %.1f), extents: (%.1f, %.1f, %.1f)\n"
-                                       L"  Player OBB center: (%.1f, %.1f, %.1f), extents: (%.1f, %.1f, %.1f)\n",
-                                       attackCenter.x, attackCenter.y, attackCenter.z,
-                                       OBB.Extents.x, OBB.Extents.y, OBB.Extents.z,
-                                       playerCenter.x, playerCenter.y, playerCenter.z,
-                                       otherOBB.Extents.x, otherOBB.Extents.y, otherOBB.Extents.z);
-                    OutputDebugString(debugMsg);
+                    OutputDebugString(L"[Scene] TigerAttack and Player OBBs do NOT intersect\n");
                 }
                 continue;
             }

@@ -826,6 +826,18 @@ void TigerObject::Fire()
         OutputDebugString(debugMsg);
         
         OutputDebugString(L"[TigerObject] Attack object created and added to scene\n");
+        
+        // 공격 오브젝트 생성 후 즉시 OBB 업데이트 (네트워크 호랑이와 로컬 호랑이 모두)
+        Collider* attackCollider = obj->GetComponent<Collider>();
+        if (attackCollider) {
+            Transform* attackTransform = obj->GetComponent<Transform>();
+            if (attackTransform) {
+                XMMATRIX finalM = attackTransform->GetTransformM();
+                attackTransform->SetFinalM(finalM);
+                attackCollider->UpdateOBB(finalM);
+            }
+        }
+        OutputDebugString(L"[TigerObject] Attack object OBB updated\n");
     } else {
         // Transform이 없는 경우에도 Original과 동일한 상대적 위치 사용
         Object* obj = new TigerAttackObject(m_scene, m_scene->AllocateId(), m_id);
@@ -833,7 +845,18 @@ void TigerObject::Fire()
         obj->AddComponent(new Collider{ {0.0f, 0.0f, 0.0f}, {4.0f, 6.0f, 8.0f} });
         m_scene->AddObj(obj);
         
-        OutputDebugString(L"[TigerObject] Attack object created with default position\n");
+        // 기본 위치 공격 오브젝트도 OBB 업데이트
+        Collider* attackCollider = obj->GetComponent<Collider>();
+        if (attackCollider) {
+            Transform* attackTransform = obj->GetComponent<Transform>();
+            if (attackTransform) {
+                XMMATRIX finalM = attackTransform->GetTransformM();
+                attackTransform->SetFinalM(finalM);
+                attackCollider->UpdateOBB(finalM);
+            }
+        }
+        
+        OutputDebugString(L"[TigerObject] Attack object created with default position and OBB updated\n");
     }
     
     // 네트워크 호랑이의 경우 Fire() 호출 후 mIsFired를 즉시 리셋하여 다음 공격을 받을 수 있도록 함
@@ -975,7 +998,7 @@ void TigerObject::CreateLeather()
 void TigerAttackObject::OnUpdate(GameTimer& gTimer)
 {
     mElapseTime += gTimer.DeltaTime();
-
+    
     // OBB 업데이트 상태 확인
     Transform* transform = GetComponent<Transform>();
     Collider* collider = GetComponent<Collider>();
@@ -988,19 +1011,12 @@ void TigerAttackObject::OnUpdate(GameTimer& gTimer)
         XMFLOAT3 center;
         XMStoreFloat3(&center, XMLoadFloat3(&obb.Center));
         
-        // 부모 Transform 정보도 출력
-        XMMATRIX finalM = transform->GetFinalM();
-        XMFLOAT4X4 finalMatrix;
-        XMStoreFloat4x4(&finalMatrix, finalM);
-        
-        wchar_t debugMsg[512];
-        swprintf_s(debugMsg, L"[TigerAttackObject] Update - pos: (%.1f, %.1f, %.1f), OBB center: (%.1f, %.1f, %.1f), extents: (%.1f, %.1f, %.1f), elapsed: %.3f\n"
-                               L"  Final matrix translation: (%.1f, %.1f, %.1f)\n",
-                               pos.x, pos.y, pos.z, center.x, center.y, center.z, obb.Extents.x, obb.Extents.y, obb.Extents.z, mElapseTime,
-                               finalMatrix._41, finalMatrix._42, finalMatrix._43);
+        wchar_t debugMsg[256];
+        swprintf_s(debugMsg, L"[TigerAttackObject] Update - pos: (%.1f, %.1f, %.1f), OBB center: (%.1f, %.1f, %.1f), extents: (%.1f, %.1f, %.1f), elapsed: %.3f\n",
+                   pos.x, pos.y, pos.z, center.x, center.y, center.z, obb.Extents.x, obb.Extents.y, obb.Extents.z, mElapseTime);
         OutputDebugString(debugMsg);
     }
-
+    
     if (mElapseTime >= 0.05) Delete();  // Original 수명으로 복원
     Object::OnUpdate(gTimer);
 }

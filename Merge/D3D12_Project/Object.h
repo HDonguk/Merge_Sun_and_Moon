@@ -87,6 +87,10 @@ public:
 	int mRicecake = 0;
 	bool mHasRicecake = false;
 	bool m_isNetworkPlayer = false;  // 네트워크 플레이어 구분
+	
+	// 생명력 관리 메서드 추가
+	void SetLife(int life) { mLife = life; }
+	int GetLife() const { return mLife; }
 };
 
 class CameraObject : public Object
@@ -174,6 +178,7 @@ public:
 	int GetLife() const { return mLife; }
 	void ResetHitTimer() { mElapseTime = 0.0f; }
 	void ResetHitState() { mIsHitted = false; }
+	void ResetAnimationTimer() { mElapseTime = 0.0f; }
 	
 	// 네트워크 호랑이를 위해 Fire() 메서드를 public으로 변경
 	void Fire();

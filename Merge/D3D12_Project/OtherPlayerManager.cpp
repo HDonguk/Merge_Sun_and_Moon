@@ -36,6 +36,7 @@ void OtherPlayerManager::SpawnOtherPlayer(int clientID) {
         float scale = 0.1f;
         PlayerObject* playerObj = new PlayerObject(m_currentScene, m_currentScene->AllocateId());
         playerObj->SetIsNetworkPlayer(true);  // 네트워크 플레이어로 설정
+        playerObj->SetLife(3);  // 네트워크 플레이어 생명력도 3으로 설정
         playerObj->AddComponent(new Transform{ {0.0f, 0.0f, 0.0f} });
         playerObj->AddComponent(new AdjustTransform{ {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {scale, scale, scale} });
         playerObj->AddComponent(new Mesh{ "1P(boy-idle).fbx" });

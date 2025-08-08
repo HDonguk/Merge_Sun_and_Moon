@@ -786,10 +786,9 @@ void NetworkManager::ProcessPacket(char* buffer) {
                                 if (tigerHitPkt->life <= 0) {
                                     tigerObj->Dead();
                                 } else {
-                                    // Hit 애니메이션 강제 재생 (생명력 감소는 이미 서버에서 처리됨)
+                                    // Hit 애니메이션 강제 재생 및 타이머 리셋
                                     tigerObj->ChangeState("0208_tiger_hit.fbx");
-                                    // 타이머 리셋하지 않음 (애니메이션이 끊기지 않도록)
-                                    // mIsHitted 플래그를 false로 설정하여 다음 hit를 받을 수 있도록 함
+                                    tigerObj->ResetAnimationTimer();  // 애니메이션 타이머 리셋
                                     tigerObj->ResetHitState();
                                     LogToFile("[Tiger] Hit animation started for tiger " + std::to_string(tigerHitPkt->tigerID));
                                 }

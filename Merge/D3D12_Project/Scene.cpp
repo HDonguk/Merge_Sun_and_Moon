@@ -68,6 +68,8 @@ void Scene::BuildHuntingStage()
     {
         float scale = 0.1f;
         objectPtr = new PlayerObject(this, AllocateId());
+        // 플레이어 생명력을 명시적으로 3으로 설정
+        dynamic_cast<PlayerObject*>(objectPtr)->SetLife(3);
         objectPtr->AddComponent(new Transform{ {300.f, 0.0f, 300.f} });
         objectPtr->AddComponent(new AdjustTransform{ {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {scale, scale, scale} });
         objectPtr->AddComponent(new Mesh{ "1P(boy-idle).fbx" });
@@ -76,6 +78,8 @@ void Scene::BuildHuntingStage()
         objectPtr->AddComponent(new Gravity);
         objectPtr->AddComponent(new Collider{ {0.0f, 8.0f, 0.0f}, {2.0f, 8.0f, 2.0f} });
         AddObj(objectPtr);
+        
+        OutputDebugString(L"[Scene] Created local player with life: 3\n");
     }
 
     {
@@ -178,6 +182,8 @@ void Scene::BuildBaseStage()
     {
         float scale = 0.1f;
         objectPtr = new PlayerObject(this, AllocateId());
+        // 플레이어 생명력을 명시적으로 3으로 설정
+        dynamic_cast<PlayerObject*>(objectPtr)->SetLife(3);
         objectPtr->AddComponent(new Transform{ {430.f, 0.0f, 150.f} });
         objectPtr->AddComponent(new AdjustTransform{ {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {scale, scale, scale} });
         objectPtr->AddComponent(new Mesh{ "1P(boy-idle).fbx" });
@@ -186,7 +192,8 @@ void Scene::BuildBaseStage()
         objectPtr->AddComponent(new Gravity);
         objectPtr->AddComponent(new Collider{ {0.0f, 80.0f * scale, 0.0f}, {30.0f * scale, 80.0f * scale, 30.0f * scale} });
         AddObj(objectPtr);
-
+        
+        OutputDebugString(L"[Scene] Created local player in Base stage with life: 3\n");
     }
     // 
     {
@@ -603,6 +610,8 @@ void Scene::BuildGodStage()
     {
         float scale = 0.1f;
         objectPtr = new PlayerObject(this, AllocateId());
+        // 플레이어 생명력을 명시적으로 3으로 설정
+        dynamic_cast<PlayerObject*>(objectPtr)->SetLife(3);
         objectPtr->AddComponent(new Transform{ {150.0f, 0.0f, 100.0f} });
         objectPtr->AddComponent(new AdjustTransform{ {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {scale, scale, scale} });
         objectPtr->AddComponent(new Mesh{ "1P(boy-idle).fbx" });
@@ -611,6 +620,8 @@ void Scene::BuildGodStage()
         objectPtr->AddComponent(new Gravity);
         objectPtr->AddComponent(new Collider{ {0.0f, 80.0f * scale, 0.0f}, {30.0f * scale, 80.0f * scale, 30.0f * scale} });
         AddObj(objectPtr);
+        
+        OutputDebugString(L"[Scene] Created local player in God stage with life: 3\n");
     }
 
     // 기존 다른 플레이어들을 다시 생성
@@ -643,17 +654,18 @@ void Scene::BuildGodStage()
                         XMStoreFloat3(&position, transform->GetPosition());
                         
                         // 새로운 플레이어 객체 생성
-                        float scale = 0.1f;
-                        Object* newPlayer = new PlayerObject(this, AllocateId());
-                        dynamic_cast<PlayerObject*>(newPlayer)->SetIsNetworkPlayer(true);  // 네트워크 플레이어로 설정
-                        newPlayer->AddComponent(new Transform{ {position.x, position.y, position.z} });
-                        newPlayer->AddComponent(new AdjustTransform{ {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {scale, scale, scale} });
-                        newPlayer->AddComponent(new Mesh{ "1P(boy-idle).fbx" });
-                        newPlayer->AddComponent(new Texture{ L"boy" , 1.0f, 0.4f });
-                        newPlayer->AddComponent(new Animation{ "1P(boy-idle).fbx" });
-                        newPlayer->AddComponent(new Gravity);
-                        newPlayer->AddComponent(new Collider{ {0.0f, 8.0f, 0.0f}, {2.0f, 8.0f, 2.0f} });
-                        AddObj(newPlayer);
+                                            float scale = 0.1f;
+                    Object* newPlayer = new PlayerObject(this, AllocateId());
+                    dynamic_cast<PlayerObject*>(newPlayer)->SetIsNetworkPlayer(true);  // 네트워크 플레이어로 설정
+                    dynamic_cast<PlayerObject*>(newPlayer)->SetLife(3);  // 네트워크 플레이어 생명력도 3으로 설정
+                    newPlayer->AddComponent(new Transform{ {position.x, position.y, position.z} });
+                    newPlayer->AddComponent(new AdjustTransform{ {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {scale, scale, scale} });
+                    newPlayer->AddComponent(new Mesh{ "1P(boy-idle).fbx" });
+                    newPlayer->AddComponent(new Texture{ L"boy" , 1.0f, 0.4f });
+                    newPlayer->AddComponent(new Animation{ "1P(boy-idle).fbx" });
+                    newPlayer->AddComponent(new Gravity);
+                    newPlayer->AddComponent(new Collider{ {0.0f, 8.0f, 0.0f}, {2.0f, 8.0f, 2.0f} });
+                    AddObj(newPlayer);
                         
                         // OtherPlayerManager에서 참조 업데이트
                         pair.second = dynamic_cast<PlayerObject*>(newPlayer);
@@ -673,6 +685,7 @@ void Scene::BuildGodStage()
                     float scale = 0.1f;
                     Object* newPlayer = new PlayerObject(this, AllocateId());
                     dynamic_cast<PlayerObject*>(newPlayer)->SetIsNetworkPlayer(true);  // 네트워크 플레이어로 설정
+                    dynamic_cast<PlayerObject*>(newPlayer)->SetLife(3);  // 네트워크 플레이어 생명력도 3으로 설정
                     newPlayer->AddComponent(new Transform{ {300.0f, 0.0f, 300.0f} });  // 기본 위치
                     newPlayer->AddComponent(new AdjustTransform{ {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {scale, scale, scale} });
                     newPlayer->AddComponent(new Mesh{ "1P(boy-idle).fbx" });

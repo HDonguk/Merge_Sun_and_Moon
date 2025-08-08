@@ -174,6 +174,18 @@ void Object::ProcessAnimation(GameTimer& gTimer)
         animation->mAnimationTime += gTimer.DeltaTime();
         
         string clipName = "Take 001";
+        
+        // hit 애니메이션의 실제 길이를 디버그 로그로 출력
+        if (animation->mCurrentFileName == "boy_hit.fbx" || animation->mCurrentFileName == "0208_tiger_hit.fbx") {
+            float clipEndTime = animData.GetClipEndTime(clipName);
+            wchar_t debugMsg[256];
+            // std::string을 std::wstring으로 변환하여 올바르게 출력
+            std::wstring wFileName(animation->mCurrentFileName.begin(), animation->mCurrentFileName.end());
+            swprintf_s(debugMsg, L"[ProcessAnimation] %s - Current time: %.3f, Clip end time: %.3f\n", 
+                       wFileName.c_str(), animation->mAnimationTime, clipEndTime);
+            OutputDebugString(debugMsg);
+        }
+        
         if (animation->mAnimationTime >= animData.GetClipEndTime(clipName)) animation->mAnimationTime = 0.0f;
         animData.GetFinalTransforms(clipName, animation->mAnimationTime, finalTransforms);
         memcpy(m_mappedData + sizeof(XMMATRIX), finalTransforms.data(), sizeof(XMMATRIX) * 90);
@@ -204,6 +216,22 @@ void PlayerObject::OnUpdate(GameTimer& gTimer)
     }
     ProcessRicecakeMockUp();
     Object::OnUpdate(gTimer);
+    
+    // 플레이어 생명력 상태 로그 (처음 몇 프레임만 출력)
+    static int frameCount = 0;
+    if (frameCount < 10) {
+        wchar_t debugMsg[256];
+        swprintf_s(debugMsg, L"[PlayerObject] Frame %d - Life: %d, IsNetworkPlayer: %s\n", 
+                   frameCount, mLife, m_isNetworkPlayer ? L"true" : L"false");
+        OutputDebugString(debugMsg);
+        frameCount++;
+    }
+    
+    // 플레이어 생명력이 0 이하로 설정되어 있으면 3으로 초기화 (안전장치)
+    if (mLife <= 0 && frameCount == 0) {
+        mLife = 3;
+        OutputDebugString(L"[PlayerObject] Life was 0 or negative, resetting to 3\n");
+    }
 }
 
 void PlayerObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration)
@@ -470,8 +498,16 @@ void PlayerObject::Hit()
     if (mIsHitted) return;
     mIsHitted = true;
     --mLife;
+    
+    // 생명력 변화 디버그 로그 추가
+    wchar_t debugMsg[256];
+    swprintf_s(debugMsg, L"[PlayerObject] Hit() called - Life decreased to: %d (IsNetworkPlayer: %s)\n", 
+               mLife, m_isNetworkPlayer ? L"true" : L"false");
+    OutputDebugString(debugMsg);
+    
     if (mLife == 0)
     {
+        OutputDebugString(L"[PlayerObject] Life is 0 - calling Dead()\n");
         Dead();
         return;
     }
@@ -506,7 +542,21 @@ void PlayerObject::CalcTime(float deltaTime)
     if (anim->mCurrentFileName == "boy_hit.fbx")
     {
         mElapseTime += deltaTime;
-        if (mElapseTime > 1.0f) TimeOut();
+        // hit 애니메이션 타이밍 디버그
+        if (mElapseTime > 0.5f && mElapseTime <= 0.6f) {
+            wchar_t debugMsg[256];
+            swprintf_s(debugMsg, L"[PlayerObject] Hit animation elapsed: %.3f seconds\n", mElapseTime);
+            OutputDebugString(debugMsg);
+        }
+        // 플레이어의 hit 애니메이션은 애니메이션의 실제 길이에 맞춰서 처리
+        // Scene을 통해 ResourceManager에 접근하여 실제 애니메이션 길이를 가져와서 사용
+        ResourceManager& resourceManager = m_scene->GetResourceManager();
+        SkinnedData& animData = resourceManager.GetAnimationData(anim->mCurrentFileName);
+        float clipEndTime = animData.GetClipEndTime("Take 001");
+        if (mElapseTime > clipEndTime) {
+            OutputDebugString(L"[PlayerObject] Hit animation timeout - switching to idle\n");
+            TimeOut();
+        }
     }
 
     if (anim->mCurrentFileName == "boy_dying_fix.fbx")
@@ -702,7 +752,12 @@ void TigerObject::TigerBehavior(GameTimer& gTimer)
 void TigerObject::ChangeState(string fileName)
 {
     Animation* anim = GetComponent<Animation>();
-    if (anim->ResetAnim(fileName, 0.0f)) mElapseTime = 0.0f;
+    if (anim->ResetAnim(fileName, 0.0f)) {
+        // hit 애니메이션의 경우 네트워크 호랑이도 타이머를 리셋
+        if (!m_isNetworkTiger || fileName == "0208_tiger_hit.fbx") {
+            mElapseTime = 0.0f;
+        }
+    }
 }
 
 void TigerObject::Search(float deltaTime)
@@ -932,8 +987,21 @@ void TigerObject::CalcTime(float deltaTime)
         if (anim->mCurrentFileName == "0208_tiger_hit.fbx")
         {
             mElapseTime += deltaTime;
-            // 네트워크 호랑이도 hit 애니메이션이 끝나면 TimeOut() 호출
-            if (mElapseTime > 0.8f) TimeOut();
+            // hit 애니메이션 타이밍 디버그
+            if (mElapseTime > 0.4f && mElapseTime <= 0.5f) {
+                wchar_t debugMsg[256];
+                swprintf_s(debugMsg, L"[TigerObject] Hit animation elapsed: %.3f seconds\n", mElapseTime);
+                OutputDebugString(debugMsg);
+            }
+            // 네트워크 호랑이의 hit 애니메이션은 애니메이션의 실제 길이에 맞춰서 처리
+            // Scene을 통해 ResourceManager에 접근하여 실제 애니메이션 길이를 가져와서 사용
+            ResourceManager& resourceManager = m_scene->GetResourceManager();
+            SkinnedData& animData = resourceManager.GetAnimationData(anim->mCurrentFileName);
+            float clipEndTime = animData.GetClipEndTime("Take 001");
+            if (mElapseTime > clipEndTime) {
+                OutputDebugString(L"[TigerObject] Network tiger hit animation completed - switching to idle\n");
+                TimeOut();
+            }
         }
 
         if (anim->mCurrentFileName == "0208_tiger_dying.fbx")
@@ -968,7 +1036,20 @@ void TigerObject::CalcTime(float deltaTime)
     if (anim->mCurrentFileName == "0208_tiger_hit.fbx")
     {
         mElapseTime += deltaTime;
-        if (mElapseTime > 0.8f) TimeOut();
+        // hit 애니메이션 타이밍 디버그
+        if (mElapseTime > 0.4f && mElapseTime <= 0.5f) {
+            wchar_t debugMsg[256];
+            swprintf_s(debugMsg, L"[TigerObject] Local tiger hit animation elapsed: %.3f seconds\n", mElapseTime);
+            OutputDebugString(debugMsg);
+        }
+        // 로컬 호랑이의 hit 애니메이션도 애니메이션의 실제 길이에 맞춰서 처리
+        ResourceManager& resourceManager = m_scene->GetResourceManager();
+        SkinnedData& animData = resourceManager.GetAnimationData(anim->mCurrentFileName);
+        float clipEndTime = animData.GetClipEndTime("Take 001");
+        if (mElapseTime > clipEndTime) {
+            OutputDebugString(L"[TigerObject] Local tiger hit animation timeout - switching to idle\n");
+            TimeOut();
+        }
     }
 
     if (anim->mCurrentFileName == "0208_tiger_dying.fbx")

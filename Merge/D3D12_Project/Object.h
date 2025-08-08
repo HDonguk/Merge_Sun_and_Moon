@@ -144,26 +144,39 @@ public:
 	void SetNetworkTigerID(int tigerID) { m_networkTigerID = tigerID; }
 	int GetNetworkTigerID() const { return m_networkTigerID; }
 	
-	// 보간을 위한 목표 위치 설정
-	void SetTargetPosition(float x, float y, float z) { m_targetPosition = {x, y, z, 1.0f}; }
-	void SetTargetRotationY(float rotY) { m_targetRotationY = rotY; }
+
 	
 	// 네트워크 호랑이 애니메이션 상태 설정
 	void SetNetworkAnimation(const std::string& animationFile, float animationTime) {
 		if (m_isNetworkTiger) {
 			Animation* anim = GetComponent<Animation>();
 			if (anim) {
-				// 애니메이션 파일이 변경된 경우에만 리셋
-				if (anim->mCurrentFileName != animationFile) {
-					anim->ResetAnim(animationFile, animationTime);
-					mElapseTime = 0.0f;
-				} else {
-					// 같은 애니메이션인 경우 서버와의 시간 차이를 보정
-					// 서버에서 받은 시간이 현재 시간보다 작으면 애니메이션이 리셋된 것으로 간주
-					if (animationTime < anim->mAnimationTime) {
-						anim->mAnimationTime = animationTime;
+				// hit 애니메이션 중에는 서버 업데이트를 무시하여 애니메이션이 완료되도록 함
+				if (anim->mCurrentFileName == "0208_tiger_hit.fbx") {
+					return;  // hit 애니메이션 중에는 서버 애니메이션 업데이트 무시
+				}
+				
+				// hit 보호 타이머가 활성화된 경우 모든 서버 애니메이션 업데이트 무시
+				if (m_hitProtectionTimer > 0.0f) {
+					return;  // 보호 타이머가 활성화된 동안 서버 업데이트 무시
+				}
+				
+				// hit 애니메이션 후 idle 상태 보호 플래그가 설정된 경우 서버 업데이트 무시
+				if (m_protectIdleAfterHit && anim->mCurrentFileName == "0722_tiger_idle2.fbx") {
+					// 보호 타이머가 만료된 후에만 다른 애니메이션 허용
+					if (m_hitProtectionTimer <= 0.0f) {
+						m_protectIdleAfterHit = false;  // 보호 플래그 해제
+					} else {
+						return;  // idle 상태 보호 중에는 서버 업데이트 무시
 					}
 				}
+				
+				// 애니메이션 파일이 변경된 경우에만 리셋 (원본 클라이언트처럼 단순하게)
+				if (anim->mCurrentFileName != animationFile) {
+					anim->ResetAnim(animationFile, 0.0f);
+					mElapseTime = 0.0f;
+				}
+				// 서버 시간 동기화 로직 제거 - 원본 클라이언트처럼 단순하게 유지
 			}
 		}
 	}
@@ -193,8 +206,8 @@ private:
 	void TimeOut();
 	void CalcTime(float deltaTime);
 	void CreateLeather();
-	float mWalkSpeed = 25.0f;
-	float mRunSpeed = 45.0f;
+	float mWalkSpeed = 20.0f;  // 원본과 동일하게 조정
+	float mRunSpeed = 35.0f;   // 원본과 동일하게 조정
 	float mElapseTime = 0.0f;
 	float mAttackTime = 0.0f;
 	float mSearchTime = 0.0f;
@@ -202,14 +215,13 @@ private:
 	bool mIsHitted = false;
 	int mLife = 3;
 	
-	// 네트워크 관련 멤버 변수
+	// 네트워크 관련 멤버 변수 (단순화)
 	bool m_isNetworkTiger = false;
 	int m_networkTigerID = -1;
 	
-	// 보간을 위한 목표 위치
-	XMVECTOR m_targetPosition = {0.0f, 0.0f, 0.0f, 1.0f};
-	float m_targetRotationY = 0.0f;
-	float m_interpolationSpeed = 8.0f; // 보간 속도 (60fps에 맞게 조정)
+	// hit 애니메이션 후 idle 상태 보호를 위한 플래그
+	bool m_protectIdleAfterHit = false;
+	float m_hitProtectionTimer = 0.0f;  // hit 애니메이션 후 보호 타이머
 };
 
 

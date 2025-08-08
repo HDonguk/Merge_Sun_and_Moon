@@ -169,23 +169,8 @@ void Object::ProcessAnimation(GameTimer& gTimer)
         vector<XMFLOAT4X4> finalTransforms{ 90 };
         SkinnedData& animData = m_scene->GetResourceManager().GetAnimationData(animation->mCurrentFileName);
         
-        // 모든 오브젝트의 애니메이션 시간 증가 (네트워크 호랑이도 포함)
-        // 네트워크 호랑이의 경우 SetNetworkAnimation에서 서버 시간으로 동기화됨
         animation->mAnimationTime += gTimer.DeltaTime();
-        
         string clipName = "Take 001";
-        
-        // hit 애니메이션의 실제 길이를 디버그 로그로 출력
-        if (animation->mCurrentFileName == "boy_hit.fbx" || animation->mCurrentFileName == "0208_tiger_hit.fbx") {
-            float clipEndTime = animData.GetClipEndTime(clipName);
-            wchar_t debugMsg[256];
-            // std::string을 std::wstring으로 변환하여 올바르게 출력
-            std::wstring wFileName(animation->mCurrentFileName.begin(), animation->mCurrentFileName.end());
-            swprintf_s(debugMsg, L"[ProcessAnimation] %s - Current time: %.3f, Clip end time: %.3f\n", 
-                       wFileName.c_str(), animation->mAnimationTime, clipEndTime);
-            OutputDebugString(debugMsg);
-        }
-        
         if (animation->mAnimationTime >= animData.GetClipEndTime(clipName)) animation->mAnimationTime = 0.0f;
         animData.GetFinalTransforms(clipName, animation->mAnimationTime, finalTransforms);
         memcpy(m_mappedData + sizeof(XMMATRIX), finalTransforms.data(), sizeof(XMMATRIX) * 90);
@@ -660,34 +645,8 @@ TigerObject::TigerObject(Scene* scene, uint32_t id, uint32_t parentId) : Object(
 
 void TigerObject::OnUpdate(GameTimer& gTimer)
 {
-    // 모든 호랑이(로컬, 네트워크)에 대해 CalcTime 호출
     CalcTime(gTimer.DeltaTime());
-    
-    // 네트워크 호랑이는 서버에서 관리되므로 클라이언트 AI 로직을 사용하지 않음
-    if (!m_isNetworkTiger) {
-        TigerBehavior(gTimer);
-    } else {
-        // 네트워크 호랑이는 SetNetworkTransform에서 이미 위치가 설정되었으므로
-        // 여기서는 추가 업데이트만 수행
-        Transform* transform = GetComponent<Transform>();
-        if (transform) {
-            // OBB가 최신 상태인지 확인하고 필요시 업데이트
-            Collider* collider = GetComponent<Collider>();
-            if (collider) {
-                XMMATRIX finalM = transform->GetTransformM();
-                if (m_parent_id != -1) {
-                    Object* parentObj = m_scene->GetObjFromId(m_parent_id);
-                    if (parentObj) {
-                        Transform* parentTransform = parentObj->GetComponent<Transform>();
-                        finalM = finalM * parentTransform->GetFinalM();
-                    }
-                }
-                transform->SetFinalM(finalM);
-                collider->UpdateOBB(finalM);
-            }
-        }
-    }
-    
+    TigerBehavior(gTimer);
     Object::OnUpdate(gTimer);
 }
 
@@ -752,20 +711,11 @@ void TigerObject::TigerBehavior(GameTimer& gTimer)
 void TigerObject::ChangeState(string fileName)
 {
     Animation* anim = GetComponent<Animation>();
-    if (anim->ResetAnim(fileName, 0.0f)) {
-        // hit 애니메이션의 경우 네트워크 호랑이도 타이머를 리셋
-        if (!m_isNetworkTiger || fileName == "0208_tiger_hit.fbx") {
-            mElapseTime = 0.0f;
-        }
-    }
+    if (anim->ResetAnim(fileName, 0.0f)) mElapseTime = 0.0f;
 }
 
 void TigerObject::Search(float deltaTime)
 {
-    // 네트워크 호랑이는 서버에서 관리되므로 Search 로직을 사용하지 않음
-    if (m_isNetworkTiger) {
-        return;
-    }
     
     static float randYaw = uid(dre);
     Transform* transform = GetComponent<Transform>();
@@ -787,9 +737,6 @@ void TigerObject::Search(float deltaTime)
 
 void TigerObject::Run()
 {
-    // 네트워크 호랑이는 서버에서 애니메이션을 관리하므로 클라이언트에서 변경하지 않음
-    if (m_isNetworkTiger) return;
-    
     Animation* anim = GetComponent<Animation>();
     if (anim->mCurrentFileName == "0208_tiger_attack.fbx") return;
     if (anim->mCurrentFileName == "0208_tiger_hit.fbx") return;
@@ -800,9 +747,6 @@ void TigerObject::Run()
 
 void TigerObject::Attack()
 {
-    // 네트워크 호랑이는 서버에서 애니메이션을 관리하므로 클라이언트에서 변경하지 않음
-    if (m_isNetworkTiger) return;
-    
     Animation* anim = GetComponent<Animation>();
     if (anim->mCurrentFileName == "0208_tiger_hit.fbx") return;
     if (anim->mCurrentFileName == "0208_tiger_dying.fbx") return;
@@ -815,10 +759,7 @@ void TigerObject::TimeOut()
     
     if (anim->mCurrentFileName == "0208_tiger_attack.fbx") 
     {
-        // 로컬 호랑이만 mIsFired 플래그를 리셋 (네트워크 호랑이는 Fire()에서 처리)
-        if (!m_isNetworkTiger) {
-            mIsFired = false;
-        }
+        mIsFired = false;
         mAttackTime = 0.0f;
         ChangeState("0722_tiger_idle2.fbx");
     }
@@ -827,27 +768,40 @@ void TigerObject::TimeOut()
     {
         mIsHitted = false;
         ChangeState("0722_tiger_idle2.fbx");
+        
+        // 네트워크 호랑이의 경우 hit 애니메이션 후 idle 상태 보호 플래그 설정
+        if (m_isNetworkTiger) {
+            m_protectIdleAfterHit = true;
+            m_hitProtectionTimer = 2.0f;  // 2초 동안 보호 (더 길게 설정)
+        }
     }
 
     if (anim->mCurrentFileName == "0208_tiger_dying.fbx")
     {
-        // 로컬 호랑이만 가죽 생성 및 삭제
-        if (!m_isNetworkTiger) {
-            CreateLeather();
-            Delete();
-        }
-        // 네트워크 호랑이는 CalcTime에서 애니메이션 끝나면 처리
+        CreateLeather();
+        Delete();
     }
 }
 void TigerObject::Fire()
 {
-    // 네트워크 호랑이는 서버에서 공격 패킷을 받을 때마다 공격 오브젝트를 생성해야 함
-    if (!m_isNetworkTiger && mIsFired) return;
-    
-    if (!m_isNetworkTiger) {
-        mIsFired = true;
+    if (mIsFired) return;
+    mIsFired = true;
+
+    // 네트워크 호랑이는 서버에 공격 이벤트만 전송
+    if (m_isNetworkTiger) {
+        Framework* framework = m_scene->GetFramework();
+        if (framework && framework->IsNetworkEnabled()) {
+            NetworkManager& networkManager = framework->GetNetworkManager();
+            if (networkManager.IsLoggedIn()) {
+                // 서버에 공격 이벤트 전송 (실제 공격 오브젝트 생성은 서버에서 처리)
+                networkManager.SendTigerAttack(m_networkTigerID);
+                OutputDebugString(L"[TigerObject] Network tiger attack event sent to server\n");
+            }
+        }
+        return;
     }
 
+    // 로컬 호랑이만 실제 공격 오브젝트 생성
     OutputDebugString(L"[TigerObject] Fire() called - creating attack object\n");
 
     // 호랑이의 실제 위치를 고려한 공격 오브젝트 생성
@@ -882,7 +836,7 @@ void TigerObject::Fire()
         
         OutputDebugString(L"[TigerObject] Attack object created and added to scene\n");
         
-        // 공격 오브젝트 생성 후 즉시 OBB 업데이트 (네트워크 호랑이와 로컬 호랑이 모두)
+        // 공격 오브젝트 생성 후 즉시 OBB 업데이트
         Collider* attackCollider = obj->GetComponent<Collider>();
         if (attackCollider) {
             Transform* attackTransform = obj->GetComponent<Transform>();
@@ -900,24 +854,8 @@ void TigerObject::Fire()
         obj->AddComponent(new Collider{ {0.0f, 0.0f, 0.0f}, {4.0f, 6.0f, 8.0f} });
         m_scene->AddObj(obj);
         
-        // 기본 위치 공격 오브젝트도 OBB 업데이트
-        Collider* attackCollider = obj->GetComponent<Collider>();
-        if (attackCollider) {
-            Transform* attackTransform = obj->GetComponent<Transform>();
-            if (attackTransform) {
-                XMMATRIX finalM = attackTransform->GetTransformM();
-                attackTransform->SetFinalM(finalM);
-                attackCollider->UpdateOBB(finalM);
-            }
-        }
-        
-        OutputDebugString(L"[TigerObject] Attack object created with default position and OBB updated\n");
+        OutputDebugString(L"[TigerObject] Attack object created (no transform)\n");
     }
-    
-    // 네트워크 호랑이의 경우 Fire() 호출 후 mIsFired를 즉시 리셋하여 다음 공격을 받을 수 있도록 함
-    //if (m_isNetworkTiger) {
-    //    mIsFired = false;
-   // }
 }
 
 void TigerObject::Hit()
@@ -925,7 +863,7 @@ void TigerObject::Hit()
     if (mIsHitted) return;
     mIsHitted = true;
     
-    // 네트워크 호랑이는 서버에만 히트 이벤트 전송 (생명력 감소는 서버에서 처리)
+    // 네트워크 호랑이도 즉시 hit 애니메이션 재생 (서버 응답과 관계없이)
     if (m_isNetworkTiger) {
         Framework* framework = m_scene->GetFramework();
         if (framework && framework->IsNetworkEnabled()) {
@@ -935,9 +873,8 @@ void TigerObject::Hit()
                 OutputDebugString(L"[Tiger] Network tiger hit event sent to server\n");
             }
         }
-        // 네트워크 호랑이는 서버 응답을 기다리므로 여기서 애니메이션도 재생하지 않음
-        // 애니메이션은 NetworkManager에서 서버 응답을 받은 후 재생
-        mElapseTime = 0.0f;
+        // 네트워크 호랑이도 즉시 hit 애니메이션 재생
+        ChangeState("0208_tiger_hit.fbx");
         return;
     }
     
@@ -963,6 +900,14 @@ void TigerObject::CalcTime(float deltaTime)
 
     // 네트워크 호랑이는 서버에서 관리되므로 타이머만 업데이트
     if (m_isNetworkTiger) {
+        // hit 보호 타이머 업데이트
+        if (m_hitProtectionTimer > 0.0f) {
+            m_hitProtectionTimer -= deltaTime;
+            if (m_hitProtectionTimer <= 0.0f) {
+                m_protectIdleAfterHit = false;  // 보호 플래그 해제
+            }
+        }
+        
         if (anim->mCurrentFileName == "0113_tiger_walk.fbx")
         {
             mSearchTime += deltaTime;
@@ -976,33 +921,20 @@ void TigerObject::CalcTime(float deltaTime)
         if (anim->mCurrentFileName == "0208_tiger_attack.fbx") 
         {
             mElapseTime += deltaTime;
-            // 네트워크 호랑이는 서버에서 공격 패킷을 받을 때만 공격 오브젝트 생성
-            // TimeOut() 호출하지 않음 (서버에서 애니메이션 관리)
+            // 네트워크 호랑이도 Original과 동일하게 Fire()와 TimeOut() 호출
+            if (mElapseTime >= 0.4f) Fire();
+            if (mElapseTime >= 0.8f) TimeOut();
         }
         else
         {
             mAttackTime += deltaTime;
         }
 
-        if (anim->mCurrentFileName == "0208_tiger_hit.fbx")
-        {
-            mElapseTime += deltaTime;
-            // hit 애니메이션 타이밍 디버그
-            if (mElapseTime > 0.4f && mElapseTime <= 0.5f) {
-                wchar_t debugMsg[256];
-                swprintf_s(debugMsg, L"[TigerObject] Hit animation elapsed: %.3f seconds\n", mElapseTime);
-                OutputDebugString(debugMsg);
-            }
-            // 네트워크 호랑이의 hit 애니메이션은 애니메이션의 실제 길이에 맞춰서 처리
-            // Scene을 통해 ResourceManager에 접근하여 실제 애니메이션 길이를 가져와서 사용
-            ResourceManager& resourceManager = m_scene->GetResourceManager();
-            SkinnedData& animData = resourceManager.GetAnimationData(anim->mCurrentFileName);
-            float clipEndTime = animData.GetClipEndTime("Take 001");
-            if (mElapseTime > clipEndTime) {
-                OutputDebugString(L"[TigerObject] Network tiger hit animation completed - switching to idle\n");
-                TimeOut();
-            }
-        }
+            if (anim->mCurrentFileName == "0208_tiger_hit.fbx")
+    {
+        mElapseTime += deltaTime;
+        if (mElapseTime > 0.8f) TimeOut();  // Original과 동일한 0.8초 타이머
+    }
 
         if (anim->mCurrentFileName == "0208_tiger_dying.fbx")
         {
@@ -1036,20 +968,7 @@ void TigerObject::CalcTime(float deltaTime)
     if (anim->mCurrentFileName == "0208_tiger_hit.fbx")
     {
         mElapseTime += deltaTime;
-        // hit 애니메이션 타이밍 디버그
-        if (mElapseTime > 0.4f && mElapseTime <= 0.5f) {
-            wchar_t debugMsg[256];
-            swprintf_s(debugMsg, L"[TigerObject] Local tiger hit animation elapsed: %.3f seconds\n", mElapseTime);
-            OutputDebugString(debugMsg);
-        }
-        // 로컬 호랑이의 hit 애니메이션도 애니메이션의 실제 길이에 맞춰서 처리
-        ResourceManager& resourceManager = m_scene->GetResourceManager();
-        SkinnedData& animData = resourceManager.GetAnimationData(anim->mCurrentFileName);
-        float clipEndTime = animData.GetClipEndTime("Take 001");
-        if (mElapseTime > clipEndTime) {
-            OutputDebugString(L"[TigerObject] Local tiger hit animation timeout - switching to idle\n");
-            TimeOut();
-        }
+        if (mElapseTime > 0.8f) TimeOut();  // Original과 동일한 0.8초 타이머
     }
 
     if (anim->mCurrentFileName == "0208_tiger_dying.fbx")
@@ -1466,15 +1385,11 @@ void TigerObject::SetNetworkTransform(float x, float y, float z, float rotY)
         if (transform) {
             // Y-위치는 Gravity 컴포넌트가 관리하므로 X, Z만 서버에서 동기화
             XMVECTOR currentPos = transform->GetPosition();
-            m_targetPosition = {x, XMVectorGetY(currentPos), z, 1.0f};
-            m_targetRotationY = rotY;
-            
-            // 즉시 위치를 설정하고 OBB 업데이트 (보간 대신 즉시 적용)
             XMVECTOR newPos = {x, XMVectorGetY(currentPos), z, 1.0f};
             transform->SetPosition(newPos);
             transform->SetRotation({0.0f, rotY, 0.0f});
             
-            // OBB 즉시 업데이트
+            // OBB 업데이트
             Collider* collider = GetComponent<Collider>();
             if (collider) {
                 XMMATRIX finalM = transform->GetTransformM();

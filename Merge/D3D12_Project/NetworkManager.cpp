@@ -206,6 +206,28 @@ void NetworkManager::SendTigerHit(int tigerID, int life) {
     }
 }
 
+void NetworkManager::SendTigerAttack(int tigerID) {
+    if (!m_isRunning || !m_isLoggedIn) return;
+
+    try {
+        PacketTigerAttack pkt;
+        pkt.header.size = sizeof(PacketTigerAttack);
+        pkt.header.type = PACKET_TIGER_ATTACK;
+        pkt.tigerID = tigerID;
+
+        int sendResult = send(sock, (char*)&pkt, sizeof(pkt), 0);
+        if (sendResult == SOCKET_ERROR) {
+            int error = WSAGetLastError();
+            LogToFile("[Error] Failed to send tiger attack: " + std::to_string(error));
+        } else {
+            LogToFile("[Tiger] Sent tiger attack to server, tigerID: " + std::to_string(tigerID));
+        }
+    }
+    catch (const std::exception& e) {
+        LogToFile("[Error] Exception in SendTigerAttack: " + std::string(e.what()));
+    }
+}
+
 void NetworkManager::SetLoginSuccessCallback(std::function<void(int, const std::string&)> callback) {
     m_loginSuccessCallback = callback;
 }
@@ -684,9 +706,12 @@ void NetworkManager::ProcessPacket(char* buffer) {
                             // 호랑이 ID를 저장하여 나중에 업데이트할 때 사용
                             tigerObj->SetNetworkTigerID(tigerSpawnPkt->tigerID);
                             
-                            // 초기 목표 위치 설정
-                            tigerObj->SetTargetPosition(tigerSpawnPkt->x, tigerSpawnPkt->y, tigerSpawnPkt->z);
-                            tigerObj->SetTargetRotationY(0.0f);
+                            // 초기 위치 설정 (보간 제거로 인해 즉시 설정)
+                            Transform* transform = tigerObj->GetComponent<Transform>();
+                            if (transform) {
+                                transform->SetPosition({tigerSpawnPkt->x, tigerSpawnPkt->y, tigerSpawnPkt->z, 1.0f});
+                                transform->SetRotation({0.0f, 0.0f, 0.0f});
+                            }
                             
                             // 초기 애니메이션 설정
                             Animation* anim = tigerObj->GetComponent<Animation>();
@@ -753,11 +778,27 @@ void NetworkManager::ProcessPacket(char* buffer) {
                     for (Object* obj : m_scene->GetObjects()) {
                         TigerObject* tigerObj = dynamic_cast<TigerObject*>(obj);
                         if (tigerObj && tigerObj->IsNetworkTiger() && tigerObj->GetNetworkTigerID() == tigerAttackPkt->tigerID) {
-                            // 네트워크 호랑이의 Fire() 메서드 호출
-                            tigerObj->Fire();
-                            
-                            LogToFile("[Tiger] Tiger " + std::to_string(tigerAttackPkt->tigerID) + " attacked at position (" + 
-                                     std::to_string(tigerAttackPkt->x) + ", " + std::to_string(tigerAttackPkt->y) + ", " + std::to_string(tigerAttackPkt->z) + ")");
+                            // 네트워크 호랑이의 실제 공격 오브젝트 생성
+                            Transform* tigerTransform = tigerObj->GetComponent<Transform>();
+                            if (tigerTransform) {
+                                Object* attackObj = new TigerAttackObject(m_scene, m_scene->AllocateId(), tigerObj->GetId());
+                                attackObj->AddComponent(new Transform{ {0.0f, 6.0f, 18.0f} });  // Original과 동일한 상대적 위치
+                                attackObj->AddComponent(new Collider{ {0.0f, 0.0f, 0.0f}, {4.0f, 6.0f, 8.0f} });
+                                m_scene->AddObj(attackObj);
+                                
+                                // 공격 오브젝트 생성 후 즉시 OBB 업데이트
+                                Collider* attackCollider = attackObj->GetComponent<Collider>();
+                                if (attackCollider) {
+                                    Transform* attackTransform = attackObj->GetComponent<Transform>();
+                                    if (attackTransform) {
+                                        XMMATRIX finalM = attackTransform->GetTransformM();
+                                        attackTransform->SetFinalM(finalM);
+                                        attackCollider->UpdateOBB(finalM);
+                                    }
+                                }
+                                
+                                LogToFile("[Tiger] Network tiger " + std::to_string(tigerAttackPkt->tigerID) + " created attack object");
+                            }
                             break;
                         }
                     }
@@ -786,11 +827,9 @@ void NetworkManager::ProcessPacket(char* buffer) {
                                 if (tigerHitPkt->life <= 0) {
                                     tigerObj->Dead();
                                 } else {
-                                    // Hit 애니메이션 강제 재생 및 타이머 리셋
-                                    tigerObj->ChangeState("0208_tiger_hit.fbx");
-                                    tigerObj->ResetAnimationTimer();  // 애니메이션 타이머 리셋
-                                    tigerObj->ResetHitState();
-                                    LogToFile("[Tiger] Hit animation started for tiger " + std::to_string(tigerHitPkt->tigerID));
+                                    // 클라이언트에서 이미 hit 애니메이션을 재생했으므로 생명력만 업데이트
+                                    // 애니메이션은 클라이언트에서 관리하므로 서버에서 재생하지 않음
+                                    LogToFile("[Tiger] Hit animation already playing for tiger " + std::to_string(tigerHitPkt->tigerID));
                                 }
                                 
                                 LogToFile("[Tiger] Tiger " + std::to_string(tigerHitPkt->tigerID) + " hit, remaining life: " + std::to_string(tigerHitPkt->life));

@@ -35,6 +35,7 @@ public:
     void SendPlayerDisconnect();
     void SendTigerRespawnRequest();  // 호랑이 재생성 요청
     void SendTigerHit(int tigerID, int life);  // 호랑이 Hit 상태 전송
+    void SendTigerAttack(int tigerID);  // 호랑이 공격 이벤트 전송
     void ClearTigerInfo();  // 호랑이 정보 초기화
     void Shutdown();
     bool IsRunning() const { return m_isRunning; }

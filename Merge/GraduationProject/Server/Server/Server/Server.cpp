@@ -790,6 +790,7 @@ void GameServer::InitializeTigers() {
             tiger.isFired = false;
             tiger.isHitted = false;  // Original과 동일
             tiger.life = 3;          // Original과 동일
+            tiger.hitProtectionTimer = 0.0f;  // hit 보호 타이머 초기화
             
             // 초기 목표 위치 설정
             tiger.targetX = tiger.x;
@@ -859,7 +860,13 @@ void GameServer::UpdateTigerBehavior(TigerInfo& tiger, float deltaTime) {
             tiger.animationTime = 0.0f;
             tiger.elapseTime = 0.0f;
             tiger.isHitted = false;
+            tiger.hitProtectionTimer = 2.0f;  // 2초 동안 보호
         }
+    }
+    
+    // hit 보호 타이머 업데이트
+    if (tiger.hitProtectionTimer > 0.0f) {
+        tiger.hitProtectionTimer -= deltaTime;
     }
     
     if (tiger.currentAnimation == "0208_tiger_dying.fbx") {
@@ -896,7 +903,8 @@ void GameServer::UpdateTigerBehavior(TigerInfo& tiger, float deltaTime) {
             // Attack() 함수 로직 (Original과 동일)
             if (tiger.currentAnimation != "0208_tiger_hit.fbx" && 
                 tiger.currentAnimation != "0208_tiger_dying.fbx" && 
-                tiger.attackTime >= 2.0f) {
+                tiger.attackTime >= 2.0f &&
+                tiger.hitProtectionTimer <= 0.0f) {  // hit 보호 타이머가 만료된 후에만 attack 허용
                 
                 if (tiger.currentAnimation != "0208_tiger_attack.fbx") {
                     tiger.currentAnimation = "0208_tiger_attack.fbx";
@@ -917,7 +925,8 @@ void GameServer::UpdateTigerBehavior(TigerInfo& tiger, float deltaTime) {
             if (tiger.currentAnimation != "0208_tiger_attack.fbx" && 
                 tiger.currentAnimation != "0208_tiger_hit.fbx" && 
                 tiger.currentAnimation != "0208_tiger_dying.fbx" && 
-                tiger.attackTime >= 2.0f) {
+                tiger.attackTime >= 2.0f &&
+                tiger.hitProtectionTimer <= 0.0f) {  // hit 보호 타이머가 만료된 후에만 run 허용
                 
                 if (tiger.currentAnimation != "0722_tiger_run.fbx") {
                     tiger.currentAnimation = "0722_tiger_run.fbx";
@@ -956,7 +965,7 @@ void GameServer::UpdateTigerBehavior(TigerInfo& tiger, float deltaTime) {
         tiger.x += dirX * WALK_SPEED * deltaTime;
         tiger.z += dirZ * WALK_SPEED * deltaTime;
         
-        if (tiger.currentAnimation != "0113_tiger_walk.fbx") {
+        if (tiger.currentAnimation != "0113_tiger_walk.fbx" && tiger.hitProtectionTimer <= 0.0f) {
             tiger.currentAnimation = "0113_tiger_walk.fbx";
             tiger.animationTime = 0.0f;
         }

@@ -646,7 +646,12 @@ TigerObject::TigerObject(Scene* scene, uint32_t id, uint32_t parentId) : Object(
 void TigerObject::OnUpdate(GameTimer& gTimer)
 {
     CalcTime(gTimer.DeltaTime());
-    TigerBehavior(gTimer);
+    
+    // 네트워크 호랑이는 서버에서 관리되므로 TigerBehavior 호출하지 않음
+    if (!m_isNetworkTiger) {
+        TigerBehavior(gTimer);
+    }
+    
     Object::OnUpdate(gTimer);
 }
 
@@ -719,6 +724,7 @@ void TigerObject::Search(float deltaTime)
     
     static float randYaw = uid(dre);
     Transform* transform = GetComponent<Transform>();
+    Animation* anim = GetComponent<Animation>();
     
     if (mSearchTime > 2.0f)
     {
@@ -732,6 +738,11 @@ void TigerObject::Search(float deltaTime)
     XMVECTOR pos = transform->GetPosition();
     transform->SetPosition(pos + dir * mWalkSpeed * deltaTime);
 
+    // 네트워크 호랑이의 hit 후 idle 보호
+    if (m_isNetworkTiger && m_protectIdleAfterHit && anim->mCurrentFileName == "0722_tiger_idle2.fbx") {
+        return;  // hit 후 idle 상태 보호 중에는 walk로 변경하지 않음
+    }
+    
     ChangeState("0113_tiger_walk.fbx");
 }
 
@@ -741,6 +752,12 @@ void TigerObject::Run()
     if (anim->mCurrentFileName == "0208_tiger_attack.fbx") return;
     if (anim->mCurrentFileName == "0208_tiger_hit.fbx") return;
     if (anim->mCurrentFileName == "0208_tiger_dying.fbx") return;
+    
+    // 네트워크 호랑이의 hit 후 idle 보호
+    if (m_isNetworkTiger && m_protectIdleAfterHit && anim->mCurrentFileName == "0722_tiger_idle2.fbx") {
+        return;  // hit 후 idle 상태 보호 중에는 run으로 변경하지 않음
+    }
+    
     if (mAttackTime < 2.0f) return;
     ChangeState("0722_tiger_run.fbx");
 }
@@ -750,6 +767,12 @@ void TigerObject::Attack()
     Animation* anim = GetComponent<Animation>();
     if (anim->mCurrentFileName == "0208_tiger_hit.fbx") return;
     if (anim->mCurrentFileName == "0208_tiger_dying.fbx") return;
+    
+    // 네트워크 호랑이의 hit 후 idle 보호
+    if (m_isNetworkTiger && m_protectIdleAfterHit && anim->mCurrentFileName == "0722_tiger_idle2.fbx") {
+        return;  // hit 후 idle 상태 보호 중에는 attack으로 변경하지 않음
+    }
+    
     if (mAttackTime < 2.0f) return;  // Original과 동일한 2초
     ChangeState("0208_tiger_attack.fbx");
 }

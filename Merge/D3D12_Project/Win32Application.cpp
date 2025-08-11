@@ -85,13 +85,6 @@ LRESULT CALLBACK Win32Application::WindowProc(HWND hWnd, UINT message, WPARAM wP
         }
         break;
 
-    case WM_MOUSEMOVE:
-        if (pSample && !pSample->IsInLoginScreen())
-        {
-            pSample->GetScene(pSample->GetCurrentSceneName()).GetObj<CameraObject>()->OnMouseInput(
-                wParam, pSample->GetWin32App().GetHwnd());
-        }
-        break;
 
     case WM_SIZE:
         if (pSample)

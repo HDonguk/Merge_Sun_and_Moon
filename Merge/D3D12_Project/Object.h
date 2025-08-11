@@ -102,12 +102,12 @@ public:
 	using Object::Object;
 	void OnUpdate(GameTimer& gTimer) override;
 	void LateUpdate(GameTimer& gTimer) override;
-	void OnMouseInput(WPARAM wParam, HWND hWnd);
+	
 private:
-	int mLastPosX = -1;
-	int mLastPosY = -1;
+	void ProcessInput();
+	void MouseMove();
 	float mTheta = XMConvertToRadians(-90.0f);
-	float mPhi = XMConvertToRadians(70.0f);
+	float mPhi = XMConvertToRadians(60.0f);
 	float mRadius = 70.0f;
 };
 

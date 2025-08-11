@@ -821,6 +821,15 @@ void Scene::BuildGodStage()
         AddObj(objectPtr);
     }
 
+    // ������
+    {
+        objectPtr = new PuzzleFrameObject(this, AllocateId());
+        objectPtr->AddComponent(new Transform{ {300.0f, 0.0f, 150.0f}, {-90.0f, 0.0f, 0.0f}, {100.0f, 1.0f, 100.0f} });
+        objectPtr->AddComponent(new Mesh{ "Quad" });
+        objectPtr->AddComponent(new Texture{ L"PuzzleFrame", -1.0f, 0.4f });
+        AddObj(objectPtr);
+    }
+
     // 나무
     {
         float scale = 5.0f;
@@ -1315,6 +1324,8 @@ Object* Scene::GetObjFromId(uint32_t id)
     return nullptr;
 }
 
+
+
 void Scene::CompactObjects()
 {
     auto func = [](Object* obj) -> bool
@@ -1494,6 +1505,11 @@ void Scene::ProcessStageQueue()
     OutputDebugString(L"[Scene] ProcessStageQueue: Stage transition fully completed\n");
 }
 
+int(*Scene::GetPuzzleStatus())[3]
+{
+        return mPuzzleStatus;
+    
+}
 
 void Scene::DeleteCurrentObjects()
 {
@@ -2013,6 +2029,15 @@ void Scene::LoadMeshAnimationTexture()
     m_texture_name_to_index.insert({ L"TigerLeather4", i++ });
     m_DDSFileName.push_back(L"./Textures/TigerLeather5.dds");
     m_texture_name_to_index.insert({ L"TigerLeather5", i++ });
+
+    m_DDSFileName.push_back(L"./Textures/PuzzleFrame.dds");
+    m_texture_name_to_index.insert({ L"PuzzleFrame", i++ });
+    m_DDSFileName.push_back(L"./Textures/PuzzleFrameComplete.dds");
+    m_texture_name_to_index.insert({ L"PuzzleFrameComplete", i++ });
+    m_DDSFileName.push_back(L"./Textures/PuzzleO.dds");
+    m_texture_name_to_index.insert({ L"PuzzleO", i++ });
+    m_DDSFileName.push_back(L"./Textures/PuzzleX.dds");
+    m_texture_name_to_index.insert({ L"PuzzleX", i++ });
 }
 
 // Update frame-based values.

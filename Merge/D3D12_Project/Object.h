@@ -137,7 +137,7 @@ class TreeObject : public Object
 {
 public:
 	using Object::Object;
-	
+	void OnUpdate(GameTimer& gTimer) override;
 	void OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration) override;
 	void LateUpdate(GameTimer& gTimer) override;
 
@@ -379,6 +379,26 @@ class CrossHairQuadObject : public Object
 public:
 	Object::Object;
 	void OnUpdate(GameTimer& gTimer) override;
+};
+
+class PuzzleCellObject : public Object
+{
+public:
+	Object::Object;
+	void OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration) override;
+	int GetStatus();
+private:
+	int mStatus = 0;
+};
+
+class PuzzleFrameObject : public Object
+{
+public:
+	PuzzleFrameObject(Scene* scene, uint32_t id, uint32_t parentId = -1);
+	void OnUpdate(GameTimer& gTimer) override;
+	bool AllCellMatch();
+private:
+	PuzzleCellObject* mCells[3][3] = {};
 };
 
 class GrassGroupObject : public Object

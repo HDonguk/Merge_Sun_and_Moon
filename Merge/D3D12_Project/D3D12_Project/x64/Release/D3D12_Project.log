@@ -203,11 +203,11 @@ C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\LoginU
 C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(719,26): warning C4244: '초기화 중': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
 C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(726,22): warning C4244: '=': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
 C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(848,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1068,26): warning C4244: '초기화 중': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1076,22): warning C4244: '=': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1326,19): warning C4244: '초기화 중': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1573,15): warning C4244: '초기화 중': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1635,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1094,26): warning C4244: '초기화 중': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1102,22): warning C4244: '=': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1352,19): warning C4244: '초기화 중': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1599,15): warning C4244: '초기화 중': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1640,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
   OtherPlayerManager.cpp
 C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\OtherPlayerManager.cpp(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
 C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,1): warning C4005: '_WINSOCKAPI_': 매크로 재정의
@@ -312,8 +312,8 @@ C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\LoginU
   (소스 파일 'Win32Application.cpp'을(를) 컴파일하는 중)
   
   코드를 생성하고 있습니다.
-  14 of 3935 functions ( 0.4%) were compiled, the rest were copied from previous compilation.
-    4 functions were new in current compilation
-    203 functions had inline decision re-evaluated but remain unchanged
+  0 of 3935 functions ( 0.0%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    0 functions had inline decision re-evaluated but remain unchanged
   코드를 생성했습니다.
   D3D12_Project.vcxproj -> C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\x64\Release\D3D12_Project.exe

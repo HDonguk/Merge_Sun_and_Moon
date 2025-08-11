@@ -913,8 +913,34 @@ void TigerObject::HitByRiceCake()
 {
     if (mIsHitted) return;
     mIsHitted = true;
+    
+    OutputDebugString(L"[TigerObject] HitByRiceCake() called - mIsHitted set to true\n");
+    
+    // 네트워크 호랑이도 즉시 hit 애니메이션 재생 (서버 응답과 관계없이)
+    if (m_isNetworkTiger) {
+        OutputDebugString(L"[TigerObject] Network tiger hit by ricecake - sending hit event to server\n");
+        Framework* framework = m_scene->GetFramework();
+        if (framework && framework->IsNetworkEnabled()) {
+            NetworkManager& networkManager = framework->GetNetworkManager();
+            if (networkManager.IsLoggedIn()) {
+                // 떡으로 맞으면 생명력 대폭 감소 (한방에 죽일 수 있도록)
+                mLife -= 3;
+                networkManager.SendTigerHit(m_networkTigerID, mLife); // 현재 생명력 전송
+                OutputDebugString(L"[Tiger] Network tiger hit by ricecake event sent to server\n");
+            }
+        }
+        // 네트워크 호랑이도 즉시 hit 애니메이션 재생
+        ChangeState("0208_tiger_hit.fbx");
+        OutputDebugString(L"[TigerObject] Network tiger hit by ricecake animation state changed\n");
+        return;
+    }
+    
+    // 로컬 호랑이만 즉시 생명력 감소 및 애니메이션 재생
+    OutputDebugString(L"[TigerObject] Local tiger hit by ricecake - reducing life\n");
+    // 떡으로 맞으면 생명력 대폭 감소 (한방에 죽일 수 있도록)
     mLife -= 3;
-    if (mLife == 0)
+    
+    if (mLife <= 0)
     {
         Dead();
         return;

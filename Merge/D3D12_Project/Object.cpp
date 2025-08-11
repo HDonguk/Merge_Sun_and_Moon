@@ -201,16 +201,30 @@ void PlayerObject::OnUpdate(GameTimer& gTimer)
     if (!m_isNetworkPlayer) {
         ProcessInput(gTimer);
     }
+    Transform* transform = GetComponent<Transform>();
+    CameraObject* cameraObj = m_scene->GetObj<CameraObject>();
+    Transform* cameraTransform = cameraObj->GetComponent<Transform>();
+
+    XMVECTOR inputDir = XMLoadFloat3(&mInputDir);
+    inputDir = XMVector3TransformNormal(inputDir, cameraTransform->GetRotationM());
+    inputDir = XMVector3Normalize(XMVectorSetY(inputDir, 0.0f));
+
+    XMVECTOR pos = transform->GetPosition();
+    pos += inputDir * mSpeed * gTimer.DeltaTime();
+    transform->SetPosition(pos);
+
     if (mFocusMode)
     {
-        Transform* transform = GetComponent<Transform>();
-        CameraObject* cameraObj = m_scene->GetObj<CameraObject>();
-        Transform* cameraTransform = cameraObj->GetComponent<Transform>();
         XMVECTOR dir = XMVector3TransformNormal(XMVECTOR{ 0.0f, 0.0f, 1.0f }, cameraTransform->GetRotationM());
         XMStoreFloat3(&mDir, XMVector3Normalize(dir));
         dir = XMVector3Normalize(XMVectorSetY(dir, 0.0f));
 
         float yaw = atan2f(XMVectorGetX(dir), XMVectorGetZ(dir)) * 180 / 3.141592f;
+        transform->SetRotation({ 0.0f, yaw, 0.0f });
+    }
+    else
+    {
+        float yaw = atan2f(XMVectorGetX(inputDir), XMVectorGetZ(inputDir)) * 180 / 3.141592f;
         transform->SetRotation({ 0.0f, yaw, 0.0f });
     }
 
@@ -324,25 +338,39 @@ void PlayerObject::ProcessInput(const GameTimer& gTimer)
     BYTE* keyState = m_scene->GetFramework()->GetKeyState();
     Transform* transform = GetComponent<Transform>();
 
-    XMVECTOR dir = XMVectorZero();
-    if ((keyState[0x57] & 0x88) == 0x88) { dir += XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f); } // w
-    if ((keyState[0x53] & 0x88) == 0x88) { dir -= XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f); } // s
-    if ((keyState[0x41] & 0x88) == 0x88) { dir -= XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f); } // a
-    if ((keyState[0x44] & 0x88) == 0x88) { dir += XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f); } // d
+    if ((keyState[0x57] & 0x88) == 0x80) { mInputDir.z += 1.0f; } // w down
+    if ((keyState[0x53] & 0x88) == 0x80) { mInputDir.z -= 1.0f; } // s down
+    if ((keyState[0x41] & 0x88) == 0x80) { mInputDir.x -= 1.0f; } // a down
+    if ((keyState[0x44] & 0x88) == 0x80) { mInputDir.x += 1.0f; } // d down
 
-    if (!XMVector3Equal(dir, XMVectorZero())) {
-        float speed = mWalkSpeed;
-        if ((keyState[VK_SHIFT] & 0x88) == 0x88) {
-            speed = mRunSpeed;
-        }
-        if ((keyState[VK_CONTROL] & 0x88) == 0x88) {
-            speed = 100.0f;
-        }
-        Move(dir, speed, gTimer.DeltaTime());
-    }
-    else {
+    if ((keyState[0x57] & 0x88) == 0x08) { mInputDir.z -= 1.0f; } // w up
+    if ((keyState[0x53] & 0x88) == 0x08) { mInputDir.z += 1.0f; } // s up
+    if ((keyState[0x41] & 0x88) == 0x08) { mInputDir.x += 1.0f; } // a up
+    if ((keyState[0x44] & 0x88) == 0x08) { mInputDir.x -= 1.0f; } // d up
+
+    if (XMVector3Equal(XMLoadFloat3(&mInputDir), XMVectorZero()))
+    {
         Idle();
     }
+    else
+    {
+        if ((keyState[VK_SHIFT] & 0x88) == 0x88)
+        {
+            mSpeed = 60.0f;
+            Run();
+        }
+        else if ((keyState[VK_CONTROL] & 0x88) == 0x88)
+        {
+            mSpeed = 100.0f;
+            Run();
+        }
+        else
+        {
+            mSpeed = 20.0f;
+            Walk();
+        }
+    }
+  
 
     if ((keyState[VK_LBUTTON] & 0x88) == 0x80)
     {
@@ -381,38 +409,6 @@ void PlayerObject::ChangeState(string fileName)
     if (anim->ResetAnim(fileName, 0.0f)) mElapseTime = 0.0f;
 }
 
-void PlayerObject::Move(XMVECTOR dir, float speed,float deltaTime)
-{
-    Animation* anim = GetComponent<Animation>();
-    if (anim->mCurrentFileName == "boy_attack(45).fbx") return;
-    if (anim->mCurrentFileName == "boy_throw.fbx") return;
-    if (anim->mCurrentFileName == "boy_hit.fbx") return;
-    if (anim->mCurrentFileName == "boy_dying_fix.fbx") return;
-    if (mAttackTime < 1.0) return;
-
-    if (speed >= mRunSpeed) {
-        ChangeState("boy_run_fix.fbx");
-    }
-    else if (speed >= mWalkSpeed) {
-        ChangeState("boy_walk_fix.fbx");
-    }
-
-    Transform* transform = GetComponent<Transform>();
-    CameraObject* cameraObj = m_scene->GetObj<CameraObject>();
-    Transform* cameraTransform = cameraObj->GetComponent<Transform>();
-    dir = XMVector3TransformNormal(dir, cameraTransform->GetRotationM());
-    dir = XMVector3Normalize(XMVectorSetY(dir, 0.0f));
-  
-
-    XMVECTOR pos = transform->GetPosition();
-    pos += dir * speed * deltaTime;
-    transform->SetPosition(pos);
-
-    float yaw = atan2f(XMVectorGetX(dir), XMVectorGetZ(dir)) * 180 / 3.141592f;
-    transform->SetRotation({ 0.0f, yaw, 0.0f });
-}
-
-
 void PlayerObject::Idle()
 {
     Animation* anim = GetComponent<Animation>();
@@ -420,8 +416,30 @@ void PlayerObject::Idle()
     if (anim->mCurrentFileName == "boy_throw.fbx") return;
     if (anim->mCurrentFileName == "boy_hit.fbx") return;
     if (anim->mCurrentFileName == "boy_dying_fix.fbx") return;
-
     ChangeState("1P(boy-idle).fbx");
+
+    if (mAttackTime < 1.0) return;
+}
+
+void PlayerObject::Walk()
+{
+    Animation* anim = GetComponent<Animation>();
+    if (anim->mCurrentFileName == "boy_attack(45).fbx") return;
+    if (anim->mCurrentFileName == "boy_throw.fbx") return;
+    if (anim->mCurrentFileName == "boy_hit.fbx") return;
+    if (anim->mCurrentFileName == "boy_dying_fix.fbx") return;
+    ChangeState("boy_walk_fix.fbx");
+}
+  
+void PlayerObject::Run()
+{
+    Animation* anim = GetComponent<Animation>();
+    if (anim->mCurrentFileName == "boy_attack(45).fbx") return;
+    if (anim->mCurrentFileName == "boy_throw.fbx") return;
+    if (anim->mCurrentFileName == "boy_hit.fbx") return;
+    if (anim->mCurrentFileName == "boy_dying_fix.fbx") return;
+
+    ChangeState("boy_run_fix.fbx");
 }
 
 void PlayerObject::Jump()

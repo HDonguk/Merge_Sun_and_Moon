@@ -63,8 +63,10 @@ public:
 	// 네트워크 플레이어를 위해 ChangeState() 메서드를 public으로 변경
 	void ChangeState(string fileName);
 private:
-	void Move(XMVECTOR dir, float speed, float deltatime);
+	
 	void Idle();
+	void Walk();
+	void Run();
 	void Jump();
 	void Attack();
 	void Throw();
@@ -75,8 +77,7 @@ public:
 	void Dead();
 	void CalcTime(float deltaTime);
 
-	float mWalkSpeed = 25.0f; // 20.0f * 0.75 = 15.0f
-	float mRunSpeed = 60.0f; // 80.0f * 0.75 = 60.0f
+	float mSpeed = 25.0f;
 	float mElapseTime = 0.0f;
 	
 	float mAttackTime = 0.0f;
@@ -87,6 +88,7 @@ public:
 
 	int mLife = 3;
 	XMFLOAT3 mDir{};
+	XMFLOAT3 mInputDir{};
 	int mRicecake = 0;
 
 	bool mFocusMode = false;

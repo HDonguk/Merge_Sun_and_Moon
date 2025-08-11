@@ -278,7 +278,7 @@ void PlayerObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, f
         return;
     }
 
-    RicecakeObject* ricecake = dynamic_cast<RicecakeObject*>(&other);
+    RiceCakeObject* ricecake = dynamic_cast<RiceCakeObject*>(&other);
     if (ricecake)
     {
         ++mRicecake;
@@ -313,9 +313,7 @@ void PlayerObject::ProcessInput(const GameTimer& gTimer)
 
     BYTE* keyState = m_scene->GetFramework()->GetKeyState();
 
-    XMStoreFloat3(&mInputDir, m_scene->GetInputDir());
-
-    if (XMVector3Equal(XMLoadFloat3(&mInputDir), XMVectorZero()))
+    if (XMVector3Equal(m_scene->GetInputDir(), XMVectorZero()))
     {
         Idle();
     }
@@ -388,7 +386,7 @@ void PlayerObject::MoveAndRotate(float deltaTime)
     CameraObject* cameraObj = m_scene->GetObj<CameraObject>();
     Transform* cameraTransform = cameraObj->GetComponent<Transform>();
 
-    XMVECTOR inputDir = XMLoadFloat3(&mInputDir);
+    XMVECTOR inputDir = m_scene->GetInputDir();
     inputDir = XMVector3TransformNormal(inputDir, cameraTransform->GetRotationM());
     inputDir = XMVector3Normalize(XMVectorSetY(inputDir, 0.0f));
 
@@ -399,7 +397,7 @@ void PlayerObject::MoveAndRotate(float deltaTime)
     if (mFocusMode)
     {
         XMVECTOR dir = XMVector3TransformNormal(XMVECTOR{ 0.0f, 0.0f, 1.0f }, cameraTransform->GetRotationM());
-        XMStoreFloat3(&mDir, XMVector3Normalize(dir));
+        XMStoreFloat3(&mCameraLookDir, XMVector3Normalize(dir));
         dir = XMVector3Normalize(XMVectorSetY(dir, 0.0f));
 
         float yaw = atan2f(XMVectorGetX(dir), XMVectorGetZ(dir)) * 180 / 3.141592f;
@@ -531,8 +529,8 @@ void PlayerObject::Fire()
         XMVECTOR pos = transform->GetPosition();
         XMVECTOR offset = XMVector3TransformNormal(XMVECTOR{ 4.0f, 15.0f, 8.0f }, transform->GetRotationM());
         float scale = 0.03f;
-        RicecakeObject* obj = new RicecakeObject(m_scene, m_scene->AllocateId());
-        obj->SetDir(XMLoadFloat3(&mDir));
+        RiceCakeProjectileObject* obj = new RiceCakeProjectileObject(m_scene, m_scene->AllocateId());
+        obj->SetDir(XMLoadFloat3(&mCameraLookDir));
         obj->AddComponent(new Transform{ pos + offset });
         obj->AddComponent(new AdjustTransform{ {-20.0f * scale, 22.0f * scale, 0.0f}, {0.0f, 0.0f, -90.0f}, {scale, scale, scale} });
         obj->AddComponent(new Mesh{ "ricecake.fbx" });
@@ -742,7 +740,7 @@ void TigerObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, fl
         Hit();
         return;
     }
-    RicecakeObject* rc = dynamic_cast<RicecakeObject*>(&other);
+    RiceCakeProjectileObject* rc = dynamic_cast<RiceCakeProjectileObject*>(&other);
     if (rc)
     {
         HitByRiceCake();
@@ -797,7 +795,21 @@ void TigerObject::TigerBehavior(GameTimer& gTimer)
     }
     else // ÷̾ Ž  ۿ ִ.
     {
-        Search(gTimer.DeltaTime());
+        Walk();
+
+        mSearchTime += gTimer.DeltaTime();
+        if (mSearchTime > 3.0f)
+        {
+            mSearchTime = 0.0f;
+            float randYaw = uid(dre);
+            transform->SetRotation({ 0.0f, randYaw, 0.0f });
+        }
+
+        XMVECTOR dir = XMVector3TransformNormal({ 0.0f, 0.0f, 1.0f }, transform->GetRotationM());
+        dir = XMVector3Normalize(dir);
+        XMVECTOR pos = transform->GetPosition();
+        pos += dir * mWalkSpeed * gTimer.DeltaTime();
+        transform->SetPosition(pos);
     }
 }
 
@@ -807,24 +819,13 @@ void TigerObject::ChangeState(string fileName)
     if (anim->ResetAnim(fileName, 0.0f)) mElapseTime = 0.0f;
 }
 
-void TigerObject::Search(float deltaTime)
+void TigerObject::Walk()
 {
     
-    static float randYaw = uid(dre);
-    Transform* transform = GetComponent<Transform>();
     Animation* anim = GetComponent<Animation>();
-    
-    if (mSearchTime > 2.0f)
-    {
-        mSearchTime = 0.0f;
-        randYaw = uid(dre);
-        transform->SetRotation({ 0.0f, randYaw, 0.0f });
-    }
-
-    XMVECTOR dir = XMVector3TransformNormal({ 0.0f, 0.0f, 1.0f }, transform->GetRotationM());
-    dir = XMVector3Normalize(dir);
-    XMVECTOR pos = transform->GetPosition();
-    transform->SetPosition(pos + dir * mWalkSpeed * deltaTime);
+    if (anim->mCurrentFileName == "0208_tiger_attack.fbx") return;
+    if (anim->mCurrentFileName == "0208_tiger_hit.fbx") return;
+    if (anim->mCurrentFileName == "0208_tiger_dying.fbx") return;
 
     // 네트워크 호랑이의 hit 후 idle 보호
     if (m_isNetworkTiger && m_protectIdleAfterHit && anim->mCurrentFileName == "0722_tiger_idle2.fbx") {
@@ -1061,11 +1062,7 @@ void TigerObject::CalcTime(float deltaTime)
             }
         }
         
-        if (anim->mCurrentFileName == "0113_tiger_walk.fbx")
-        {
-            mSearchTime += deltaTime;
-        }
-
+      
         if (anim->mCurrentFileName == "0722_tiger_run.fbx")
         {
             // run 애니메이션 중에는 별도 타이머 업데이트 없음 (서버에서 관리)
@@ -1349,28 +1346,13 @@ void AxeObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, floa
     Object::OnProcessCollision(other, collisionNormal, penetration);
 }
 
-void RicecakeObject::SetDir(XMVECTOR dir)
-{
-    XMStoreFloat3(&mDir, dir);
-}
-
-void RicecakeObject::OnUpdate(GameTimer& gTimer)
-{
-    Transform* transform = GetComponent<Transform>();
-    XMVECTOR pos = transform->GetPosition();
-    pos += XMLoadFloat3(&mDir) * mSpeed * gTimer.DeltaTime();
-    transform->SetPosition(pos);
-
-    Object::OnUpdate(gTimer);
-}
-
-void RicecakeObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration)
+void RiceCakeObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration)
 {
     PlayerAttackObject* pa = dynamic_cast<PlayerAttackObject*>(&other);
     if (pa) return;
     TigerAttackObject* ta = dynamic_cast<TigerAttackObject*>(&other);
     if (ta) return;
-    RicecakeObject* ricecake = dynamic_cast<RicecakeObject*>(&other);
+    RiceCakeObject* ricecake = dynamic_cast<RiceCakeObject*>(&other);
     if (ricecake)
     {
         Transform* transform = GetComponent<Transform>();
@@ -1383,70 +1365,25 @@ void RicecakeObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal,
     Object::OnProcessCollision(other, collisionNormal, penetration);
 }
 
-void RicecakeObject::LateUpdate(GameTimer& gTimer)
-{
-    Transform* transform = GetComponent<Transform>();
-    XMVECTOR pos = transform->GetPosition();
-    char outstatus = m_scene->ClampToBounds(pos, { 0.0f, 0.0f, 0.0f });
-    transform->SetPosition(pos);
-
-    bool CreatedByTree = XMVector3Equal(XMLoadFloat3(&mDir), XMVectorZero());
-
-    if (outstatus)
-    {
-        if (CreatedByTree)
-        {
-            Gravity* gravity = GetComponent<Gravity>();
-            gravity->ResetElapseTime();
-        }
-        else
-        {
-            Delete();
-        }
-    }
-
-    transform->SetFinalM(transform->GetTransformM());
-
-    XMMATRIX world = transform->GetFinalM();
-    XMMATRIX adjustM = XMMatrixIdentity();
-    AdjustTransform* adjustTrnasform = GetComponent<AdjustTransform>();
-    if (adjustTrnasform) {
-        adjustM = adjustTrnasform->GetTransformM();
-    }
-    memcpy(m_mappedData, &XMMatrixTranspose(adjustM * world), sizeof(XMMATRIX));
-
-    ProcessAnimation(gTimer);
-
-    Texture* texture = GetComponent<Texture>();
-    float powValue = 1.0f;
-    float ambiantValue = 0.4f;
-    if (texture) {
-        ambiantValue = texture->mAmbiantValue;
-        powValue = texture->mPowValue;
-    }
-    memcpy(m_mappedData + sizeof(XMFLOAT4X4) * 91 + sizeof(int) * 4, &powValue, sizeof(float));
-    memcpy(m_mappedData + sizeof(XMFLOAT4X4) * 91 + sizeof(int) * 4 + sizeof(float), &ambiantValue, sizeof(float));
-}
-
-void TreeObject::OnUpdate(GameTimer& gTimer)
-{
-    mElapseTime += gTimer.DeltaTime();
-    Object::OnUpdate(gTimer);
-}
-
 void TreeObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration)
 {
     PlayerAttackObject* pa = dynamic_cast<PlayerAttackObject*>(&other);
-    if (pa && mElapseTime > 1.0f)
+    if (pa) { mCollisionByPlayerAttack |= (unsigned char)0x80; }
+
+    Object::OnProcessCollision(other, collisionNormal, penetration);
+}
+
+void TreeObject::LateUpdate(GameTimer& gTimer)
+{
+    if (mCollisionByPlayerAttack == (unsigned char)0x80)
     {
-        mElapseTime = 0.0f;
 
         Transform* transform = GetComponent<Transform>();
         XMVECTOR pos = transform->GetPosition();
         float yaw = uid(dre);
         XMVECTOR offset = XMVector3TransformNormal(XMVECTOR{ 0.0f, 50.0f, 20.0f }, XMMatrixRotationY(yaw));
         float scale = 0.03f;
-        RicecakeObject* obj = new RicecakeObject(m_scene, m_scene->AllocateId());
+        RiceCakeObject* obj = new RiceCakeObject(m_scene, m_scene->AllocateId());
         obj->AddComponent(new Transform{ pos + offset });
         obj->AddComponent(new AdjustTransform{ {-20.0f * scale, 22.0f * scale, 0.0f}, {0.0f, 0.0f, -90.0f}, {scale, scale, scale} });
         obj->AddComponent(new Mesh{ "ricecake.fbx" });
@@ -1455,7 +1392,8 @@ void TreeObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, flo
         obj->AddComponent(new Collider{ {0.0f, 30.0f * scale, 0.0f}, {25.0f * scale, 30.0f * scale, 25.0f * scale} });
         m_scene->AddObj(obj);
     }
-    Object::OnProcessCollision(other, collisionNormal, penetration);
+    mCollisionByPlayerAttack = mCollisionByPlayerAttack >> 4;
+    Object::LateUpdate(gTimer);
 }
 
 void GoToBaseObject::OnUpdate(GameTimer& gTimer)
@@ -1692,6 +1630,37 @@ void GrassGroupObject::RandomRot()
     Transform* transform = GetComponent<Transform>();
     float yaw = uid(dre);
     transform->SetRotation({ 0.0f, yaw, 0.0f });
+}
+
+void RiceCakeProjectileObject::OnUpdate(GameTimer& gTimer)
+{
+    Transform* transform = GetComponent<Transform>();
+    XMVECTOR pos = transform->GetPosition();
+
+    char outstatus = m_scene->ClampToBounds(pos, { 0.0f, 0.0f, 0.0f });
+    if (outstatus)
+    {
+        Delete();
+        return;
+    }
+
+    pos += XMLoadFloat3(&mDir) * mSpeed * gTimer.DeltaTime();
+    transform->SetPosition(pos);
+
+    Object::OnUpdate(gTimer);
+
+}
+
+void RiceCakeProjectileObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration)
+{
+    TigerAttackObject* ta = dynamic_cast<TigerAttackObject*>(&other);
+    if (ta) return;
+    Delete();
+}
+
+void RiceCakeProjectileObject::SetDir(XMVECTOR dir)
+{
+    XMStoreFloat3(&mDir, dir);
 }
 
 void TigerObject::SetNetworkTransform(float x, float y, float z, float rotY)

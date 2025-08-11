@@ -71,11 +71,12 @@ private:
 	void Jump();
 	void Attack();
 	void Throw();
-	void TimeOut();
+	
 	void Fire();
 public:
 	void Hit();
 	void Dead();
+	void TimeOut();
 	void CalcTime(float deltaTime);
 
 	float mSpeed = 25.0f;
@@ -88,8 +89,7 @@ public:
 	bool mIsJumpping = false;
 
 	int mLife = 3;
-	XMFLOAT3 mDir{};
-	XMFLOAT3 mInputDir{};
+	XMFLOAT3 mCameraLookDir{};
 	int mRicecake = 0;
 
 	bool mFocusMode = false;
@@ -136,12 +136,12 @@ class TreeObject : public Object
 {
 public:
 	using Object::Object;
-	void OnUpdate(GameTimer& gTimer) override;
+	
 	void OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration) override;
-
+	void LateUpdate(GameTimer& gTimer) override;
 
 private:
-	float mElapseTime = 0.0f;
+	unsigned char mCollisionByPlayerAttack = (unsigned char)0x00;
 };
 
 class TigerObject : public Object
@@ -187,7 +187,7 @@ public:
 	
 private:
 	void TigerBehavior(GameTimer& gTimer);
-	void Search(float deltaTime);
+	void Walk();
 	void Run();
 	void Attack();
 	void TimeOut();
@@ -294,14 +294,22 @@ public:
 private:
 };
 
-class RicecakeObject : public Object
+class RiceCakeObject : public Object
 {
 public:
 	Object::Object;
-	void SetDir(XMVECTOR dir);
+
+	void OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration) override;
+};
+
+class RiceCakeProjectileObject : public Object
+{
+public:
+	Object::Object;
 	void OnUpdate(GameTimer& gTimer) override;
 	void OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration) override;
-	void LateUpdate(GameTimer& gTimer) override;
+	void SetDir(XMVECTOR dir);
+
 
 private:
 	XMFLOAT3 mDir{};

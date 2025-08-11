@@ -493,9 +493,10 @@ void Framework::ProcessInput()
 
     for (int i = 0; i < keySize; ++i)
     {
-        if (mKeyState[i] & 0x80) keyState[i] |= 0x08;
+        mKeyState[i] = mKeyState[i] >> 4;
+        mKeyState[i] |= keyState[i];
     }
-    memcpy(mKeyState, keyState, keySize);
+ 
 
     if ((mKeyState[VK_ESCAPE] & 0x88) == 0x80)
     {

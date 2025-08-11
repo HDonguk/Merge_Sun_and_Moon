@@ -805,18 +805,9 @@ void TigerObject::Fire()
     if (mIsFired) return;
     mIsFired = true;
 
-    // 네트워크 호랑이는 서버에 공격 이벤트만 전송
+    // 네트워크 호랑이도 실제 공격 오브젝트 생성 (0.4초 후에 호출됨)
     if (m_isNetworkTiger) {
-        Framework* framework = m_scene->GetFramework();
-        if (framework && framework->IsNetworkEnabled()) {
-            NetworkManager& networkManager = framework->GetNetworkManager();
-            if (networkManager.IsLoggedIn()) {
-                // 서버에 공격 이벤트 전송 (실제 공격 오브젝트 생성은 서버에서 처리)
-                networkManager.SendTigerAttack(m_networkTigerID);
-                OutputDebugString(L"[TigerObject] Network tiger attack event sent to server\n");
-            }
-        }
-        return;
+        OutputDebugString(L"[TigerObject] Network tiger Fire() called - creating attack object\n");
     }
 
     // 로컬 호랑이만 실제 공격 오브젝트 생성
@@ -951,19 +942,12 @@ void TigerObject::CalcTime(float deltaTime)
         if (anim->mCurrentFileName == "0208_tiger_attack.fbx") 
         {
             mElapseTime += deltaTime;
-            // 네트워크 호랑이도 Original과 동일하게 Fire()와 TimeOut() 호출
-            // 단, 공격 오브젝트 생성을 0.4초 지연시켜 Original과 동일한 타이밍으로 맞춤
+            // 네트워크 호랑이도 Original과 동일하게 0.4초 후에 Fire() 호출
             if (mElapseTime >= 0.4f) {
-                // 네트워크 호랑이는 서버에서 공격 패킷을 받은 후에만 Fire() 호출
-                // 이는 서버의 공격 패킷과 동기화되어야 함
-                if (m_networkTigerID != -1) {
-                    // 서버에서 공격 신호를 받았을 때만 Fire() 호출
-                    if (m_serverAttackSignal) {
-                        Fire();
-                        m_serverAttackSignal = false;  // 신호 소비
-                    }
-                } else {
-                    Fire(); // Local tiger
+                // 네트워크 호랑이는 서버에서 공격 신호를 받았을 때만 Fire() 호출
+                if (m_serverAttackSignal) {
+                    Fire();
+                    m_serverAttackSignal = false;  // 신호 소비
                 }
             }
             if (mElapseTime >= 0.8f) TimeOut();

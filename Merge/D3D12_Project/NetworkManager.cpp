@@ -798,41 +798,14 @@ void NetworkManager::ProcessPacket(char* buffer) {
                 if (!m_isLoggedIn) {
                     break;
                 }
-                // Scene에서 해당 호랑이를 찾아서 공격 효과 처리
+                // Scene에서 해당 호랑이를 찾아서 공격 신호만 설정 (공격 오브젝트는 0.4초 후 CalcTime에서 생성됨)
                 if (m_scene) {
                     for (Object* obj : m_scene->GetObjects()) {
                         TigerObject* tigerObj = dynamic_cast<TigerObject*>(obj);
                         if (tigerObj && tigerObj->IsNetworkTiger() && tigerObj->GetNetworkTigerID() == tigerAttackPkt->tigerID) {
                             // 서버 공격 신호 설정 (공격 오브젝트는 0.4초 후 CalcTime에서 생성됨)
                             tigerObj->SetServerAttackSignal(true);
-                            
-                            // 네트워크 호랑이의 실제 공격 오브젝트 생성
-                            Transform* tigerTransform = tigerObj->GetComponent<Transform>();
-                            if (tigerTransform) {
-                                Object* attackObj = new TigerAttackObject(m_scene, m_scene->AllocateId(), tigerObj->GetId());
-                                attackObj->AddComponent(new Transform{ {0.0f, 6.0f, 18.0f} });  // Original과 동일한 상대적 위치
-                                attackObj->AddComponent(new Collider{ {0.0f, 0.0f, 0.0f}, {4.0f, 6.0f, 8.0f} });
-                                m_scene->AddObj(attackObj);
-                                
-                                // 공격 오브젝트 생성 후 즉시 OBB 업데이트
-                                Collider* attackCollider = attackObj->GetComponent<Collider>();
-                                if (attackCollider) {
-                                    Transform* attackTransform = attackObj->GetComponent<Transform>();
-                                    if (attackTransform) {
-                                        // 부모(호랑이)의 Transform과 결합된 최종 월드 매트릭스 계산
-                                        XMMATRIX attackLocalM = attackTransform->GetTransformM();
-                                        XMMATRIX tigerWorldM = tigerTransform->GetFinalM();
-                                        XMMATRIX finalM = attackLocalM * tigerWorldM;
-                                        
-                                        attackTransform->SetFinalM(finalM);
-                                        attackCollider->UpdateOBB(finalM);
-                                        
-                                        LogToFile("[Tiger] Network tiger attack object OBB updated with parent transform");
-                                    }
-                                }
-                                
-                                LogToFile("[Tiger] Network tiger " + std::to_string(tigerAttackPkt->tigerID) + " created attack object");
-                            }
+                            LogToFile("[Tiger] Network tiger " + std::to_string(tigerAttackPkt->tigerID) + " received attack signal from server");
                             break;
                         }
                     }

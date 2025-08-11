@@ -794,19 +794,22 @@ void TigerObject::TigerBehavior(GameTimer& gTimer)
     {
         Walk();
 
-        mSearchTime += gTimer.DeltaTime();
-        if (mSearchTime > 3.0f)
+        if (anim->mCurrentFileName == "0113_tiger_walk.fbx")
         {
-            mSearchTime = 0.0f;
-            float randYaw = uid(dre);
-            transform->SetRotation({ 0.0f, randYaw, 0.0f });
-        }
+            mSearchTime += gTimer.DeltaTime();
+            if (mSearchTime > 3.0f)
+            {
+                mSearchTime = 0.0f;
+                float randYaw = uid(dre);
+                transform->SetRotation({ 0.0f, randYaw, 0.0f });
+            }
 
-        XMVECTOR dir = XMVector3TransformNormal({ 0.0f, 0.0f, 1.0f }, transform->GetRotationM());
-        dir = XMVector3Normalize(dir);
-        XMVECTOR pos = transform->GetPosition();
-        pos += dir * mWalkSpeed * gTimer.DeltaTime();
-        transform->SetPosition(pos);
+            XMVECTOR dir = XMVector3TransformNormal({ 0.0f, 0.0f, 1.0f }, transform->GetRotationM());
+            dir = XMVector3Normalize(dir);
+            XMVECTOR pos = transform->GetPosition();
+            pos += dir * mWalkSpeed * gTimer.DeltaTime();
+            transform->SetPosition(pos);
+        }
     }
 }
 

@@ -75,7 +75,7 @@ void Scene::BuildHuntingStage()
         objectPtr = new PlayerObject(this, AllocateId());
         // 플레이어 생명력을 명시적으로 3으로 설정
         dynamic_cast<PlayerObject*>(objectPtr)->SetLife(3);
-        objectPtr->AddComponent(new Transform{ {300.f, 0.0f, 300.f} });
+        objectPtr->AddComponent(new Transform{ {200.f, 0.0f, 300.f} });
         objectPtr->AddComponent(new AdjustTransform{ {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {scale, scale, scale} });
         objectPtr->AddComponent(new Mesh{ "1P(boy-idle).fbx" });
         objectPtr->AddComponent(new Texture{ L"boy" , 1.0f, 0.4f });

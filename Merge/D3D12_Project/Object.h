@@ -121,6 +121,7 @@ class TestObject : public Object
 {
 public:
 	using Object::Object;
+	void OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration) override;
 };
 
 class TreeObject : public Object
@@ -161,6 +162,7 @@ public:
 	
 	// 공격 받기 메서드 (public으로 변경)
 	void Hit();
+	void HitByRiceCake(); // 호랑이 떡 한방에 사망하게 수정 부분
 	void Dead();
 	void SetLife(int life) { mLife = life; }
 	int GetLife() const { return mLife; }
@@ -354,4 +356,11 @@ class TigerLeatherQuadObject : public Object
 {
 	Object::Object;
 	void OnUpdate(GameTimer& gTimer) override;
+};
+
+class GrassGroupObject : public Object
+{
+public:
+	GrassGroupObject(Scene* scene, uint32_t id, uint32_t parentId = -1);
+	void RandomRot();
 };

@@ -643,12 +643,18 @@ void TigerObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, fl
     if (ta) return;
 
     PlayerAttackObject* pa = dynamic_cast<PlayerAttackObject*>(&other);
-    RicecakeObject* rc = dynamic_cast<RicecakeObject*>(&other);
-    if (pa || rc)
+    if (pa)
     {
         Hit();
         return;
     }
+    RicecakeObject* rc = dynamic_cast<RicecakeObject*>(&other);
+    if (rc)
+    {
+        HitByRiceCake();
+        return;
+    }
+
 
     Transform* transform = GetComponent<Transform>();
     XMVECTOR pos = transform->GetPosition();
@@ -901,6 +907,19 @@ void TigerObject::Hit()
     }
     ChangeState("0208_tiger_hit.fbx");
     OutputDebugString(L"[TigerObject] Local tiger hit animation state changed\n");
+}
+
+void TigerObject::HitByRiceCake()
+{
+    if (mIsHitted) return;
+    mIsHitted = true;
+    mLife -= 3;
+    if (mLife == 0)
+    {
+        Dead();
+        return;
+    }
+    ChangeState("0208_tiger_hit.fbx");
 }
 
 void TigerObject::Dead()
@@ -1506,6 +1525,55 @@ void TigerLeatherQuadObject::OnUpdate(GameTimer& gTimer)
     }
 
 }
+
+void TestObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration)
+{
+}
+
+GrassGroupObject::GrassGroupObject(Scene* scene, uint32_t id, uint32_t parentId) : Object(scene, id, parentId)
+{
+    Object* objectPtr = nullptr;
+    float scale = 30.0f;
+    float offset = 5.0f;
+    objectPtr = new TestObject(scene, scene->AllocateId(), id);
+    objectPtr->AddComponent(new Transform{ {0.0f, 0.0f, 0.0f} });
+    objectPtr->AddComponent(new AdjustTransform{ {0.0f, 0.0f, 0.0f}, {-90.0f, 0.0f, 0.0f}, {scale, scale, scale} });
+    objectPtr->AddComponent(new Mesh{ "grass_low.fbx" });
+    objectPtr->AddComponent(new Texture{ L"Green", 1.0f, 0.4f });
+    scene->AddObj(objectPtr);
+    objectPtr = new TestObject(scene, scene->AllocateId(), id);
+    objectPtr->AddComponent(new Transform{ {-offset, 0.0f, 0.0f} });
+    objectPtr->AddComponent(new AdjustTransform{ {0.0f, 0.0f, 0.0f}, {-90.0f, 0.0f, 0.0f}, {scale, scale, scale} });
+    objectPtr->AddComponent(new Mesh{ "grass_low.fbx" });
+    objectPtr->AddComponent(new Texture{ L"Green", 1.0f, 0.4f });
+    scene->AddObj(objectPtr);
+    objectPtr = new TestObject(scene, scene->AllocateId(), id);
+    objectPtr->AddComponent(new Transform{ {offset, 0.0f, 0.0f} });
+    objectPtr->AddComponent(new AdjustTransform{ {0.0f, 0.0f, 0.0f}, {-90.0f, 0.0f, 0.0f}, {scale, scale, scale} });
+    objectPtr->AddComponent(new Mesh{ "grass_low.fbx" });
+    objectPtr->AddComponent(new Texture{ L"Green", 1.0f, 0.4f });
+    scene->AddObj(objectPtr);
+    objectPtr = new TestObject(scene, scene->AllocateId(), id);
+    objectPtr->AddComponent(new Transform{ {0.0f, 0.0f, offset} });
+    objectPtr->AddComponent(new AdjustTransform{ {0.0f, 0.0f, 0.0f}, {-90.0f, 0.0f, 0.0f}, {scale, scale, scale} });
+    objectPtr->AddComponent(new Mesh{ "grass_low.fbx" });
+    objectPtr->AddComponent(new Texture{ L"Green", 1.0f, 0.4f });
+    scene->AddObj(objectPtr);
+    objectPtr = new TestObject(scene, scene->AllocateId(), id);
+    objectPtr->AddComponent(new Transform{ {0.0f, 0.0f, -offset} });
+    objectPtr->AddComponent(new AdjustTransform{ {0.0f, 0.0f, 0.0f}, {-90.0f, 0.0f, 0.0f}, {scale, scale, scale} });
+    objectPtr->AddComponent(new Mesh{ "grass_low.fbx" });
+    objectPtr->AddComponent(new Texture{ L"Green", 1.0f, 0.4f });
+    scene->AddObj(objectPtr);
+}
+
+void GrassGroupObject::RandomRot()
+{
+    Transform* transform = GetComponent<Transform>();
+    float yaw = uid(dre);
+    transform->SetRotation({ 0.0f, yaw, 0.0f });
+}
+
 void TigerObject::SetNetworkTransform(float x, float y, float z, float rotY)
 {
     if (m_isNetworkTiger) {

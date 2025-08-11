@@ -109,6 +109,14 @@ void Scene::BuildHuntingStage()
         objectPtr->AddComponent(new Texture{ L"RiceCake0", -1.0f, 0.4f });
         AddObj(objectPtr);
 
+        scale = 0.25;
+        textureRatio = 256.0f / 256.0f; // �ؽ�ó ����
+        objectPtr = new TigerLeatherQuadObject(this, AllocateId());
+        objectPtr->AddComponent(new Transform{ {0.7f * depthFactor, -0.55f * depthFactor, 1.0f * depthFactor}, {-90.0f, 0.0f, 0.0f}, {depthFactor * textureRatio * scale, 1.0f, depthFactor * scale} });
+        objectPtr->AddComponent(new Mesh{ "Quad" });
+        objectPtr->AddComponent(new Texture{ L"TigerLeather0", -1.0f, 0.4f });
+        AddObj(objectPtr);
+
     }
 
     {
@@ -225,6 +233,35 @@ void Scene::BuildBaseStage()
         OutputDebugString(L"[Scene] Created local player in Base stage with life: 3\n");
     }
     // 
+    // UI
+    {
+        float depthFactor = 0.11f;
+        float scale = 0.1f;
+        float textureRatio = 420.0f / 112.0f; // �ؽ�ó ����
+        objectPtr = new LifeQuadObject(this, AllocateId());
+        objectPtr->AddComponent(new Transform{ {-0.8f * depthFactor, 0.4f * depthFactor, 1.0f * depthFactor}, {-90.0f, 0.0f, 0.0f}, {depthFactor * textureRatio * scale, 1.0f, depthFactor * scale} });
+        objectPtr->AddComponent(new Mesh{ "Quad" });
+        objectPtr->AddComponent(new Texture{ L"Life3", -1.0f, 0.4f });
+        AddObj(objectPtr);
+
+        scale = 0.15;
+        textureRatio = 256.0f / 256.0f; // �ؽ�ó ����
+        objectPtr = new BoyIconQuadObject(this, AllocateId());
+        objectPtr->AddComponent(new Transform{ {-1.0f * depthFactor, 0.4f * depthFactor, 1.0f * depthFactor}, {-90.0f, 0.0f, 0.0f}, {depthFactor * textureRatio * scale, 1.0f, depthFactor * scale} });
+        objectPtr->AddComponent(new Mesh{ "Quad" });
+        objectPtr->AddComponent(new Texture{ L"BoyIcon", -1.0f, 0.4f });
+        AddObj(objectPtr);
+
+        scale = 0.25;
+        textureRatio = 256.0f / 328.0f; // �ؽ�ó ����
+        objectPtr = new RiceCakeQuadObject(this, AllocateId());
+        objectPtr->AddComponent(new Transform{ {-1.0f * depthFactor, -0.55f * depthFactor, 1.0f * depthFactor}, {-90.0f, 0.0f, 0.0f}, {depthFactor * textureRatio * scale, 1.0f, depthFactor * scale} });
+        objectPtr->AddComponent(new Mesh{ "Quad" });
+        objectPtr->AddComponent(new Texture{ L"RiceCake0", -1.0f, 0.4f });
+        AddObj(objectPtr);
+
+    }
+
     {
         float scale = 0.1f;
         objectPtr = new SisterObject(this, AllocateId());
@@ -583,7 +620,7 @@ void Scene::BuildBaseStage()
             objectPtr->AddComponent(new AdjustTransform{ {0.0f * scale, 0.0f * scale, 0.0f * scale}, {0.0f, 0.0f, 0.0f}, {scale, scale, scale} });
             objectPtr->AddComponent(new Collider{ {0.0f, 0.0f, 0.0f}, {2.3f * scale, 1.5f * scale, 1.3f * scale} });
             objectPtr->AddComponent(new Mesh{ "cloud1.fbx" });
-            objectPtr->AddComponent(new Texture{ L"Gray", 1.0f, 0.4f });
+            objectPtr->AddComponent(new Texture{ L"LightGray", 1.0f, 0.4f });
             objectPtr->AddComponent(new Gravity);
             AddObj(objectPtr);
         }
@@ -595,7 +632,7 @@ void Scene::BuildBaseStage()
             objectPtr->AddComponent(new AdjustTransform{ {0.0f * scale, 0.0f * scale, 0.0f * scale}, {0.0f, 0.0f, 0.0f}, {scale, scale, scale} });
             objectPtr->AddComponent(new Collider{ {0.0f, 0.0f, 0.0f}, {2.3f * scale, 1.5f * scale, 1.3f * scale} });
             objectPtr->AddComponent(new Mesh{ "cloud1.fbx" });
-            objectPtr->AddComponent(new Texture{ L"Gray", 1.0f, 0.4f });
+            objectPtr->AddComponent(new Texture{ L"LightGray", 1.0f, 0.4f });
             objectPtr->AddComponent(new Gravity);
             AddObj(objectPtr);
         }

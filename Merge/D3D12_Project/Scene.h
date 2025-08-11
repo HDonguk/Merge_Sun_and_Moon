@@ -93,7 +93,7 @@ private:
 private:
     Framework* m_parent = nullptr;
     wstring m_current_stage = L"";
-    wstring m_stage_queue = L"Title";
+    wstring m_stage_queue = L"God";
     vector<Object*> m_objects;
     uint32_t m_id_counter = 0;
     Object* m_object_queue[MAX_QUEUE]{};

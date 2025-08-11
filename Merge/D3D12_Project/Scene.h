@@ -103,6 +103,7 @@ private:
     bool mTigerQuest = false;
 
     XMFLOAT3 mInputDir{};
+    uint32_t mMainCameraId = -1;
 
     unique_ptr<ResourceManager> m_resourceManager;
     //

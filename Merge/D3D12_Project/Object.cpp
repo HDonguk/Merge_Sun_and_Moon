@@ -278,11 +278,11 @@ void PlayerObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, f
         return;
     }
 
-    RiceCakeObject* ricecake = dynamic_cast<RiceCakeObject*>(&other);
-    if (ricecake)
+    RiceCakeObject* riceCake = dynamic_cast<RiceCakeObject*>(&other);
+    if (riceCake)
     {
-        ++mRicecake;
-        mRicecake = mRicecake > 4 ? 4 : mRicecake;
+        ++mRiceCake;
+        mRiceCake = mRiceCake > 4 ? 4 : mRiceCake;
         return;
     }
 
@@ -298,9 +298,9 @@ void PlayerObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, f
     }
 }
 
-int PlayerObject::GetRicecakeCount()
+int PlayerObject::GetRiceCakeCount()
 {
-    return mRicecake;
+    return mRiceCake;
 }
 
 int PlayerObject::GetLifeCount()
@@ -476,7 +476,7 @@ void PlayerObject::Throw()
     if (anim->mCurrentFileName == "boy_hit.fbx") return;
     if (anim->mCurrentFileName == "boy_dying_fix.fbx") return;
     if (mAttackTime < 1.0) return;
-    if (mRicecake < 1) return;
+    if (mRiceCake < 1) return;
     ChangeState("boy_throw.fbx");
 }
 
@@ -523,7 +523,7 @@ void PlayerObject::Fire()
 
     if (anim->mCurrentFileName == "boy_throw.fbx")
     {
-        --mRicecake;
+        --mRiceCake;
 
         Transform* transform = GetComponent<Transform>();
         XMVECTOR pos = transform->GetPosition();
@@ -534,7 +534,7 @@ void PlayerObject::Fire()
         obj->AddComponent(new Transform{ pos + offset });
         obj->AddComponent(new AdjustTransform{ {-20.0f * scale, 22.0f * scale, 0.0f}, {0.0f, 0.0f, -90.0f}, {scale, scale, scale} });
         obj->AddComponent(new Mesh{ "ricecake.fbx" });
-        obj->AddComponent(new Texture{ L"ricecake", 1.0f, 0.4f });
+        obj->AddComponent(new Texture{ L"RiceCakePink", 1.0f, 0.4f });
         obj->AddComponent(new Gravity);
         obj->AddComponent(new Collider{ {0.0f, 30.0f * scale, 0.0f}, {25.0f * scale, 30.0f * scale, 25.0f * scale} });
         m_scene->AddObj(obj);
@@ -614,59 +614,41 @@ void PlayerObject::CalcTime(float deltaTime)
 void CameraObject::OnUpdate(GameTimer& gTimer)
 {
     ProcessInput();
+    Object* playerObj = m_scene->GetObj<PlayerObject>();
+    Transform* playerTransform = playerObj->GetComponent<Transform>();
+    XMVECTOR playerPos = playerTransform->GetPosition();
+
+    float radius = 0.0f;
+    XMVECTOR offset = XMVectorZero();
 
     if (mFocusMode)
     {
-        Object* playerObj = m_scene->GetObj<PlayerObject>();
-        Transform* playerTransform = playerObj->GetComponent<Transform>();
-        XMVECTOR playerPos = playerTransform->GetPosition();
-        XMVECTOR offset = XMVector3TransformNormal({ 4.0f, 15.0f, -6.0f }, playerTransform->GetRotationM());
-        XMVECTOR targetPos = playerTransform->GetPosition() + offset;
-
-        Transform* myTransform = GetComponent<Transform>();
-        XMVECTOR myPos = targetPos;
-        myTransform->SetPosition(myPos);
-
-        float deltaYaw = mDeltaX * 0.02f;
-        float deltaPitch = mDeltaY * 0.02f;
-        XMVECTOR rot = myTransform->GetRotation() + XMVECTOR{ deltaPitch , deltaYaw , 0.0f };
-        float pitch = XMVectorGetX(rot);
-        pitch = pitch < -90.0f ? -90.0f : (pitch > 90.0f ? 90.0f : pitch);
-        rot = XMVectorSetX(rot, pitch);
-        myTransform->SetRotation(rot);
+        radius = mFocusModeRadius;
+        offset = XMVector3TransformNormal({ 4.0f, 15.0f, 8.0f }, playerTransform->GetRotationM());
     }
     else
     {
-        mTheta -= XMConvertToRadians(mDeltaX * 0.02f);
-        mPhi -= XMConvertToRadians(mDeltaY * 0.02f);
-
-        // ���� clamp
-        float min = 0.1f;
-        float max = XM_PI - 0.1f;
-        mPhi = mPhi < min ? min : (mPhi > max ? max : mPhi);
-
-        float x = mRadius * sinf(mPhi) * cosf(mTheta);
-        float y = mRadius * cosf(mPhi);
-        float z = mRadius * sinf(mPhi) * sinf(mTheta);
-
-        Object* playerObj = m_scene->GetObj<PlayerObject>();
-        Transform* playerTransform = playerObj->GetComponent<Transform>();
-        XMVECTOR targetPos = playerTransform->GetPosition() + XMVECTOR{ 0.0f, 15.0f, 0.0f };
-
-        Transform* myTransform = GetComponent<Transform>();
-        XMVECTOR myPos = targetPos + XMVECTOR{ x, y, z, 0.f };
-        char outstatus = m_scene->ClampToBounds(myPos, { 0.0f, 1.0f, 0.0f });
-        myTransform->SetPosition(myPos);
-
-        XMVECTOR dir = targetPos - myPos;
-
-        XMFLOAT3 yawPitch{};
-        XMStoreFloat3(&yawPitch, dir);
-
-        float yaw = atan2f(yawPitch.x, yawPitch.z) * 180 / 3.141592f;
-        float pitch = atan2f(yawPitch.y, sqrtf(yawPitch.x * yawPitch.x + yawPitch.z * yawPitch.z)) * 180 / 3.141592f;
-        myTransform->SetRotation({ -pitch, yaw, 0.0f });
+        radius = mRadius;
+        offset = { 0.0f, 15.0f, 0.0f };
     }
+
+    float x = radius * sinf(mPhi) * cosf(mTheta);
+    float y = radius * cosf(mPhi);
+    float z = radius * sinf(mPhi) * sinf(mTheta);
+
+    XMVECTOR targetPos = playerPos + offset;
+    XMVECTOR myPos = targetPos + XMVECTOR{ x, y, z, 0.f };
+    char outstatus = m_scene->ClampToBounds(myPos, { 0.0f, 1.0f, 0.0f });
+
+    Transform* myTransform = GetComponent<Transform>();
+    myTransform->SetPosition(myPos);
+
+    XMVECTOR dir = targetPos - myPos;
+    XMFLOAT3 yawPitch{};
+    XMStoreFloat3(&yawPitch, dir);
+    float yaw = atan2f(yawPitch.x, yawPitch.z) * 180 / 3.141592f;
+    float pitch = atan2f(yawPitch.y, sqrtf(yawPitch.x * yawPitch.x + yawPitch.z * yawPitch.z)) * 180 / 3.141592f;
+    myTransform->SetRotation({ -pitch, yaw, 0.0f });
 
     Object::OnUpdate(gTimer);
 }
@@ -698,13 +680,28 @@ void CameraObject::MouseMove()
     mDeltaY = static_cast<float>(currentMousePos.y - centerY);
 
     SetCursorPos(centerX, centerY);
+
+    mTheta -= XMConvertToRadians(mDeltaX * 0.02f);
+    mPhi -= XMConvertToRadians(mDeltaY * 0.02f);
+    // ���� clamp
+    float min = 0.1f;
+    float max = XM_PI - 0.1f;
+    mPhi = mPhi < min ? min : (mPhi > max ? max : mPhi);
 }
+
 void CameraObject::ProcessInput()
 {
     BYTE* keyState = m_scene->GetFramework()->GetKeyState();
     if ((keyState[VK_RBUTTON] & 0x88) == 0x80)
     {
         mFocusMode = true;
+        float depthFactor = 0.11f;
+        float scale = 0.01f;
+        Object* obj = new CrossHairQuadObject(m_scene, m_scene->AllocateId(), m_id);
+        obj->AddComponent(new Transform{ {0.0f * depthFactor, 0.0f * depthFactor, 1.0f * depthFactor}, {-90.0f, 0.0f, 0.0f}, {depthFactor * scale, 1.0f, depthFactor * scale} });
+        obj->AddComponent(new Mesh{ "Quad" });
+        obj->AddComponent(new Texture{ L"Red", -1.0f, 0.4f });
+        m_scene->AddObj(obj);
     }
     else if ((keyState[VK_RBUTTON] & 0x88) == 0x08)
     {
@@ -1352,8 +1349,8 @@ void RiceCakeObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal,
     if (pa) return;
     TigerAttackObject* ta = dynamic_cast<TigerAttackObject*>(&other);
     if (ta) return;
-    RiceCakeObject* ricecake = dynamic_cast<RiceCakeObject*>(&other);
-    if (ricecake)
+    RiceCakeObject* riceCake = dynamic_cast<RiceCakeObject*>(&other);
+    if (riceCake)
     {
         Transform* transform = GetComponent<Transform>();
         XMVECTOR pos = transform->GetPosition();
@@ -1387,7 +1384,7 @@ void TreeObject::LateUpdate(GameTimer& gTimer)
         obj->AddComponent(new Transform{ pos + offset });
         obj->AddComponent(new AdjustTransform{ {-20.0f * scale, 22.0f * scale, 0.0f}, {0.0f, 0.0f, -90.0f}, {scale, scale, scale} });
         obj->AddComponent(new Mesh{ "ricecake.fbx" });
-        obj->AddComponent(new Texture{ L"ricecake", 1.0f, 0.4f });
+        obj->AddComponent(new Texture{ L"RiceCakePink", 1.0f, 0.4f });
         obj->AddComponent(new Gravity);
         obj->AddComponent(new Collider{ {0.0f, 30.0f * scale, 0.0f}, {25.0f * scale, 30.0f * scale, 25.0f * scale} });
         m_scene->AddObj(obj);
@@ -1431,8 +1428,6 @@ void GodObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, floa
 
 void TitleQuadObject::OnUpdate(GameTimer& gTimer)
 {
-    CameraObject* camera = m_scene->GetObj<CameraObject>();
-    m_parent_id = camera->GetId();
 
     BYTE* keyState = m_scene->GetFramework()->GetKeyState();
     if ((keyState[VK_RETURN] & 0x88) == 0x80)
@@ -1461,11 +1456,6 @@ void SisterObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, f
     Object::OnProcessCollision(other, collisionNormal, penetration);
 }
 
-void EndQuadObject::OnUpdate(GameTimer& gTimer)
-{
-    CameraObject* camera = m_scene->GetObj<CameraObject>();
-    m_parent_id = camera->GetId();
-}
 
 void SisterQuadObject::OnUpdate(GameTimer& gTimer)
 {
@@ -1480,8 +1470,7 @@ void SisterQuadObject::OnUpdate(GameTimer& gTimer)
 
 void LifeQuadObject::OnUpdate(GameTimer& gTimer)
 {
-    CameraObject* camera = m_scene->GetObj<CameraObject>();
-    m_parent_id = camera->GetId();
+
 
     PlayerObject* player = m_scene->GetObj<PlayerObject>();
     int playerLifeCount = player->GetLifeCount();
@@ -1506,21 +1495,16 @@ void LifeQuadObject::OnUpdate(GameTimer& gTimer)
 
 }
 
-void BoyIconQuadObject::OnUpdate(GameTimer& gTimer)
-{
-    CameraObject* camera = m_scene->GetObj<CameraObject>();
-    m_parent_id = camera->GetId();
-}
+
 
 void RiceCakeQuadObject::OnUpdate(GameTimer& gTimer)
 {
-    CameraObject* camera = m_scene->GetObj<CameraObject>();
-    m_parent_id = camera->GetId();
+
     PlayerObject* player = m_scene->GetObj<PlayerObject>();
 
     Texture* texture = GetComponent<Texture>();
 
-    int riceCakeCount = player->GetRicecakeCount();
+    int riceCakeCount = player->GetRiceCakeCount();
 
     switch (riceCakeCount)
     {
@@ -1548,8 +1532,7 @@ void RiceCakeQuadObject::OnUpdate(GameTimer& gTimer)
 
 void TigerLeatherQuadObject::OnUpdate(GameTimer& gTimer)
 {
-    CameraObject* camera = m_scene->GetObj<CameraObject>();
-    m_parent_id = camera->GetId();
+  
     Texture* texture = GetComponent<Texture>();
 
     int LeatherCount = m_scene->GetLeatherCount();
@@ -1661,6 +1644,16 @@ void RiceCakeProjectileObject::OnProcessCollision(Object& other, XMVECTOR collis
 void RiceCakeProjectileObject::SetDir(XMVECTOR dir)
 {
     XMStoreFloat3(&mDir, dir);
+}
+
+void CrossHairQuadObject::OnUpdate(GameTimer& gTimer)
+{
+    BYTE* keyState = m_scene->GetFramework()->GetKeyState();
+    if ((keyState[VK_RBUTTON] & 0x88) == 0x08)
+    {
+        Delete();
+    }
+
 }
 
 void TigerObject::SetNetworkTransform(float x, float y, float z, float rotY)

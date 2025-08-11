@@ -1,0 +1,2 @@
+[01:30:35] NetworkManager initialized
+[01:31:26] [Error] PlayerObject not found in scene

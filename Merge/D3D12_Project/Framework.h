@@ -28,6 +28,9 @@ public:
 	BYTE* GetKeyState();
 	HWND GetHWnd();
 	
+	void SetWndActivateState(bool state);
+	bool GetWndActivateState();
+
 	// 네트워크 관련
 	void EnableNetwork(const char* serverIP, int port);
 	void DisableNetwork();

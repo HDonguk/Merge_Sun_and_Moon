@@ -506,7 +506,7 @@ void PlayerObject::Fire()
 
         Transform* transform = GetComponent<Transform>();
         XMVECTOR pos = transform->GetPosition();
-        XMVECTOR offset = XMVector3TransformNormal(XMVECTOR{ 4.0f, 15.0f, 10.0f }, transform->GetRotationM());
+        XMVECTOR offset = XMVector3TransformNormal(XMVECTOR{ 4.0f, 15.0f, 8.0f }, transform->GetRotationM());
         float scale = 0.03f;
         RicecakeObject* obj = new RicecakeObject(m_scene, m_scene->AllocateId());
         obj->SetDir(XMLoadFloat3(&mDir));
@@ -661,6 +661,7 @@ void CameraObject::LateUpdate(GameTimer& gTimer)
 
 void CameraObject::MouseMove()
 {
+    if (!m_scene->GetFramework()->GetWndActivateState()) return;
     //  wnd  ǥ ˾ƿ´
     HWND hWnd = m_scene->GetFramework()->GetHWnd();
     RECT clientRect{};

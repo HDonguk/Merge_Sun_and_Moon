@@ -102,6 +102,20 @@ LRESULT CALLBACK Win32Application::WindowProc(HWND hWnd, UINT message, WPARAM wP
         }
         break;
 
+    case WM_ACTIVATE:
+        // wParam�� ���� ����(LOWORD)�� Ȱ��ȭ ���¸� ��Ÿ���ϴ�.
+        if (LOWORD(wParam) == WA_ACTIVE || LOWORD(wParam) == WA_CLICKACTIVE)
+        {
+            // â�� Ȱ��ȭ��
+            pSample->SetWndActivateState(true);
+        }
+        else // WA_INACTIVE
+        {
+            // â�� ��Ȱ��ȭ��
+            pSample->SetWndActivateState(false);
+        }
+        break;
+
     case WM_DESTROY:
         PostQuitMessage(0);
         break;

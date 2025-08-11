@@ -18,7 +18,8 @@ enum PacketType {
     PACKET_CLIENT_READY = 9,   // 클라이언트 준비 완료 신호
     PACKET_TIGER_ATTACK = 10,  // 호랑이 공격 패킷
     PACKET_TIGER_RESPAWN_REQUEST = 11,  // 호랑이 재생성 요청
-    PACKET_TIGER_HIT = 12      // 호랑이 Hit 패킷
+    PACKET_TIGER_HIT = 12,     // 호랑이 Hit 패킷
+    PACKET_STAGE_CHANGE = 13   // 스테이지 변경 패킷
 };
 
 struct PacketPlayerUpdate {
@@ -93,5 +94,11 @@ struct PacketTigerHit {
     PacketHeader header;
     int tigerID;
     int life;  // 남은 체력
+};
+
+struct PacketStageChange {
+    PacketHeader header;
+    int clientID;
+    char stageName[32];  // 스테이지 이름 (예: "Hunting", "God")
 };
 #pragma pack(pop)

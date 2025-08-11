@@ -147,42 +147,12 @@ public:
 
 	
 	// 네트워크 호랑이 애니메이션 상태 설정
-	void SetNetworkAnimation(const std::string& animationFile, float animationTime) {
-		if (m_isNetworkTiger) {
-			Animation* anim = GetComponent<Animation>();
-			if (anim) {
-				// hit 애니메이션 중에는 서버 업데이트를 무시하여 애니메이션이 완료되도록 함
-				if (anim->mCurrentFileName == "0208_tiger_hit.fbx") {
-					return;  // hit 애니메이션 중에는 서버 애니메이션 업데이트 무시
-				}
-				
-				// hit 보호 타이머가 활성화된 경우 모든 서버 애니메이션 업데이트 무시
-				if (m_hitProtectionTimer > 0.0f) {
-					return;  // 보호 타이머가 활성화된 동안 서버 업데이트 무시
-				}
-				
-				// hit 애니메이션 후 idle 상태 보호 플래그가 설정된 경우 서버 업데이트 무시
-				if (m_protectIdleAfterHit && anim->mCurrentFileName == "0722_tiger_idle2.fbx") {
-					// 보호 타이머가 만료된 후에만 다른 애니메이션 허용
-					if (m_hitProtectionTimer <= 0.0f) {
-						m_protectIdleAfterHit = false;  // 보호 플래그 해제
-					} else {
-						return;  // idle 상태 보호 중에는 서버 업데이트 무시
-					}
-				}
-				
-				// 애니메이션 파일이 변경된 경우에만 리셋 (원본 클라이언트처럼 단순하게)
-				if (anim->mCurrentFileName != animationFile) {
-					anim->ResetAnim(animationFile, 0.0f);
-					mElapseTime = 0.0f;
-				}
-				// 서버 시간 동기화 로직 제거 - 원본 클라이언트처럼 단순하게 유지
-			}
-		}
-	}
 	
 	// 네트워크 호랑이 위치 및 회전 설정
 	void SetNetworkTransform(float x, float y, float z, float rotY);
+	
+	// 네트워크 호랑이 애니메이션 설정
+	void SetNetworkAnimation(const std::string& animationFile, float animationTime);
 	
 	// 공격 받기 메서드 (public으로 변경)
 	void Hit();
@@ -197,6 +167,8 @@ public:
 	void Fire();
 	// 네트워크 호랑이를 위해 ChangeState() 메서드를 public으로 변경
 	void ChangeState(string fileName);
+	// 서버 공격 신호 설정 메서드
+	void SetServerAttackSignal(bool signal) { m_serverAttackSignal = signal; }
 	
 private:
 	void TigerBehavior(GameTimer& gTimer);
@@ -219,6 +191,12 @@ private:
 	bool m_isNetworkTiger = false;
 	int m_networkTigerID = -1;
 	
+	// 이전 네트워크 위치를 저장하여 이동 방향 계산에 사용
+	XMVECTOR m_previousNetworkPos = {0.0f, 0.0f, 0.0f, 1.0f};
+	
+	// 서버로부터 공격 신호를 받았는지 확인하는 플래그
+	bool m_serverAttackSignal = false;
+	
 	// hit 애니메이션 후 idle 상태 보호를 위한 플래그
 	bool m_protectIdleAfterHit = false;
 	float m_hitProtectionTimer = 0.0f;  // hit 애니메이션 후 보호 타이머
@@ -230,6 +208,7 @@ class TigerAttackObject : public Object
 public:
 	using Object::Object;
 	void OnUpdate(GameTimer& gTimer) override;
+	void OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration) override;
 private:
 	float mElapseTime = 0.0f;
 };

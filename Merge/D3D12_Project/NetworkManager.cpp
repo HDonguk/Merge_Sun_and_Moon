@@ -228,6 +228,33 @@ void NetworkManager::SendTigerAttack(int tigerID) {
     }
 }
 
+void NetworkManager::SendStageChange(const std::wstring& stageName) {
+    if (!m_isRunning || !m_isLoggedIn) return;
+
+    try {
+        PacketStageChange pkt;
+        pkt.header.size = sizeof(PacketStageChange);
+        pkt.header.type = PACKET_STAGE_CHANGE;
+        pkt.clientID = m_myClientID;
+        
+        // wstring을 char 배열로 변환
+        std::string stageNameStr = std::string(stageName.begin(), stageName.end());
+        strncpy_s(pkt.stageName, sizeof(pkt.stageName), stageNameStr.c_str(), sizeof(pkt.stageName) - 1);
+        pkt.stageName[sizeof(pkt.stageName) - 1] = '\0';  // null 종료 보장
+
+        int sendResult = send(sock, (char*)&pkt, sizeof(pkt), 0);
+        if (sendResult == SOCKET_ERROR) {
+            int error = WSAGetLastError();
+            LogToFile("[Error] Failed to send stage change: " + std::to_string(error));
+        } else {
+            LogToFile("[Stage] Sent stage change to server: " + stageNameStr);
+        }
+    }
+    catch (const std::exception& e) {
+        LogToFile("[Error] Exception in SendStageChange: " + std::string(e.what()));
+    }
+}
+
 void NetworkManager::SetLoginSuccessCallback(std::function<void(int, const std::string&)> callback) {
     m_loginSuccessCallback = callback;
 }
@@ -767,17 +794,18 @@ void NetworkManager::ProcessPacket(char* buffer) {
             
             case PACKET_TIGER_ATTACK: {
                 PacketTigerAttack* tigerAttackPkt = (PacketTigerAttack*)buffer;
-                
                 // 로그인 상태 확인
                 if (!m_isLoggedIn) {
                     break;
                 }
-                
                 // Scene에서 해당 호랑이를 찾아서 공격 효과 처리
                 if (m_scene) {
                     for (Object* obj : m_scene->GetObjects()) {
                         TigerObject* tigerObj = dynamic_cast<TigerObject*>(obj);
                         if (tigerObj && tigerObj->IsNetworkTiger() && tigerObj->GetNetworkTigerID() == tigerAttackPkt->tigerID) {
+                            // 서버 공격 신호 설정 (공격 오브젝트는 0.4초 후 CalcTime에서 생성됨)
+                            tigerObj->SetServerAttackSignal(true);
+                            
                             // 네트워크 호랑이의 실제 공격 오브젝트 생성
                             Transform* tigerTransform = tigerObj->GetComponent<Transform>();
                             if (tigerTransform) {
@@ -791,9 +819,15 @@ void NetworkManager::ProcessPacket(char* buffer) {
                                 if (attackCollider) {
                                     Transform* attackTransform = attackObj->GetComponent<Transform>();
                                     if (attackTransform) {
-                                        XMMATRIX finalM = attackTransform->GetTransformM();
+                                        // 부모(호랑이)의 Transform과 결합된 최종 월드 매트릭스 계산
+                                        XMMATRIX attackLocalM = attackTransform->GetTransformM();
+                                        XMMATRIX tigerWorldM = tigerTransform->GetFinalM();
+                                        XMMATRIX finalM = attackLocalM * tigerWorldM;
+                                        
                                         attackTransform->SetFinalM(finalM);
                                         attackCollider->UpdateOBB(finalM);
+                                        
+                                        LogToFile("[Tiger] Network tiger attack object OBB updated with parent transform");
                                     }
                                 }
                                 

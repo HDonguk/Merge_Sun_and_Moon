@@ -13,7 +13,7 @@ GameServer::GameServer()
     , m_hIOCP(NULL)
     , m_listenSocket(INVALID_SOCKET)
     , m_port(5000)
-    , m_tigerUpdateTimer(0.0f)
+    , m_huntingStageActive(false)
     , m_randomEngine(std::random_device{}())
 {
 }
@@ -59,8 +59,8 @@ bool GameServer::Initialize(int port) {
         return false;
     }
 
-    // 호랑이 초기화
-    InitializeTigers();
+    // 호랑이 초기화는 Hunting 스테이지 활성화 시에 수행
+    std::cout << "[Server] Tiger initialization delayed until Hunting Stage activation" << std::endl;
     return true;
 }
 
@@ -111,7 +111,7 @@ DWORD GameServer::WorkerThread() {
         OVERLAPPED* pOverlapped;
         
         BOOL result = GetQueuedCompletionStatus(m_hIOCP, &bytesTransferred, 
-            &completionKey, &pOverlapped, 50); // 타임아웃을 50ms로 설정 (업데이트 주기 조절)
+            &completionKey, &pOverlapped, 16); // 타임아웃을 16ms로 설정 (60fps 업데이트 주기와 맞춤)
         
         if (!m_isRunning) break;
         
@@ -220,7 +220,7 @@ void GameServer::HandlePacket(IOContext* ioContext, int clientID, DWORD bytesTra
         
         // 패킷 헤더 유효성 검사
         if (header->size < sizeof(PacketHeader) || header->size > MAX_PACKET_SIZE || 
-            header->type <= 0 || header->type > 12) {
+            header->type <= 0 || header->type > 13) {
             std::cout << "[Error] Invalid packet header - Size: " << header->size 
                       << ", Type: " << header->type << ", Client: " << clientID << std::endl;
             
@@ -499,60 +499,33 @@ void GameServer::ProcessSinglePacket(char* buffer, int clientID, int packetSize)
             PacketClientReady* pkt = (PacketClientReady*)buffer;
             std::cout << "[ClientReady] Client " << clientID << " is ready to receive game data" << std::endl;
             
-            // 클라이언트가 준비되었으므로 호랑이 스폰 패킷들을 순차적으로 전송
-            std::cout << "[ClientReady] Sending tiger spawn packets to client " << clientID << std::endl;
-            std::cout << "[ClientReady] Total tigers to spawn: " << m_tigers.size() << std::endl;
-            
-            // 클라이언트 소켓 상태 재확인
-            if (m_clients[clientID].socket == INVALID_SOCKET) {
-                std::cout << "[Error] Client " << clientID << " socket is invalid, cannot send tiger spawn packets" << std::endl;
-                break;
-            }
-            
-            for (const auto& [tigerID, tiger] : m_tigers) {
-                // 각 패킷 전송 전 클라이언트 상태 재확인
-                if (m_clients.find(clientID) == m_clients.end() || 
-                    m_clients[clientID].socket == INVALID_SOCKET) {
-                    std::cout << "[Error] Client " << clientID << " disconnected during tiger spawn, stopping" << std::endl;
-                    break;
-                }
-                
-                PacketTigerSpawn tigerPacket;
-                tigerPacket.header.type = PACKET_TIGER_SPAWN;
-                tigerPacket.header.size = sizeof(PacketTigerSpawn);
-                tigerPacket.tigerID = tiger.tigerID;
-                tigerPacket.x = tiger.x;
-                tigerPacket.y = tiger.y;
-                tigerPacket.z = tiger.z;
-                
-                std::cout << "[ClientReady] Attempting to send tiger spawn packet for ID: " << tiger.tigerID 
-                          << " at position (" << tiger.x << ", " << tiger.y << ", " << tiger.z << ")" << std::endl;
-                
-                if (!SendPacket(m_clients[clientID].socket, &tigerPacket, sizeof(PacketTigerSpawn))) {
-                    std::cout << "[Error] Failed to send tiger spawn packet for ID: " << tiger.tigerID << std::endl;
-                    // 에러가 발생하면 더 이상 전송하지 않음
-                    break;
-                }
-                std::cout << "[Success] Sent tiger spawn packet for ID: " << tiger.tigerID << std::endl;
-                
-                // 각 호랑이 스폰 사이에 짧은 지연 추가 (클라이언트 처리 시간 확보)
-                Sleep(50);  // 50ms로 줄임
-            }
-            
-            std::cout << "[ClientReady] Completed sending all tiger spawn packets to client " << clientID << std::endl;
-            
-            // 모든 패킷 전송 완료 후 짧은 지연 (클라이언트 처리 시간 확보)
-            Sleep(100);  // 100ms로 줄임
+            // 클라이언트가 준비되었으므로 기존 플레이어 정보 전송
+            std::cout << "[ClientReady] Client " << clientID << " ready, waiting for stage change to Hunting" << std::endl;
             
             // 클라이언트 상태 최종 확인
             if (m_clients.find(clientID) != m_clients.end() && 
                 m_clients[clientID].socket != INVALID_SOCKET) {
-                std::cout << "[ClientReady] Client " << clientID << " successfully received all tiger spawn packets" << std::endl;
+                std::cout << "[ClientReady] Client " << clientID << " successfully ready" << std::endl;
                 
-                // 호랑이 스폰 완료 후 기존 플레이어 정보 전송
+                // 기존 플레이어 정보 전송
                 BroadcastNewPlayer(clientID);
             } else {
-                std::cout << "[Error] Client " << clientID << " disconnected after tiger spawn" << std::endl;
+                std::cout << "[Error] Client " << clientID << " disconnected after ready" << std::endl;
+            }
+            break;
+        }
+        
+        case PACKET_STAGE_CHANGE: {
+            if (header->size != sizeof(PacketStageChange)) {
+                std::cout << "[Error] Invalid STAGE_CHANGE packet size" << std::endl;
+                break;
+            }
+            PacketStageChange* pkt = (PacketStageChange*)buffer;
+            std::cout << "[StageChange] Client " << clientID << " changed to stage: " << pkt->stageName << std::endl;
+            
+            // Hunting 스테이지로 변경된 경우 호랑이 초기화
+            if (strcmp(pkt->stageName, "Hunting") == 0) {
+                ActivateHuntingStage();
             }
             break;
         }
@@ -814,8 +787,8 @@ void GameServer::UpdateTigerBehavior(TigerInfo& tiger, float deltaTime) {
     // Original과 동일한 상수값 사용
     const float CHASE_RADIUS = 200.0f;
     const float ATTACK_RADIUS = 17.0f;
-    const float WALK_SPEED = 25.0f;  // Original과 동일
-    const float RUN_SPEED = 45.0f;   // Original과 동일
+    const float WALK_SPEED = 20.0f;  // Original과 동일하게 수정
+    const float RUN_SPEED = 35.0f;   // Original과 동일하게 수정
     
     // 애니메이션 시간 업데이트 (모든 애니메이션에 대해)
     tiger.animationTime += deltaTime;
@@ -973,19 +946,22 @@ void GameServer::UpdateTigerBehavior(TigerInfo& tiger, float deltaTime) {
 }
 
 void GameServer::UpdateTigers(float deltaTime) {
-    m_tigerUpdateTimer += deltaTime;
-    if (m_tigerUpdateTimer < 0.016667f) return; // 60fps (16.67ms)마다 업데이트
-
+    // Hunting 스테이지가 활성화된 경우에만 호랑이 업데이트
+    if (!m_huntingStageActive) return;
+    
+    // 고정 주기 대신 실제 deltaTime 사용하여 더 부드러운 움직임
     for (auto& tigerPair : m_tigers) {
         auto& tiger = tigerPair.second;
-        UpdateTigerBehavior(tiger, m_tigerUpdateTimer); // 실제 누적된 시간 사용
+        UpdateTigerBehavior(tiger, deltaTime); // 실제 deltaTime 사용
     }
-
+    
     BroadcastTigerUpdates();
-    m_tigerUpdateTimer = 0.0f;
 }
 
 void GameServer::BroadcastTigerUpdates() {
+    // Hunting 스테이지가 활성화되지 않았으면 업데이트 전송하지 않음
+    if (!m_huntingStageActive) return;
+    
     // 로그인된 클라이언트가 없으면 업데이트 전송하지 않음
     int loggedInCount = 0;
     for (const auto& clientPair : m_clients) {
@@ -1054,6 +1030,32 @@ void GameServer::GetNearestPlayerPosition(const TigerInfo& tiger, float& targetX
             targetX = client.lastUpdate.x;
             targetZ = client.lastUpdate.z;
         }
+    }
+}
+
+void GameServer::ActivateHuntingStage() {
+    if (!m_huntingStageActive) {
+        m_huntingStageActive = true;
+        std::cout << "[Server] Hunting Stage activated - initializing tigers" << std::endl;
+        
+        // 호랑이 초기화
+        InitializeTigers();
+        
+        // 모든 클라이언트에게 호랑이 스폰 패킷 전송
+        for (const auto& tigerPair : m_tigers) {
+            const auto& tiger = tigerPair.second;
+            PacketTigerSpawn spawnPacket;
+            spawnPacket.header.type = PACKET_TIGER_SPAWN;
+            spawnPacket.header.size = sizeof(PacketTigerSpawn);
+            spawnPacket.tigerID = tiger.tigerID;
+            spawnPacket.x = tiger.x;
+            spawnPacket.y = tiger.y;
+            spawnPacket.z = tiger.z;
+            
+            BroadcastPacket(&spawnPacket, sizeof(spawnPacket));
+        }
+        
+        std::cout << "[Server] Tigers initialized and spawn packets sent to all clients" << std::endl;
     }
 }
 

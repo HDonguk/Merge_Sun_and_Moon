@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "Object.h"
 #include "GameTimer.h"
 #include "Scene.h"
@@ -6,7 +7,7 @@
 #include "Framework.h"
 #include "NetworkManager.h"
 
-std::random_device rd;  // ù ��° rd ��ü
+std::random_device rd;  // ù ° rd ü
 default_random_engine dre(rd());
 uniform_int_distribution uid(-180,180);
 
@@ -527,12 +528,6 @@ void PlayerObject::CalcTime(float deltaTime)
     if (anim->mCurrentFileName == "boy_hit.fbx")
     {
         mElapseTime += deltaTime;
-        // hit 애니메이션 타이밍 디버그
-        if (mElapseTime > 0.5f && mElapseTime <= 0.6f) {
-            wchar_t debugMsg[256];
-            swprintf_s(debugMsg, L"[PlayerObject] Hit animation elapsed: %.3f seconds\n", mElapseTime);
-            OutputDebugString(debugMsg);
-        }
         // 플레이어의 hit 애니메이션은 애니메이션의 실제 길이에 맞춰서 처리
         // Scene을 통해 ResourceManager에 접근하여 실제 애니메이션 길이를 가져와서 사용
         ResourceManager& resourceManager = m_scene->GetResourceManager();
@@ -611,12 +606,12 @@ void CameraObject::LateUpdate(GameTimer& gTimer)
 
     XMMATRIX transformM = transform->GetTransformM();
     XMMATRIX invtransformM = XMMatrixInverse(nullptr, transformM);
-    memcpy(m_scene->GetConstantBufferMappedData(), &XMMatrixTranspose(invtransformM), sizeof(XMMATRIX)); // ó�� �Ű������� �����ּ�
+    memcpy(m_scene->GetConstantBufferMappedData(), &XMMatrixTranspose(invtransformM), sizeof(XMMATRIX)); // ó Ű ּ
 }
 
 void CameraObject::OnMouseInput(WPARAM wParam, HWND hWnd)
 {
-    // ���� wnd�� ���� ��ǥ�� �˾ƿ´�
+    //  wnd  ǥ ˾ƿ´
     RECT clientRect{};
     GetWindowRect(hWnd, &clientRect);
     int width = int(clientRect.right - clientRect.left);
@@ -631,7 +626,7 @@ void CameraObject::OnMouseInput(WPARAM wParam, HWND hWnd)
     mTheta -= XMConvertToRadians(dx * 0.02f);
     mPhi -= XMConvertToRadians(dy * 0.02f);
 
-    // ���� clamp
+    //  clamp
     float min = 0.1f;
     float max = XM_PI - 0.1f;
     mPhi = mPhi < min ? min : (mPhi > max ? max : mPhi);
@@ -687,9 +682,9 @@ void TigerObject::TigerBehavior(GameTimer& gTimer)
     XMVECTOR dir = XMVector3Normalize(playerPos - pos);
     float yaw = atan2f(XMVectorGetX(dir), XMVectorGetZ(dir)) * 180 / 3.141592f;
 
-    if (result < 200.f) // �÷��̾ Ž�� ���� �ȿ� ������... 
+    if (result < 200.f) // ÷̾ Ž  ȿ ... 
     {
-        if (result < 17.0f) // Ž������ �ȿ� �÷��̾ �ְ�, �ſ� �����ٸ�....
+        if (result < 17.0f) // Ž ȿ ÷̾ ְ, ſ ٸ....
         {
             Attack();
             if (anim->mCurrentFileName == "0208_tiger_attack.fbx" && mElapseTime == 0)
@@ -697,7 +692,7 @@ void TigerObject::TigerBehavior(GameTimer& gTimer)
                 transform->SetRotation({ 0.0f, yaw, 0.0f });
             }
         }
-        else // Ž������ �ȿ� �÷��̾ ������, �ſ� ������ �ʴٸ�...
+        else // Ž ȿ ÷̾ , ſ  ʴٸ...
         {
             Run();
             if (anim->mCurrentFileName == "0722_tiger_run.fbx")
@@ -707,7 +702,7 @@ void TigerObject::TigerBehavior(GameTimer& gTimer)
             }
         }
     }
-    else // �÷��̾ Ž�� ���� �ۿ� �ִ�.
+    else // ÷̾ Ž  ۿ ִ.
     {
         Search(gTimer.DeltaTime());
     }
@@ -864,12 +859,17 @@ void TigerObject::Fire()
         if (attackCollider) {
             Transform* attackTransform = obj->GetComponent<Transform>();
             if (attackTransform) {
-                XMMATRIX finalM = attackTransform->GetTransformM();
+                // 부모(호랑이)의 Transform과 결합된 최종 월드 매트릭스 계산
+                XMMATRIX attackLocalM = attackTransform->GetTransformM();
+                XMMATRIX tigerWorldM = tigerTransform->GetFinalM();
+                XMMATRIX finalM = attackLocalM * tigerWorldM;
+                
                 attackTransform->SetFinalM(finalM);
                 attackCollider->UpdateOBB(finalM);
+                
+                OutputDebugString(L"[TigerObject] Attack object OBB updated with parent transform\n");
             }
         }
-        OutputDebugString(L"[TigerObject] Attack object OBB updated\n");
     } else {
         // Transform이 없는 경우에도 Original과 동일한 상대적 위치 사용
         Object* obj = new TigerAttackObject(m_scene, m_scene->AllocateId(), m_id);
@@ -886,8 +886,11 @@ void TigerObject::Hit()
     if (mIsHitted) return;
     mIsHitted = true;
     
+    OutputDebugString(L"[TigerObject] Hit() called - mIsHitted set to true\n");
+    
     // 네트워크 호랑이도 즉시 hit 애니메이션 재생 (서버 응답과 관계없이)
     if (m_isNetworkTiger) {
+        OutputDebugString(L"[TigerObject] Network tiger hit - sending hit event to server\n");
         Framework* framework = m_scene->GetFramework();
         if (framework && framework->IsNetworkEnabled()) {
             NetworkManager& networkManager = framework->GetNetworkManager();
@@ -898,18 +901,22 @@ void TigerObject::Hit()
         }
         // 네트워크 호랑이도 즉시 hit 애니메이션 재생
         ChangeState("0208_tiger_hit.fbx");
+        OutputDebugString(L"[TigerObject] Network tiger hit animation state changed\n");
         return;
     }
     
     // 로컬 호랑이만 즉시 생명력 감소 및 애니메이션 재생
+    OutputDebugString(L"[TigerObject] Local tiger hit - reducing life\n");
     --mLife;
     
     if (mLife == 0)
     {
+        OutputDebugString(L"[TigerObject] Tiger life reached 0 - calling Dead()\n");
         Dead();
         return;
     }
     ChangeState("0208_tiger_hit.fbx");
+    OutputDebugString(L"[TigerObject] Local tiger hit animation state changed\n");
 }
 
 void TigerObject::Dead()
@@ -945,7 +952,20 @@ void TigerObject::CalcTime(float deltaTime)
         {
             mElapseTime += deltaTime;
             // 네트워크 호랑이도 Original과 동일하게 Fire()와 TimeOut() 호출
-            if (mElapseTime >= 0.4f) Fire();
+            // 단, 공격 오브젝트 생성을 0.4초 지연시켜 Original과 동일한 타이밍으로 맞춤
+            if (mElapseTime >= 0.4f) {
+                // 네트워크 호랑이는 서버에서 공격 패킷을 받은 후에만 Fire() 호출
+                // 이는 서버의 공격 패킷과 동기화되어야 함
+                if (m_networkTigerID != -1) {
+                    // 서버에서 공격 신호를 받았을 때만 Fire() 호출
+                    if (m_serverAttackSignal) {
+                        Fire();
+                        m_serverAttackSignal = false;  // 신호 소비
+                    }
+                } else {
+                    Fire(); // Local tiger
+                }
+            }
             if (mElapseTime >= 0.8f) TimeOut();
         }
         else
@@ -1018,31 +1038,7 @@ void TigerObject::CreateLeather()
     m_scene->AddObj(objectPtr);
 }
 
-void TigerAttackObject::OnUpdate(GameTimer& gTimer)
-{
-    mElapseTime += gTimer.DeltaTime();
-    
-    // OBB 업데이트 상태 확인
-    Transform* transform = GetComponent<Transform>();
-    Collider* collider = GetComponent<Collider>();
-    if (transform && collider) {
-        XMFLOAT3 pos;
-        XMStoreFloat3(&pos, transform->GetPosition());
-        
-        // OBB 정보 출력
-        auto& obb = collider->GetOBB();
-        XMFLOAT3 center;
-        XMStoreFloat3(&center, XMLoadFloat3(&obb.Center));
-        
-        wchar_t debugMsg[256];
-        swprintf_s(debugMsg, L"[TigerAttackObject] Update - pos: (%.1f, %.1f, %.1f), OBB center: (%.1f, %.1f, %.1f), extents: (%.1f, %.1f, %.1f), elapsed: %.3f\n",
-                   pos.x, pos.y, pos.z, center.x, center.y, center.z, obb.Extents.x, obb.Extents.y, obb.Extents.z, mElapseTime);
-        OutputDebugString(debugMsg);
-    }
-    
-    if (mElapseTime >= 0.05) Delete();  // Original 수명으로 복원
-    Object::OnUpdate(gTimer);
-}
+
 
 
 
@@ -1141,6 +1137,32 @@ void TigerMockup::OnProcessCollision(Object& other, XMVECTOR collisionNormal, fl
         }
     }
 
+    Transform* transform = GetComponent<Transform>();
+    XMVECTOR pos = transform->GetPosition();
+    pos += -collisionNormal * penetration;
+    transform->SetPosition(pos);
+}
+
+void TigerAttackObject::OnUpdate(GameTimer& gTimer)
+{
+    mElapseTime += gTimer.DeltaTime();
+    if (mElapseTime >= 0.8f) Delete();  // 공격 지속 시간 (Original과 동일)
+    Object::OnUpdate(gTimer);
+}
+
+void TigerAttackObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration)
+{
+    PlayerObject* player = dynamic_cast<PlayerObject*>(&other);
+    if (player)
+    {
+        OutputDebugString(L"[TigerAttackObject] Collision with PlayerObject detected - calling player->Hit()\n");
+        // 플레이어가 피격되었을 때의 처리
+        // 여기서는 단순히 로그만 출력하고 공격 오브젝트는 삭제
+        Delete();  // 공격 오브젝트 삭제
+        return;
+    }
+
+    // 다른 오브젝트와의 충돌 처리
     Transform* transform = GetComponent<Transform>();
     XMVECTOR pos = transform->GetPosition();
     pos += -collisionNormal * penetration;
@@ -1405,12 +1427,94 @@ void TigerObject::SetNetworkTransform(float x, float y, float z, float rotY)
 {
     if (m_isNetworkTiger) {
         Transform* transform = GetComponent<Transform>();
-        if (transform) {
+        if (transform != nullptr) {
             // Y-위치는 Gravity 컴포넌트가 관리하므로 X, Z만 서버에서 동기화
             XMVECTOR currentPos = transform->GetPosition();
             XMVECTOR newPos = {x, XMVectorGetY(currentPos), z, 1.0f};
             transform->SetPosition(newPos);
-            transform->SetRotation({0.0f, rotY, 0.0f});
+            
+            // Original 클라이언트처럼 거리에 따라 다른 회전 로직 적용
+            PlayerObject* player = m_scene->GetObj<PlayerObject>();
+            if (player) {
+                Transform* playerTransform = player->GetComponent<Transform>();
+                if (playerTransform) {
+                    XMVECTOR playerPos = playerTransform->GetPosition();
+                    float distance = XMVectorGetX(XMVector3Length(playerPos - newPos));
+                    
+                    // Original 클라이언트와 동일한 거리 기준 사용
+                    if (distance < 200.0f) {
+                        // 플레이어가 탐색 범위 내에 있을 때만 플레이어를 향해 회전
+                        XMVECTOR dir = XMVector3Normalize(playerPos - newPos);
+                        float yaw = atan2f(XMVectorGetX(dir), XMVectorGetZ(dir)) * 180.0f / 3.141592f;
+                        
+                        // 현재 회전과 목표 회전의 차이를 계산하여 자연스러운 회전 적용
+                        XMVECTOR currentRotation = transform->GetRotation();
+                        float currentYaw = XMVectorGetY(currentRotation);
+                        
+                        // 회전 차이를 계산하고 부드럽게 보간
+                        float rotationDiff = yaw - currentYaw;
+                        
+                        // 180도 이상 차이나는 경우 반대 방향으로 회전
+                        if (rotationDiff > 180.0f) rotationDiff -= 360.0f;
+                        if (rotationDiff < -180.0f) rotationDiff += 360.0f;
+                        
+                        // 부드러운 회전을 위해 회전 속도 제한 (60fps 기준으로 3도/프레임)
+                        float maxRotationPerFrame = 3.0f;
+                        if (abs(rotationDiff) > maxRotationPerFrame) {
+                            if (rotationDiff > 0) {
+                                rotationDiff = maxRotationPerFrame;
+                            } else {
+                                rotationDiff = -maxRotationPerFrame;
+                            }
+                        }
+                        
+                        float newYaw = currentYaw + rotationDiff;
+                        transform->SetRotation({0.0f, newYaw, 0.0f});
+                    } else {
+                        // 플레이어가 탐색 범위 밖에 있을 때는 이동 방향에 따른 자연스러운 회전
+                        // 이전 위치와 현재 위치를 비교하여 이동 방향 계산
+                        XMVECTOR zeroVector = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+                        if (!XMVector4Equal(m_previousNetworkPos, zeroVector)) {
+                            XMVECTOR moveDir = newPos - m_previousNetworkPos;
+                            float moveDistance = XMVectorGetX(XMVector3Length(moveDir));
+                            
+                            // 이동 거리가 충분할 때만 회전 적용 (떨림 방지)
+                            if (moveDistance > 0.1f) {
+                                // 이동 방향으로 회전 (Original 클라이언트의 Search 로직과 동일)
+                                XMVECTOR normalizedDir = XMVector3Normalize(moveDir);
+                                float yaw = atan2f(XMVectorGetX(normalizedDir), XMVectorGetZ(normalizedDir)) * 180.0f / 3.141592f;
+                                
+                                // 현재 회전과 목표 회전의 차이를 계산하여 자연스러운 회전 적용
+                                XMVECTOR currentRotation = transform->GetRotation();
+                                float currentYaw = XMVectorGetY(currentRotation);
+                                
+                                // 회전 차이를 계산하고 부드럽게 보간
+                                float rotationDiff = yaw - currentYaw;
+                                
+                                // 180도 이상 차이나는 경우 반대 방향으로 회전
+                                if (rotationDiff > 180.0f) rotationDiff -= 360.0f;
+                                if (rotationDiff < -180.0f) rotationDiff += 360.0f;
+                                
+                                // 부드러운 회전을 위해 회전 속도 제한 (60fps 기준으로 3도/프레임)
+                                float maxRotationPerFrame = 3.0f;
+                                if (abs(rotationDiff) > maxRotationPerFrame) {
+                                    if (rotationDiff > 0) {
+                                        rotationDiff = maxRotationPerFrame;
+                                    } else {
+                                        rotationDiff = -maxRotationPerFrame;
+                                    }
+                                }
+                                
+                                float newYaw = currentYaw + rotationDiff;
+                                transform->SetRotation({0.0f, newYaw, 0.0f});
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // 이전 위치 저장 (다음 프레임에서 사용)
+            m_previousNetworkPos = newPos;
             
             // OBB 업데이트
             Collider* collider = GetComponent<Collider>();
@@ -1426,6 +1530,41 @@ void TigerObject::SetNetworkTransform(float x, float y, float z, float rotY)
                 transform->SetFinalM(finalM);
                 collider->UpdateOBB(finalM);
             }
+        }
+    }
+}
+
+void TigerObject::SetNetworkAnimation(const std::string& animationFile, float animationTime)
+{
+    if (m_isNetworkTiger) {
+        Animation* anim = GetComponent<Animation>();
+        if (anim) {
+            // 새로운 애니메이션이 시작될 때만 상태 변경
+            if (anim->mCurrentFileName != animationFile) {
+                // 현재 애니메이션이 끝나기 전까지는 변경하지 않음 (버벅거림 방지)
+                // 단, 공격 애니메이션은 즉시 변경 (반응성 향상)
+                if (animationFile == "0208_tiger_attack.fbx" ||
+                    animationFile == "0208_tiger_hit.fbx" ||
+                    animationFile == "0208_tiger_dying.fbx") {
+                    ChangeState(animationFile);
+                    // Original 클라이언트와 동일하게 0으로 리셋
+                    anim->ResetAnim(animationFile, 0.0f);
+                    mElapseTime = 0.0f;
+                    m_serverAttackSignal = false;  // 공격 신호 리셋
+                } else {
+                    // 일반 애니메이션은 현재 애니메이션이 끝날 때까지 기다림
+                    // 애니메이션 시간이 0.9 이상이면 거의 끝난 것으로 간주
+                    if (anim->mAnimationTime >= 0.9f) {
+                        ChangeState(animationFile);
+                        // Original 클라이언트와 동일하게 0으로 리셋
+                        anim->ResetAnim(animationFile, 0.0f);
+                        mElapseTime = 0.0f;
+                    }
+                }
+            }
+            
+            // 서버 시간을 직접 설정하지 않음 (떨림 방지)
+            // Original 클라이언트와 동일하게 클라이언트에서 자연스럽게 재생
         }
     }
 }

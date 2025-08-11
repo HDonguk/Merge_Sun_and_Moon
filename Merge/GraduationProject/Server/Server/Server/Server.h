@@ -78,8 +78,8 @@ private:
     std::vector<HANDLE> m_workerThreads;
     bool m_isRunning;
     int m_port;
-    float m_tigerUpdateTimer;
     std::mt19937 m_randomEngine;
+    bool m_huntingStageActive;  // Hunting 스테이지 활성화 여부
 
     // 내부 메서드
     static DWORD WINAPI WorkerThreadProc(LPVOID lpParam);
@@ -98,6 +98,7 @@ private:
     void UpdateTigers(float deltaTime);
     void BroadcastTigerUpdates();
     void UpdateTigerBehavior(TigerInfo& tiger, float deltaTime);
+    void ActivateHuntingStage();  // Hunting 스테이지 활성화 메서드
     float GetRandomFloat(float min, float max);
     bool IsPlayerNearby(const TigerInfo& tiger, float radius);
     void GetNearestPlayerPosition(const TigerInfo& tiger, float& targetX, float& targetZ);

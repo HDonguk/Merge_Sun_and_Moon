@@ -1133,6 +1133,12 @@ void Scene::SetStage(wstring stage)
         }
     }
     
+    // Hunting 스테이지로 전환할 때 서버에 알림
+    if (m_parent && stage == L"Hunting") {
+        OutputDebugString(L"[Scene] SetStage: Sending Hunting stage change to server\n");
+        m_parent->GetNetworkManager().SendStageChange(L"Hunting");
+    }
+    
     m_stage_queue = stage;
 }
 

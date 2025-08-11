@@ -1155,7 +1155,7 @@ void Scene::ResetLeatherCount()
 bool Scene::HasEnoughLeather()
 {
 
-    return mLeatherCount > 5 ? true : false;
+    return mLeatherCount >= 5 ? true : false;
 }
 
 
@@ -1559,6 +1559,9 @@ void Scene::ProcessInput()
     if ((keyState[VK_F3] & 0x88) == 0x80) {
         m_stage_queue = L"Title";
     }
+    if ((keyState[VK_F10] & 0x88) == 0x80) {
+        mLeatherCount = 5;
+    }
 }
 
 void Scene::LoadMeshAnimationTexture()
@@ -1660,6 +1663,8 @@ void Scene::LoadMeshAnimationTexture()
     m_texture_name_to_index.insert({ L"Quest", i++ });
     m_DDSFileName.push_back(L"./Textures/End.dds");
     m_texture_name_to_index.insert({ L"End", i++ });
+    m_DDSFileName.push_back(L"./Textures/GoToGod.dds");
+    m_texture_name_to_index.insert({ L"GoToGod", i++ });
 }
 
 // Update frame-based values.

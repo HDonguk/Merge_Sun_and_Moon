@@ -325,3 +325,9 @@ public:
 	Object::Object;
 	void OnUpdate(GameTimer& gTimer) override;
 };
+
+class SisterQuadObject : public Object
+{
+public:
+	Object::Object;
+};

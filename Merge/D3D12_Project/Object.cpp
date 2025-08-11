@@ -1391,12 +1391,22 @@ void SisterObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, f
     PlayerObject* player = dynamic_cast<PlayerObject*>(&other);
     if (player && !mIsQuadAble)
     {
-        mIsQuadAble = true;
-        QuadObject* obj = new QuadObject(m_scene, m_scene->AllocateId(), m_id);
-        obj->AddComponent(new Transform{ {-5.0f, 10.0f, 0.0f}, {-90.0f, 180.0f, 0.0f}, {30.0f, 0.0f, 25.0f} });
-        obj->AddComponent(new Mesh{ "Quad" });
-        obj->AddComponent(new Texture{ L"Quest", 1.0f, 0.4f });
-        m_scene->AddObj(obj);
+        if (m_scene->HasEnoughLeather())
+        {
+            Object* obj = new SisterQuadObject(m_scene, m_scene->AllocateId(), m_id);
+            obj->AddComponent(new Transform{ {-5.0f, 10.0f, 0.0f}, {-90.0f, 180.0f, 0.0f}, {30.0f, 0.0f, 25.0f} });
+            obj->AddComponent(new Mesh{ "Quad" });
+            obj->AddComponent(new Texture{ L"GoToGod", 1.0f, 0.4f });
+            m_scene->AddObj(obj);
+        }
+        else
+        {
+            Object* obj = new SisterQuadObject(m_scene, m_scene->AllocateId(), m_id);
+            obj->AddComponent(new Transform{ {-5.0f, 10.0f, 0.0f}, {-90.0f, 180.0f, 0.0f}, {30.0f, 0.0f, 25.0f} });
+            obj->AddComponent(new Mesh{ "Quad" });
+            obj->AddComponent(new Texture{ L"Quest", 1.0f, 0.4f });
+            m_scene->AddObj(obj);
+        }
     }
     Object::OnProcessCollision(other, collisionNormal, penetration);
 }

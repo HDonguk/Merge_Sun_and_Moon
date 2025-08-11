@@ -31,7 +31,7 @@ void Scene::OnInit(ID3D12Device* device, ID3D12GraphicsCommandList* commandList)
     BuildProjMatrix();
     OutputDebugString(L"[Scene] About to call BuildBaseStage()\n");
     BuildBaseStage();
-    BuildTitleStage();
+
     OutputDebugString(L"[Scene] BuildBaseStage() completed\n");
     BuildRootSignature(device);
     BuildInputElement();
@@ -47,6 +47,10 @@ void Scene::OnInit(ID3D12Device* device, ID3D12GraphicsCommandList* commandList)
     BuildConstantBufferView(device);
     BuildTextureBufferView(device);
     BuildShadow();
+
+    ProcessStageQueue();
+    ProcessObjectQueue();
+
     OutputDebugString(L"[Scene] OnInit() completed\n");
 }
 
@@ -82,42 +86,7 @@ void Scene::BuildHuntingStage()
         OutputDebugString(L"[Scene] Created local player with life: 3\n");
     }
 
-    // UI
-    {
-        float depthFactor = 0.11f;
-        float scale = 0.1f;
-        float textureRatio = 420.0f / 112.0f; // �ؽ�ó ����
-        objectPtr = new LifeQuadObject(this, AllocateId());
-        objectPtr->AddComponent(new Transform{ {-0.8f * depthFactor, 0.4f * depthFactor, 1.0f * depthFactor}, {-90.0f, 0.0f, 0.0f}, {depthFactor * textureRatio * scale, 1.0f, depthFactor * scale} });
-        objectPtr->AddComponent(new Mesh{ "Quad" });
-        objectPtr->AddComponent(new Texture{ L"Life3", -1.0f, 0.4f });
-        AddObj(objectPtr);
-
-        scale = 0.15;
-        textureRatio = 256.0f / 256.0f; // �ؽ�ó ����
-        objectPtr = new BoyIconQuadObject(this, AllocateId());
-        objectPtr->AddComponent(new Transform{ {-1.0f * depthFactor, 0.4f * depthFactor, 1.0f * depthFactor}, {-90.0f, 0.0f, 0.0f}, {depthFactor * textureRatio * scale, 1.0f, depthFactor * scale} });
-        objectPtr->AddComponent(new Mesh{ "Quad" });
-        objectPtr->AddComponent(new Texture{ L"BoyIcon", -1.0f, 0.4f });
-        AddObj(objectPtr);
-
-        scale = 0.25;
-        textureRatio = 256.0f / 328.0f; // �ؽ�ó ����
-        objectPtr = new RiceCakeQuadObject(this, AllocateId());
-        objectPtr->AddComponent(new Transform{ {-1.0f * depthFactor, -0.55f * depthFactor, 1.0f * depthFactor}, {-90.0f, 0.0f, 0.0f}, {depthFactor * textureRatio * scale, 1.0f, depthFactor * scale} });
-        objectPtr->AddComponent(new Mesh{ "Quad" });
-        objectPtr->AddComponent(new Texture{ L"RiceCake0", -1.0f, 0.4f });
-        AddObj(objectPtr);
-
-        scale = 0.25;
-        textureRatio = 256.0f / 256.0f; // �ؽ�ó ����
-        objectPtr = new TigerLeatherQuadObject(this, AllocateId());
-        objectPtr->AddComponent(new Transform{ {0.7f * depthFactor, -0.55f * depthFactor, 1.0f * depthFactor}, {-90.0f, 0.0f, 0.0f}, {depthFactor * textureRatio * scale, 1.0f, depthFactor * scale} });
-        objectPtr->AddComponent(new Mesh{ "Quad" });
-        objectPtr->AddComponent(new Texture{ L"TigerLeather0", -1.0f, 0.4f });
-        AddObj(objectPtr);
-
-    }
+   
 
     {
         objectPtr = new TerrainObject(this, AllocateId());
@@ -190,11 +159,6 @@ void Scene::BuildHuntingStage()
     // 서버에서 PACKET_TIGER_SPAWN 패킷을 통해 호랑이들이 생성됨
     
     // 다른 플레이어들은 네트워크를 통해 자동으로 생성되므로 여기서는 생성하지 않음
-    OutputDebugString(L"[Scene] Other players will be created through network updates\n");
-    
-    OutputDebugString(L"[Scene] Processing object queue...\n");
-    ProcessObjectQueue();
-    OutputDebugString(L"[Scene] BuildHuntingStage completed successfully\n");
     
     // 스테이지 전환 완료 - 다른 플레이어 생성 허용
     if (m_parent) {
@@ -233,34 +197,7 @@ void Scene::BuildBaseStage()
         OutputDebugString(L"[Scene] Created local player in Base stage with life: 3\n");
     }
     // 
-    // UI
-    {
-        float depthFactor = 0.11f;
-        float scale = 0.1f;
-        float textureRatio = 420.0f / 112.0f; // �ؽ�ó ����
-        objectPtr = new LifeQuadObject(this, AllocateId());
-        objectPtr->AddComponent(new Transform{ {-0.8f * depthFactor, 0.4f * depthFactor, 1.0f * depthFactor}, {-90.0f, 0.0f, 0.0f}, {depthFactor * textureRatio * scale, 1.0f, depthFactor * scale} });
-        objectPtr->AddComponent(new Mesh{ "Quad" });
-        objectPtr->AddComponent(new Texture{ L"Life3", -1.0f, 0.4f });
-        AddObj(objectPtr);
-
-        scale = 0.15;
-        textureRatio = 256.0f / 256.0f; // �ؽ�ó ����
-        objectPtr = new BoyIconQuadObject(this, AllocateId());
-        objectPtr->AddComponent(new Transform{ {-1.0f * depthFactor, 0.4f * depthFactor, 1.0f * depthFactor}, {-90.0f, 0.0f, 0.0f}, {depthFactor * textureRatio * scale, 1.0f, depthFactor * scale} });
-        objectPtr->AddComponent(new Mesh{ "Quad" });
-        objectPtr->AddComponent(new Texture{ L"BoyIcon", -1.0f, 0.4f });
-        AddObj(objectPtr);
-
-        scale = 0.25;
-        textureRatio = 256.0f / 328.0f; // �ؽ�ó ����
-        objectPtr = new RiceCakeQuadObject(this, AllocateId());
-        objectPtr->AddComponent(new Transform{ {-1.0f * depthFactor, -0.55f * depthFactor, 1.0f * depthFactor}, {-90.0f, 0.0f, 0.0f}, {depthFactor * textureRatio * scale, 1.0f, depthFactor * scale} });
-        objectPtr->AddComponent(new Mesh{ "Quad" });
-        objectPtr->AddComponent(new Texture{ L"RiceCake0", -1.0f, 0.4f });
-        AddObj(objectPtr);
-
-    }
+  
 
     {
         float scale = 0.1f;
@@ -639,7 +576,7 @@ void Scene::BuildBaseStage()
     }
 
 
-    ProcessObjectQueue();
+
     
     // Base 스테이지 생성 완료 후 네트워크 업데이트 전송
     if (m_parent) {
@@ -690,25 +627,7 @@ void Scene::BuildGodStage()
         OutputDebugString(L"[Scene] Created local player in God stage with life: 3\n");
     }
 
-    // UI
-    {
-        float depthFactor = 0.11f;
-        float scale = 0.1f;
-        float textureRatio = 420.0f / 112.0f; // �ؽ�ó ����
-        objectPtr = new LifeQuadObject(this, AllocateId());
-        objectPtr->AddComponent(new Transform{ {-0.8f * depthFactor, 0.4f * depthFactor, 1.0f * depthFactor}, {-90.0f, 0.0f, 0.0f}, {depthFactor * textureRatio * scale, 1.0f, depthFactor * scale} });
-        objectPtr->AddComponent(new Mesh{ "Quad" });
-        objectPtr->AddComponent(new Texture{ L"Life3", -1.0f, 0.4f });
-        AddObj(objectPtr);
-
-        scale = 0.15;
-        textureRatio = 256.0f / 256.0f; // �ؽ�ó ����
-        objectPtr = new BoyIconQuadObject(this, AllocateId());
-        objectPtr->AddComponent(new Transform{ {-1.0f * depthFactor, 0.4f * depthFactor, 1.0f * depthFactor}, {-90.0f, 0.0f, 0.0f}, {depthFactor * textureRatio * scale, 1.0f, depthFactor * scale} });
-        objectPtr->AddComponent(new Mesh{ "Quad" });
-        objectPtr->AddComponent(new Texture{ L"BoyIcon", -1.0f, 0.4f });
-        AddObj(objectPtr);
-    }
+  
 
     // 기존 다른 플레이어들을 다시 생성
     OutputDebugString(L"[Scene] Recreating other players for God Stage...\n");
@@ -896,7 +815,7 @@ void Scene::BuildGodStage()
     }
     
     OutputDebugString(L"[Scene] BuildGodStage completed successfully\n");
-    ProcessObjectQueue();
+
 }
 
 void Scene::BuildEndStage()
@@ -934,7 +853,47 @@ void Scene::BuildEndStage()
         AddObj(objectPtr);
     }
 
-    ProcessObjectQueue();
+}
+
+void Scene::BuildUI()
+{
+    if (m_current_stage == L"Title") return;
+    if (m_current_stage == L"End") return;
+    // UI
+    Object* objectPtr = nullptr;
+
+    float depthFactor = 0.11f;
+    float scale = 0.1f;
+    float textureRatio = 420.0f / 112.0f; // �ؽ�ó ����
+    objectPtr = new LifeQuadObject(this, AllocateId());
+    objectPtr->AddComponent(new Transform{ {-0.8f * depthFactor, 0.4f * depthFactor, 1.0f * depthFactor}, {-90.0f, 0.0f, 0.0f}, {depthFactor * textureRatio * scale, 1.0f, depthFactor * scale} });
+    objectPtr->AddComponent(new Mesh{ "Quad" });
+    objectPtr->AddComponent(new Texture{ L"Life3", -1.0f, 0.4f });
+    AddObj(objectPtr);
+
+    scale = 0.15;
+    textureRatio = 256.0f / 256.0f; // �ؽ�ó ����
+    objectPtr = new BoyIconQuadObject(this, AllocateId());
+    objectPtr->AddComponent(new Transform{ {-1.0f * depthFactor, 0.4f * depthFactor, 1.0f * depthFactor}, {-90.0f, 0.0f, 0.0f}, {depthFactor * textureRatio * scale, 1.0f, depthFactor * scale} });
+    objectPtr->AddComponent(new Mesh{ "Quad" });
+    objectPtr->AddComponent(new Texture{ L"BoyIcon", -1.0f, 0.4f });
+    AddObj(objectPtr);
+
+    scale = 0.25;
+    textureRatio = 256.0f / 328.0f; // �ؽ�ó ����
+    objectPtr = new RiceCakeQuadObject(this, AllocateId());
+    objectPtr->AddComponent(new Transform{ {-1.0f * depthFactor, -0.55f * depthFactor, 1.0f * depthFactor}, {-90.0f, 0.0f, 0.0f}, {depthFactor * textureRatio * scale, 1.0f, depthFactor * scale} });
+    objectPtr->AddComponent(new Mesh{ "Quad" });
+    objectPtr->AddComponent(new Texture{ L"RiceCake0", -1.0f, 0.4f });
+    AddObj(objectPtr);
+
+    scale = 0.25;
+    textureRatio = 256.0f / 256.0f; // �ؽ�ó ����
+    objectPtr = new TigerLeatherQuadObject(this, AllocateId());
+    objectPtr->AddComponent(new Transform{ {0.7f * depthFactor, -0.55f * depthFactor, 1.0f * depthFactor}, {-90.0f, 0.0f, 0.0f}, {depthFactor * textureRatio * scale, 1.0f, depthFactor * scale} });
+    objectPtr->AddComponent(new Mesh{ "Quad" });
+    objectPtr->AddComponent(new Texture{ L"White", -1.0f, 0.4f });
+    AddObj(objectPtr);
 }
 
 void Scene::BuildTitleStage()
@@ -974,7 +933,6 @@ void Scene::BuildTitleStage()
         AddObj(objectPtr);
     }
 
-    ProcessObjectQueue();
 }
 
 
@@ -1295,6 +1253,16 @@ int Scene::GetLeatherCount()
     return mLeatherCount;
 }
 
+bool Scene::IsTigerQuestAccepted()
+{
+    return mTigerQuest;
+}
+
+void Scene::SetTigerQuestState(bool state)
+{
+    mTigerQuest = state;
+}
+
 
 void Scene::ProcessStageQueue()
 {
@@ -1303,6 +1271,7 @@ void Scene::ProcessStageQueue()
         OutputDebugString(L"[Scene] ProcessStageQueue: Switching to Base Stage\n");
         DeleteCurrentObjects();
         BuildBaseStage();
+        BuildUI();
     }
     else if (m_stage_queue == L"Hunting")
     {
@@ -1322,22 +1291,26 @@ void Scene::ProcessStageQueue()
         
         BuildHuntingStage();
         OutputDebugString(L"[Scene] Hunting Stage built successfully\n");
+        BuildUI();
     }
     else if (m_stage_queue == L"God")
     {
         OutputDebugString(L"[Scene] ProcessStageQueue: Switching to God Stage\n");
         DeleteCurrentObjects();
         BuildGodStage();
+        BuildUI();
     }
     else if (m_stage_queue == L"Title")
     {
         DeleteCurrentObjects();
         BuildTitleStage();
+        BuildUI();
     }
      else if (m_stage_queue == L"End")
     {
         DeleteCurrentObjects();
         BuildEndStage();
+        BuildUI();
     }
     m_stage_queue = L"";
 }
@@ -1794,6 +1767,8 @@ void Scene::LoadMeshAnimationTexture()
     m_texture_name_to_index.insert({ L"LightGray", i++ });
     m_DDSFileName.push_back(L"./Textures/Green.dds");
     m_texture_name_to_index.insert({ L"Green", i++ });
+    m_DDSFileName.push_back(L"./Textures/White.dds");
+    m_texture_name_to_index.insert({ L"White", i++ });
 
     m_DDSFileName.push_back(L"./Textures/tiger.dds");
     m_texture_name_to_index.insert({ L"tigerLeather", i++ });
@@ -1871,7 +1846,7 @@ void Scene::OnUpdate(GameTimer& gTimer)
     }
 
     // 
-    memcpy(static_cast<UINT8*>(m_mappedData) + sizeof(XMMATRIX), &XMMatrixTranspose(XMLoadFloat4x4(&m_proj)), sizeof(XMMATRIX)); // ó Ű ּ
+    memcpy(static_cast<UINT8*>(m_mappedData) + sizeof(XMMATRIX), &XMMatrixTranspose(XMLoadFloat4x4(&m_proj)), sizeof(XMMATRIX));
 }
 
 // Render the scene.

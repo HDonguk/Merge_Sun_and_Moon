@@ -78,11 +78,13 @@ public:
 	float mWalkSpeed = 25.0f; // 20.0f * 0.75 = 15.0f
 	float mRunSpeed = 60.0f; // 80.0f * 0.75 = 60.0f
 	float mElapseTime = 0.0f;
-	float mJumpTime = 0.0f;
+	
 	float mAttackTime = 0.0f;
 	bool mIsFired = false;
 	bool mIsHitted = false;
-	bool mJumped = false;
+	
+	bool mIsJumpping = false;
+
 	int mLife = 3;
 	XMFLOAT3 mDir{};
 	int mRicecake = 0;

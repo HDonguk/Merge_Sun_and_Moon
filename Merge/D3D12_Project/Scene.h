@@ -42,6 +42,8 @@ public:
     bool HasEnoughLeather();
     float GetAspectRatio();
     int GetLeatherCount();
+    bool IsTigerQuestAccepted();
+    void SetTigerQuestState(bool state);
 
     wstring GetCurrentStage() const { return m_current_stage; }
     const vector<Object*>& GetObjects() const { return m_objects; }
@@ -81,6 +83,7 @@ private:
     void BuildHuntingStage();
     void BuildGodStage();
     void BuildEndStage();
+    void BuildUI();
     void BuildShadow();
     void BuildShaders();
     void BuildInputElement();
@@ -88,14 +91,16 @@ private:
         const std::wstring& fileName, const D3D_SHADER_MACRO* defines, const std::string& entryPoint, const std::string& target);
 private:
     Framework* m_parent = nullptr;
-    wstring m_current_stage = L"Title";
-    wstring m_stage_queue = L"";
+    wstring m_current_stage = L"";
+    wstring m_stage_queue = L"Title";
     vector<Object*> m_objects;
     uint32_t m_id_counter = 0;
     Object* m_object_queue[MAX_QUEUE]{};
     int m_object_queue_index = 0;
     int mLeatherCount = 0;
     //
+    bool mTigerQuest = false;
+
     unique_ptr<ResourceManager> m_resourceManager;
     //
     CD3DX12_VIEWPORT m_viewport;

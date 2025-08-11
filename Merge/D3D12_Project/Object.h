@@ -89,6 +89,8 @@ public:
 	XMFLOAT3 mDir{};
 	int mRicecake = 0;
 
+	bool mFocusMode = false;
+
 	bool m_isNetworkPlayer = false;  // 네트워크 플레이어 구분
 	
 	// 생명력 관리 메서드 추가
@@ -109,6 +111,9 @@ private:
 	float mTheta = XMConvertToRadians(-90.0f);
 	float mPhi = XMConvertToRadians(60.0f);
 	float mRadius = 70.0f;
+	bool mFocusMode = false;
+	float mDeltaX = 0.0f;
+	float mDeltaY = 0.0f;
 };
 
 class TerrainObject : public Object

@@ -196,15 +196,24 @@ void Object::Delete()
 
 void PlayerObject::OnUpdate(GameTimer& gTimer)
 {
-    Transform* transform = GetComponent<Transform>();
-    XMVECTOR pos = transform->GetPosition();
-    char outstatus = m_scene->ClampToBounds(pos, { 0.0f, 0.0f, 0.0f });
-    if (outstatus & 0x04) mIsJumpping = false;
-
+    //ProcessInput(gTimer);
     // 네트워크 플레이어는 입력 처리하지 않음
     if (!m_isNetworkPlayer) {
         ProcessInput(gTimer);
     }
+    if (mFocusMode)
+    {
+        Transform* transform = GetComponent<Transform>();
+        CameraObject* cameraObj = m_scene->GetObj<CameraObject>();
+        Transform* cameraTransform = cameraObj->GetComponent<Transform>();
+        XMVECTOR dir = XMVector3TransformNormal(XMVECTOR{ 0.0f, 0.0f, 1.0f }, cameraTransform->GetRotationM());
+        XMStoreFloat3(&mDir, XMVector3Normalize(dir));
+        dir = XMVector3Normalize(XMVectorSetY(dir, 0.0f));
+
+        float yaw = atan2f(XMVectorGetX(dir), XMVectorGetZ(dir)) * 180 / 3.141592f;
+        transform->SetRotation({ 0.0f, yaw, 0.0f });
+    }
+
 
     Object::OnUpdate(gTimer);
     
@@ -335,12 +344,34 @@ void PlayerObject::ProcessInput(const GameTimer& gTimer)
         Idle();
     }
 
-    if ((keyState[VK_LBUTTON] & 0x88) == 0x80)  Attack();
-    if ((keyState[VK_RBUTTON] & 0x88) == 0x80)  Throw();
+    if ((keyState[VK_LBUTTON] & 0x88) == 0x80)
+    {
+        if (mFocusMode)
+        {
+            Throw();
+        }
+        else
+        {
+            Attack();
+        }
+    }
 
 
     if ((keyState[VK_SPACE] & 0x88) == 0x80) {
+        Transform* transform = GetComponent<Transform>();
+        XMVECTOR pos = transform->GetPosition();
+        char outstatus = m_scene->ClampToBounds(pos, { 0.0f, 0.0f, 0.0f });
+        if (outstatus & 0x04) mIsJumpping = false;
+
         Jump();
+    }
+    if ((keyState[VK_RBUTTON] & 0x88) == 0x80)
+    {
+        mFocusMode = true;
+    }
+    else if ((keyState[VK_RBUTTON] & 0x88) == 0x08)
+    {
+        mFocusMode = false;
     }
 }
 
@@ -370,9 +401,8 @@ void PlayerObject::Move(XMVECTOR dir, float speed,float deltaTime)
     CameraObject* cameraObj = m_scene->GetObj<CameraObject>();
     Transform* cameraTransform = cameraObj->GetComponent<Transform>();
     dir = XMVector3TransformNormal(dir, cameraTransform->GetRotationM());
-
     dir = XMVector3Normalize(XMVectorSetY(dir, 0.0f));
-    XMStoreFloat3(&mDir, dir);
+  
 
     XMVECTOR pos = transform->GetPosition();
     pos += dir * speed * deltaTime;
@@ -476,7 +506,7 @@ void PlayerObject::Fire()
 
         Transform* transform = GetComponent<Transform>();
         XMVECTOR pos = transform->GetPosition();
-        XMVECTOR offset = XMVector3TransformNormal(XMVECTOR{ 4.0f, 10.0f, 10.0f }, transform->GetRotationM());
+        XMVECTOR offset = XMVector3TransformNormal(XMVECTOR{ 4.0f, 15.0f, 10.0f }, transform->GetRotationM());
         float scale = 0.03f;
         RicecakeObject* obj = new RicecakeObject(m_scene, m_scene->AllocateId());
         obj->SetDir(XMLoadFloat3(&mDir));
@@ -564,27 +594,58 @@ void CameraObject::OnUpdate(GameTimer& gTimer)
 {
     ProcessInput();
 
-    float x = mRadius * sinf(mPhi) * cosf(mTheta);
-    float y = mRadius * cosf(mPhi);
-    float z = mRadius * sinf(mPhi) * sinf(mTheta);
+    if (mFocusMode)
+    {
+        Object* playerObj = m_scene->GetObj<PlayerObject>();
+        Transform* playerTransform = playerObj->GetComponent<Transform>();
+        XMVECTOR playerPos = playerTransform->GetPosition();
+        XMVECTOR offset = XMVector3TransformNormal({ 4.0f, 15.0f, -6.0f }, playerTransform->GetRotationM());
+        XMVECTOR targetPos = playerTransform->GetPosition() + offset;
 
-    Object* playerObj = m_scene->GetObj<PlayerObject>();
-    Transform* playerTransform = playerObj->GetComponent<Transform>();
-    XMVECTOR targetPos = playerTransform->GetPosition() + XMVECTOR{0.0f, 15.0f, 0.0f};
+        Transform* myTransform = GetComponent<Transform>();
+        XMVECTOR myPos = targetPos;
+        myTransform->SetPosition(myPos);
 
-    Transform* myTransform = GetComponent<Transform>();
-    XMVECTOR myPos = targetPos + XMVECTOR{ x, y, z, 0.f };
-    char outstatus = m_scene->ClampToBounds(myPos, { 0.0f, 1.0f, 0.0f });
-    myTransform->SetPosition(myPos);
-    
-    XMVECTOR dir = targetPos - myPos;
+        float deltaYaw = mDeltaX * 0.02f;
+        float deltaPitch = mDeltaY * 0.02f;
+        XMVECTOR rot = myTransform->GetRotation() + XMVECTOR{ deltaPitch , deltaYaw , 0.0f };
+        float pitch = XMVectorGetX(rot);
+        pitch = pitch < -90.0f ? -90.0f : (pitch > 90.0f ? 90.0f : pitch);
+        rot = XMVectorSetX(rot, pitch);
+        myTransform->SetRotation(rot);
+    }
+    else
+    {
+        mTheta -= XMConvertToRadians(mDeltaX * 0.02f);
+        mPhi -= XMConvertToRadians(mDeltaY * 0.02f);
 
-    XMFLOAT3 yawPitch{};
-    XMStoreFloat3(&yawPitch, dir);
+        // ���� clamp
+        float min = 0.1f;
+        float max = XM_PI - 0.1f;
+        mPhi = mPhi < min ? min : (mPhi > max ? max : mPhi);
 
-    float yaw = atan2f(yawPitch.x, yawPitch.z) * 180 / 3.141592f;
-    float pitch = atan2f(yawPitch.y, sqrtf(yawPitch.x * yawPitch.x + yawPitch.z * yawPitch.z)) * 180 / 3.141592f;
-    myTransform->SetRotation({ -pitch, yaw, 0.0f });
+        float x = mRadius * sinf(mPhi) * cosf(mTheta);
+        float y = mRadius * cosf(mPhi);
+        float z = mRadius * sinf(mPhi) * sinf(mTheta);
+
+        Object* playerObj = m_scene->GetObj<PlayerObject>();
+        Transform* playerTransform = playerObj->GetComponent<Transform>();
+        XMVECTOR targetPos = playerTransform->GetPosition() + XMVECTOR{ 0.0f, 15.0f, 0.0f };
+
+        Transform* myTransform = GetComponent<Transform>();
+        XMVECTOR myPos = targetPos + XMVECTOR{ x, y, z, 0.f };
+        char outstatus = m_scene->ClampToBounds(myPos, { 0.0f, 1.0f, 0.0f });
+        myTransform->SetPosition(myPos);
+
+        XMVECTOR dir = targetPos - myPos;
+
+        XMFLOAT3 yawPitch{};
+        XMStoreFloat3(&yawPitch, dir);
+
+        float yaw = atan2f(yawPitch.x, yawPitch.z) * 180 / 3.141592f;
+        float pitch = atan2f(yawPitch.y, sqrtf(yawPitch.x * yawPitch.x + yawPitch.z * yawPitch.z)) * 180 / 3.141592f;
+        myTransform->SetRotation({ -pitch, yaw, 0.0f });
+    }
 
     Object::OnUpdate(gTimer);
 }
@@ -611,20 +672,22 @@ void CameraObject::MouseMove()
 
     POINT currentMousePos;
     GetCursorPos(&currentMousePos);
-    float dx = static_cast<float>(currentMousePos.x - centerX);
-    float dy = static_cast<float>(currentMousePos.y - centerY);
-    mTheta -= XMConvertToRadians(dx * 0.02f);
-    mPhi -= XMConvertToRadians(dy * 0.02f);
-
-    //  clamp
-    float min = 0.1f;
-    float max = XM_PI - 0.1f;
-    mPhi = mPhi < min ? min : (mPhi > max ? max : mPhi);
+    mDeltaX = static_cast<float>(currentMousePos.x - centerX);
+    mDeltaY = static_cast<float>(currentMousePos.y - centerY);
 
     SetCursorPos(centerX, centerY);
 }
 void CameraObject::ProcessInput()
 {
+    BYTE* keyState = m_scene->GetFramework()->GetKeyState();
+    if ((keyState[VK_RBUTTON] & 0x88) == 0x80)
+    {
+        mFocusMode = true;
+    }
+    else if ((keyState[VK_RBUTTON] & 0x88) == 0x08)
+    {
+        mFocusMode = false;
+    }
     MouseMove();
 }
 
@@ -906,7 +969,7 @@ void TigerObject::Hit()
     OutputDebugString(L"[TigerObject] Local tiger hit - reducing life\n");
     --mLife;
     
-    if (mLife == 0)
+    if (mLife <= 0)
     {
         OutputDebugString(L"[TigerObject] Tiger life reached 0 - calling Dead()\n");
         Dead();

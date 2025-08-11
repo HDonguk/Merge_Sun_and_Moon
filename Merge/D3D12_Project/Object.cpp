@@ -200,7 +200,7 @@ void PlayerObject::OnUpdate(GameTimer& gTimer)
     if (!m_isNetworkPlayer) {
         ProcessInput(gTimer);
     }
-    ProcessRicecakeMockUp();
+
     Object::OnUpdate(gTimer);
     
     // 플레이어 생명력 상태 로그 (처음 몇 프레임만 출력)
@@ -278,6 +278,7 @@ void PlayerObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, f
     if (ricecake)
     {
         ++mRicecake;
+        mRicecake = mRicecake > 4 ? 4 : mRicecake;
         return;
     }
 
@@ -295,6 +296,11 @@ void PlayerObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, f
 int PlayerObject::GetRicecakeCount()
 {
     return mRicecake;
+}
+
+int PlayerObject::GetLifeCount()
+{
+    return mLife;
 }
 
 void PlayerObject::ProcessInput(const GameTimer& gTimer)
@@ -555,22 +561,6 @@ void PlayerObject::CalcTime(float deltaTime)
     }
 }
 
-void PlayerObject::ProcessRicecakeMockUp()
-{
-    if (mRicecake > 0 && !mHasRicecake)
-    {
-        mHasRicecake = true;
-        float scale = 0.03f;
-        Object* obj = new RicecakeMockup(m_scene, m_scene->AllocateId(), m_id);
-        obj->AddComponent(new Transform{ {1.5f, 5.0f, -0.2f} });
-        obj->AddComponent(new AdjustTransform{ {-20.0f * scale, 22.0f * scale, 0.0f}, {0.0f, 0.0f, -90.0f}, {scale, scale, scale} });
-        obj->AddComponent(new Mesh{ "ricecake.fbx" });
-        obj->AddComponent(new Texture{ L"ricecake", 1.0f, 0.4f });
-        m_scene->AddObj(obj);
-    }
-
-    if (mRicecake <= 0) mHasRicecake = false;
-}
 
 
 void CameraObject::OnUpdate(GameTimer& gTimer)
@@ -668,6 +658,12 @@ void TigerObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, fl
     pos += -collisionNormal * penetration;
     transform->SetPosition(pos);
 }
+
+int TigerObject::GetLife()
+{
+    return mLife;
+}
+
 
 void TigerObject::TigerBehavior(GameTimer& gTimer)
 {
@@ -1212,15 +1208,7 @@ void AxeObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, floa
     PlayerObject* player = dynamic_cast<PlayerObject*>(&other);
     if (player)
     {
-        m_parent_id = player->GetId();
-        Transform* transform = GetComponent<Transform>();
-        transform->SetPosition({ 0.0f, 6.0f, -2.0f });
-        transform->SetRotation({ 0.0f, 90.0f, 0.0f });
-        Object* obj = new QuadObject(m_scene, m_scene->AllocateId());
-        obj->AddComponent(new Transform{ {-0.5f * 1.77f, -0.5f, 1.0f}, {-90.0f, 0.0f, 0.0f}, {1.77f, 1.0f, 1.0f} });
-        obj->AddComponent(new Mesh{ "Quad" });
-        obj->AddComponent(new Texture{ L"End", 1.0f, 0.4f });
-        m_scene->AddObj(obj);
+        m_scene->SetStage(L"End");
     }
     Object::OnProcessCollision(other, collisionNormal, penetration);
 }
@@ -1334,14 +1322,6 @@ void TreeObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, flo
     Object::OnProcessCollision(other, collisionNormal, penetration);
 }
 
-void RicecakeMockup::OnUpdate(GameTimer& gTimer)
-{
-    PlayerObject* player = m_scene->GetObj<PlayerObject>();
-    int ricecakeCount = player->GetRicecakeCount();
-    if (ricecakeCount <= 0) Delete();
-    Object::OnUpdate(gTimer);
-}
-
 void GoToBaseObject::OnUpdate(GameTimer& gTimer)
 {
     Texture* texture = GetComponent<Texture>();
@@ -1374,7 +1354,7 @@ void GodObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, floa
     Object::OnProcessCollision(other, collisionNormal, penetration);
 }
 
-void TitleObject::OnUpdate(GameTimer& gTimer)
+void TitleQuadObject::OnUpdate(GameTimer& gTimer)
 {
     CameraObject* camera = m_scene->GetObj<CameraObject>();
     m_parent_id = camera->GetId();
@@ -1391,32 +1371,142 @@ void SisterObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, f
     PlayerObject* player = dynamic_cast<PlayerObject*>(&other);
     if (player && !mIsQuadAble)
     {
-        if (m_scene->HasEnoughLeather())
-        {
-            Object* obj = new SisterQuadObject(m_scene, m_scene->AllocateId(), m_id);
-            obj->AddComponent(new Transform{ {-5.0f, 10.0f, 0.0f}, {-90.0f, 180.0f, 0.0f}, {30.0f, 0.0f, 25.0f} });
-            obj->AddComponent(new Mesh{ "Quad" });
-            obj->AddComponent(new Texture{ L"GoToGod", 1.0f, 0.4f });
-            m_scene->AddObj(obj);
-        }
-        else
-        {
-            Object* obj = new SisterQuadObject(m_scene, m_scene->AllocateId(), m_id);
-            obj->AddComponent(new Transform{ {-5.0f, 10.0f, 0.0f}, {-90.0f, 180.0f, 0.0f}, {30.0f, 0.0f, 25.0f} });
-            obj->AddComponent(new Mesh{ "Quad" });
-            obj->AddComponent(new Texture{ L"Quest", 1.0f, 0.4f });
-            m_scene->AddObj(obj);
-        }
+        mIsQuadAble = true;
+
+        Object* obj = new SisterQuadObject(m_scene, m_scene->AllocateId(), m_id);
+        obj->AddComponent(new Transform{ {-5.0f, 10.0f, 0.1f}, {-90.0f, 180.0f, 0.0f}, {30.0f, 0.0f, 25.0f} });
+        obj->AddComponent(new Mesh{ "Quad" });
+        obj->AddComponent(new Texture{ L"Quest", -1.0f, 0.4f });
+        m_scene->AddObj(obj);
+
+        float depthFactor = 0.11;
+        float scale = 0.25;
+        float textureRatio = 256.0f / 256.0f; // �ؽ�ó ����
+        obj = new TigerLeatherQuadObject(m_scene, m_scene->AllocateId());
+        obj->AddComponent(new Transform{ {0.7f * depthFactor, -0.55f * depthFactor, 1.0f * depthFactor}, {-90.0f, 0.0f, 0.0f}, {depthFactor * textureRatio * scale, 1.0f, depthFactor * scale} });
+        obj->AddComponent(new Mesh{ "Quad" });
+        obj->AddComponent(new Texture{ L"TigerLeather0", -1.0f, 0.4f });
+        m_scene->AddObj(obj);
     }
     Object::OnProcessCollision(other, collisionNormal, penetration);
 }
 
-void QuadObject::OnUpdate(GameTimer& gTimer)
+void EndQuadObject::OnUpdate(GameTimer& gTimer)
 {
     CameraObject* camera = m_scene->GetObj<CameraObject>();
     m_parent_id = camera->GetId();
 }
 
+void SisterQuadObject::OnUpdate(GameTimer& gTimer)
+{
+    if (m_scene->HasEnoughLeather())
+    {
+        Texture* texture = GetComponent<Texture>();
+        texture->mName = L"GoToGod";
+    }
+
+    Object::OnUpdate(gTimer);
+}
+
+void LifeQuadObject::OnUpdate(GameTimer& gTimer)
+{
+    CameraObject* camera = m_scene->GetObj<CameraObject>();
+    m_parent_id = camera->GetId();
+
+    PlayerObject* player = m_scene->GetObj<PlayerObject>();
+    int playerLifeCount = player->GetLifeCount();
+    Texture* texture = GetComponent<Texture>();
+    switch (playerLifeCount)
+    {
+    case 0:
+        texture->mName = L"Life0";
+        break;
+    case 1:
+        texture->mName = L"Life1";
+        break;
+    case 2:
+        texture->mName = L"Life2";
+        break;
+    case 3:
+        texture->mName = L"Life3";
+        break;
+    default:
+        break;
+    }
+
+    Object::OnUpdate(gTimer);
+}
+
+void BoyIconQuadObject::OnUpdate(GameTimer& gTimer)
+{
+    CameraObject* camera = m_scene->GetObj<CameraObject>();
+    m_parent_id = camera->GetId();
+    Object::OnUpdate(gTimer);
+}
+
+void RiceCakeQuadObject::OnUpdate(GameTimer& gTimer)
+{
+    CameraObject* camera = m_scene->GetObj<CameraObject>();
+    m_parent_id = camera->GetId();
+    PlayerObject* player = m_scene->GetObj<PlayerObject>();
+    int riceCakeCount = player->GetRicecakeCount();
+    Texture* texture = GetComponent<Texture>();
+    switch (riceCakeCount)
+    {
+    case 0:
+        texture->mName = L"RiceCake0";
+        break;
+    case 1:
+        texture->mName = L"RiceCake1";
+        break;
+    case 2:
+        texture->mName = L"RiceCake2";
+        break;
+    case 3:
+        texture->mName = L"RiceCake3";
+        break;
+    case 4:
+        texture->mName = L"RiceCake4";
+        break;
+    default:
+        break;
+    }
+
+    Object::OnUpdate(gTimer);
+}
+
+void TigerLeatherQuadObject::OnUpdate(GameTimer& gTimer)
+{
+    CameraObject* camera = m_scene->GetObj<CameraObject>();
+    m_parent_id = camera->GetId();
+    Texture* texture = GetComponent<Texture>();
+
+    int LeatherCount = m_scene->GetLeatherCount();
+    switch (LeatherCount)
+    {
+    case 0:
+        texture->mName = L"TigerLeather0";
+        break;
+    case 1:
+        texture->mName = L"TigerLeather1";
+        break;
+    case 2:
+        texture->mName = L"TigerLeather2";
+        break;
+    case 3:
+        texture->mName = L"TigerLeather3";
+        break;
+    case 4:
+        texture->mName = L"TigerLeather4";
+        break;
+    case 5:
+        texture->mName = L"TigerLeather5";
+        break;
+    default:
+        break;
+    }
+
+}
 void TigerObject::SetNetworkTransform(float x, float y, float z, float rotY)
 {
     if (m_isNetworkTiger) {

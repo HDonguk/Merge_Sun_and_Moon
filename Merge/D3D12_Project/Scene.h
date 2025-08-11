@@ -40,6 +40,9 @@ public:
     void IncreaseLeatherCount();
     void ResetLeatherCount();
     bool HasEnoughLeather();
+    float GetAspectRatio();
+    int GetLeatherCount();
+
     wstring GetCurrentStage() const { return m_current_stage; }
     const vector<Object*>& GetObjects() const { return m_objects; }
 
@@ -73,10 +76,11 @@ private:
     void BuildTextureBufferView(ID3D12Device* device);
     void BuildDescriptorHeap(ID3D12Device* device);
     void BuildProjMatrix();
+    void BuildTitleStage();
     void BuildBaseStage();
     void BuildHuntingStage();
     void BuildGodStage();
-    void BuildTitleStage();
+    void BuildEndStage();
     void BuildShadow();
     void BuildShaders();
     void BuildInputElement();

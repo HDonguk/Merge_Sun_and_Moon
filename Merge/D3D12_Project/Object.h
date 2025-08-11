@@ -51,6 +51,7 @@ public:
 	void OnUpdate(GameTimer& gTimer) override;
 	void OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration) override;
 	int GetRicecakeCount();
+	int GetLifeCount();
 	
 	// 네트워크 플레이어 구분
 	void SetIsNetworkPlayer(bool isNetwork) { m_isNetworkPlayer = isNetwork; }
@@ -73,7 +74,7 @@ public:
 	void Hit();
 	void Dead();
 	void CalcTime(float deltaTime);
-	void ProcessRicecakeMockUp();
+
 	float mWalkSpeed = 25.0f; // 20.0f * 0.75 = 15.0f
 	float mRunSpeed = 60.0f; // 80.0f * 0.75 = 60.0f
 	float mElapseTime = 0.0f;
@@ -85,7 +86,7 @@ public:
 	int mLife = 3;
 	XMFLOAT3 mDir{};
 	int mRicecake = 0;
-	bool mHasRicecake = false;
+
 	bool m_isNetworkPlayer = false;  // 네트워크 플레이어 구분
 	
 	// 생명력 관리 메서드 추가
@@ -127,6 +128,7 @@ public:
 	void OnUpdate(GameTimer& gTimer) override;
 	void OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration) override;
 
+
 private:
 	float mElapseTime = 0.0f;
 };
@@ -137,6 +139,7 @@ public:
 	TigerObject(Scene* scene, uint32_t id, uint32_t parentId = -1);
 	void OnUpdate(GameTimer& gTimer) override;
 	void OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration) override;
+	int GetLife();
 	
 	// 네트워크 관련 메서드
 	void SetIsNetworkTiger(bool isNetworkTiger) { m_isNetworkTiger = isNetworkTiger; }
@@ -293,14 +296,6 @@ private:
 	float mSpeed = 200.0f;
 };
 
-class RicecakeMockup : public Object
-{
-public:
-	Object::Object;
-	void OnUpdate(GameTimer& gTimer) override;
-private:
-};
-
 class GoToBaseObject : public Object
 {
 public:
@@ -312,14 +307,14 @@ private:
 	float mElapseTime = 0.0f;
 };
 
-class TitleObject : public Object
+class TitleQuadObject : public Object
 {
 public:
 	Object::Object;
 	void OnUpdate(GameTimer& gTimer) override;
 };
 
-class QuadObject : public Object
+class EndQuadObject : public Object
 {
 public:
 	Object::Object;
@@ -330,4 +325,31 @@ class SisterQuadObject : public Object
 {
 public:
 	Object::Object;
+	void OnUpdate(GameTimer& gTimer) override;
+};
+
+class LifeQuadObject : public Object
+{
+public:
+	Object::Object;
+	void OnUpdate(GameTimer& gTimer) override;
+};
+
+class BoyIconQuadObject : public Object
+{
+public:
+	Object::Object;
+	void OnUpdate(GameTimer& gTimer) override;
+};
+
+class RiceCakeQuadObject : public Object
+{
+	Object::Object;
+	void OnUpdate(GameTimer& gTimer) override;
+};
+
+class TigerLeatherQuadObject : public Object
+{
+	Object::Object;
+	void OnUpdate(GameTimer& gTimer) override;
 };

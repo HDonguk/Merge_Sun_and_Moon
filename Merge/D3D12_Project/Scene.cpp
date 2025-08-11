@@ -1391,6 +1391,10 @@ void Scene::SetTigerQuestState(bool state)
     mTigerQuest = state;
 }
 
+XMVECTOR Scene::GetInputDir()
+{
+    return XMLoadFloat3(&mInputDir);
+}
 
 void Scene::ProcessStageQueue()
 {
@@ -1793,18 +1797,20 @@ std::unordered_map<std::string, ComPtr<ID3D12PipelineState>>& Scene::GetPSOs()
 void Scene::ProcessInput()
 {
     BYTE* keyState = m_parent->GetKeyState();
-    if ((keyState[VK_F1] & 0x88) == 0x80) {
-        m_stage_queue = L"Base";
-    }
-    if ((keyState[VK_F2] & 0x88) == 0x80) {
-        m_stage_queue = L"God";
-    }
-    if ((keyState[VK_F3] & 0x88) == 0x80) {
-        m_stage_queue = L"Title";
-    }
-    if ((keyState[VK_F10] & 0x88) == 0x80) {
-        mLeatherCount = 5;
-    }
+    if ((keyState[VK_F1] & 0x88) == 0x80) { m_stage_queue = L"Base"; }
+    if ((keyState[VK_F2] & 0x88) == 0x80) { m_stage_queue = L"God"; }
+    if ((keyState[VK_F3] & 0x88) == 0x80) { m_stage_queue = L"Title"; }
+    if ((keyState[VK_F10] & 0x88) == 0x80) { mLeatherCount = 5; }
+
+    if ((keyState[0x57] & 0x88) == 0x80) { mInputDir.z += 1.0f; } // w down
+    if ((keyState[0x53] & 0x88) == 0x80) { mInputDir.z -= 1.0f; } // s down
+    if ((keyState[0x41] & 0x88) == 0x80) { mInputDir.x -= 1.0f; } // a down
+    if ((keyState[0x44] & 0x88) == 0x80) { mInputDir.x += 1.0f; } // d down
+
+    if ((keyState[0x57] & 0x88) == 0x08) { mInputDir.z -= 1.0f; } // w up
+    if ((keyState[0x53] & 0x88) == 0x08) { mInputDir.z += 1.0f; } // s up
+    if ((keyState[0x41] & 0x88) == 0x08) { mInputDir.x += 1.0f; } // a up
+    if ((keyState[0x44] & 0x88) == 0x08) { mInputDir.x -= 1.0f; } // d up
 }
 
 void Scene::LoadMeshAnimationTexture()

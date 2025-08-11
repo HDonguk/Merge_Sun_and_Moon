@@ -44,6 +44,7 @@ public:
     int GetLeatherCount();
     bool IsTigerQuestAccepted();
     void SetTigerQuestState(bool state);
+    XMVECTOR GetInputDir();
 
     wstring GetCurrentStage() const { return m_current_stage; }
     const vector<Object*>& GetObjects() const { return m_objects; }
@@ -100,6 +101,8 @@ private:
     int mLeatherCount = 0;
     //
     bool mTigerQuest = false;
+
+    XMFLOAT3 mInputDir{};
 
     unique_ptr<ResourceManager> m_resourceManager;
     //

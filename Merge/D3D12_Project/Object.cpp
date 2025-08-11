@@ -196,37 +196,13 @@ void Object::Delete()
 
 void PlayerObject::OnUpdate(GameTimer& gTimer)
 {
+    CalcTime(gTimer.DeltaTime());
     //ProcessInput(gTimer);
     // 네트워크 플레이어는 입력 처리하지 않음
     if (!m_isNetworkPlayer) {
         ProcessInput(gTimer);
     }
-    Transform* transform = GetComponent<Transform>();
-    CameraObject* cameraObj = m_scene->GetObj<CameraObject>();
-    Transform* cameraTransform = cameraObj->GetComponent<Transform>();
-
-    XMVECTOR inputDir = XMLoadFloat3(&mInputDir);
-    inputDir = XMVector3TransformNormal(inputDir, cameraTransform->GetRotationM());
-    inputDir = XMVector3Normalize(XMVectorSetY(inputDir, 0.0f));
-
-    XMVECTOR pos = transform->GetPosition();
-    pos += inputDir * mSpeed * gTimer.DeltaTime();
-    transform->SetPosition(pos);
-
-    if (mFocusMode)
-    {
-        XMVECTOR dir = XMVector3TransformNormal(XMVECTOR{ 0.0f, 0.0f, 1.0f }, cameraTransform->GetRotationM());
-        XMStoreFloat3(&mDir, XMVector3Normalize(dir));
-        dir = XMVector3Normalize(XMVectorSetY(dir, 0.0f));
-
-        float yaw = atan2f(XMVectorGetX(dir), XMVectorGetZ(dir)) * 180 / 3.141592f;
-        transform->SetRotation({ 0.0f, yaw, 0.0f });
-    }
-    else
-    {
-        float yaw = atan2f(XMVectorGetX(inputDir), XMVectorGetZ(inputDir)) * 180 / 3.141592f;
-        transform->SetRotation({ 0.0f, yaw, 0.0f });
-    }
+    MoveAndRotate(gTimer.DeltaTime());
 
 
     Object::OnUpdate(gTimer);
@@ -334,19 +310,10 @@ int PlayerObject::GetLifeCount()
 
 void PlayerObject::ProcessInput(const GameTimer& gTimer)
 {
-    CalcTime(gTimer.DeltaTime());
+
     BYTE* keyState = m_scene->GetFramework()->GetKeyState();
-    Transform* transform = GetComponent<Transform>();
 
-    if ((keyState[0x57] & 0x88) == 0x80) { mInputDir.z += 1.0f; } // w down
-    if ((keyState[0x53] & 0x88) == 0x80) { mInputDir.z -= 1.0f; } // s down
-    if ((keyState[0x41] & 0x88) == 0x80) { mInputDir.x -= 1.0f; } // a down
-    if ((keyState[0x44] & 0x88) == 0x80) { mInputDir.x += 1.0f; } // d down
-
-    if ((keyState[0x57] & 0x88) == 0x08) { mInputDir.z -= 1.0f; } // w up
-    if ((keyState[0x53] & 0x88) == 0x08) { mInputDir.z += 1.0f; } // s up
-    if ((keyState[0x41] & 0x88) == 0x08) { mInputDir.x += 1.0f; } // a up
-    if ((keyState[0x44] & 0x88) == 0x08) { mInputDir.x -= 1.0f; } // d up
+    XMStoreFloat3(&mInputDir, m_scene->GetInputDir());
 
     if (XMVector3Equal(XMLoadFloat3(&mInputDir), XMVectorZero()))
     {
@@ -409,6 +376,44 @@ void PlayerObject::ChangeState(string fileName)
     if (anim->ResetAnim(fileName, 0.0f)) mElapseTime = 0.0f;
 }
 
+void PlayerObject::MoveAndRotate(float deltaTime)
+{
+    Animation* anim = GetComponent<Animation>();
+    if (anim->mCurrentFileName == "boy_attack(45).fbx") return;
+    if (anim->mCurrentFileName == "boy_throw.fbx") return;
+    if (anim->mCurrentFileName == "boy_hit.fbx") return;
+    if (anim->mCurrentFileName == "boy_dying_fix.fbx") return;
+
+    Transform* transform = GetComponent<Transform>();
+    CameraObject* cameraObj = m_scene->GetObj<CameraObject>();
+    Transform* cameraTransform = cameraObj->GetComponent<Transform>();
+
+    XMVECTOR inputDir = XMLoadFloat3(&mInputDir);
+    inputDir = XMVector3TransformNormal(inputDir, cameraTransform->GetRotationM());
+    inputDir = XMVector3Normalize(XMVectorSetY(inputDir, 0.0f));
+
+    XMVECTOR pos = transform->GetPosition();
+    pos += inputDir * mSpeed * deltaTime;
+    transform->SetPosition(pos);
+
+    if (mFocusMode)
+    {
+        XMVECTOR dir = XMVector3TransformNormal(XMVECTOR{ 0.0f, 0.0f, 1.0f }, cameraTransform->GetRotationM());
+        XMStoreFloat3(&mDir, XMVector3Normalize(dir));
+        dir = XMVector3Normalize(XMVectorSetY(dir, 0.0f));
+
+        float yaw = atan2f(XMVectorGetX(dir), XMVectorGetZ(dir)) * 180 / 3.141592f;
+        transform->SetRotation({ 0.0f, yaw, 0.0f });
+    }
+    else
+    {
+        float yaw = atan2f(XMVectorGetX(inputDir), XMVectorGetZ(inputDir)) * 180 / 3.141592f;
+        if (yaw != 0.0f)
+        {
+            transform->SetRotation({ 0.0f, yaw, 0.0f });
+        }
+    }
+}
 void PlayerObject::Idle()
 {
     Animation* anim = GetComponent<Animation>();

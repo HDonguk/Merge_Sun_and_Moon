@@ -64,6 +64,7 @@ public:
 	void ChangeState(string fileName);
 private:
 	
+	void MoveAndRotate(float deltaTime);
 	void Idle();
 	void Walk();
 	void Run();

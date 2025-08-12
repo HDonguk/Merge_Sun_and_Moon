@@ -83,18 +83,6 @@ public:
         if (playerCount == 0) {
             OutputDebugString(L"[Scene] No PlayerObject found in scene\n");
             return nullptr;
-        } else if (playerCount == 1 && localPlayer == nullptr) {
-            // 플레이어가 하나뿐이고 네트워크 플레이어로 설정되어 있다면 로컬 플레이어로 변경
-            for (Object* obj : m_objects) {
-                if (!obj->GetValid()) continue;
-                PlayerObject* player = dynamic_cast<PlayerObject*>(obj);
-                if (player) {
-                    player->SetIsNetworkPlayer(false);
-                    localPlayer = player;
-                    OutputDebugString(L"[Scene] Single player found, set as local player\n");
-                    break;
-                }
-            }
         } else if (playerCount > 1 && localPlayer == nullptr) {
             OutputDebugString(L"[Scene] Multiple players found but no local player identified\n");
         }

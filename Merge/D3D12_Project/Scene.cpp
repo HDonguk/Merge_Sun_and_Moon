@@ -1359,7 +1359,7 @@ void Scene::SetStage(wstring stage)
     // 스테이지 전환 시 네트워크 업데이트 전송
     if (m_parent && stage == L"Base") {
         // Base 스테이지로 전환할 때 현재 플레이어 위치를 네트워크로 전송
-        PlayerObject* player = GetObj<PlayerObject>();
+        PlayerObject* player = GetLocalPlayer();
         if (player) {
             Transform* transform = player->GetComponent<Transform>();
             if (transform) {

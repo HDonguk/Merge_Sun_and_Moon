@@ -7,6 +7,9 @@ C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Mer
 C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
   (compiling source file 'Component.cpp')
   
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Component.cpp')
+  
 C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
   (compiling source file 'Component.cpp')
   
@@ -22,6 +25,9 @@ C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Mer
   (compiling source file 'Framework.cpp')
       C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,9):
       '_WINSOCKAPI_' previously declared on the command line
+  
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Framework.cpp')
   
 C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
   (compiling source file 'Framework.cpp')
@@ -78,6 +84,9 @@ C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Mer
 C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Framework.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
   (compiling source file 'Main.cpp')
   
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Main.cpp')
+  
 C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
   (compiling source file 'Main.cpp')
   
@@ -101,6 +110,9 @@ C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Mer
   (compiling source file 'NetworkManager.cpp')
   
 C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Packet.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'NetworkManager.cpp')
+  
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
   (compiling source file 'NetworkManager.cpp')
   
 C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
@@ -187,6 +199,9 @@ C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Mer
 C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
   (compiling source file 'Object.cpp')
   
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Object.cpp')
+  
 C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
   (compiling source file 'Object.cpp')
   
@@ -205,7 +220,7 @@ C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Mer
 C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1198,22): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
 C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1394,19): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
 C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1628,15): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
-C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1704,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1705,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
   OtherPlayerManager.cpp
 C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\OtherPlayerManager.cpp(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
 C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,9): warning C4005: '_WINSOCKAPI_': macro redefinition
@@ -217,6 +232,9 @@ C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Mer
   (compiling source file 'OtherPlayerManager.cpp')
   
 C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'OtherPlayerManager.cpp')
+  
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
   (compiling source file 'OtherPlayerManager.cpp')
   
 C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
@@ -232,6 +250,9 @@ C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Mer
   (compiling source file 'Scene.cpp')
       C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,9):
       '_WINSOCKAPI_' previously declared on the command line
+  
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Scene.cpp')
   
 C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
   (compiling source file 'Scene.cpp')
@@ -267,10 +288,14 @@ C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Mer
 C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1795,110): warning C4267: 'argument': conversion from 'size_t' to 'UINT', possible loss of data
 C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1884,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
   Shadow.cpp
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Shadow.cpp(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
 C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,9): warning C4005: '_WINSOCKAPI_': macro redefinition
   (compiling source file 'Shadow.cpp')
       C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,9):
       '_WINSOCKAPI_' previously declared on the command line
+  
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Shadow.cpp')
   
 C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
   (compiling source file 'Shadow.cpp')
@@ -297,6 +322,9 @@ C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Mer
 C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Framework.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
   (compiling source file 'Win32Application.cpp')
   
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Win32Application.cpp')
+  
 C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
   (compiling source file 'Win32Application.cpp')
   
@@ -310,8 +338,8 @@ C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Mer
   (compiling source file 'Win32Application.cpp')
   
   Generating code
-  36 of 4019 functions ( 0.9%) were compiled, the rest were copied from previous compilation.
-    1 functions were new in current compilation
-    106 functions had inline decision re-evaluated but remain unchanged
+  26 of 4020 functions ( 0.6%) were compiled, the rest were copied from previous compilation.
+    2 functions were new in current compilation
+    11 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   D3D12_Project.vcxproj -> C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\x64\Release\D3D12_Project.exe

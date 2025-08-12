@@ -61,6 +61,19 @@ public:
         }
         return temp;
     }
+
+    // 로컬 플레이어(직접 조작하는 플레이어)를 반환하는 메서드 추가
+    PlayerObject* GetLocalPlayer()
+    {
+        for (Object* obj : m_objects) {
+            if (!obj->GetValid()) continue;
+            PlayerObject* player = dynamic_cast<PlayerObject*>(obj);
+            if (player && !player->IsNetworkPlayer()) {
+                return player;  // 네트워크 플레이어가 아닌 것이 로컬 플레이어
+            }
+        }
+        return nullptr;
+    }
 private:
     void ProcessStageQueue();
     void CompactObjects();

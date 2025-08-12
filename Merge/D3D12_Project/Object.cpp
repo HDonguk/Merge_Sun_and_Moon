@@ -619,7 +619,7 @@ void PlayerObject::CalcTime(float deltaTime)
 void CameraObject::OnUpdate(GameTimer& gTimer)
 {
     ProcessInput();
-    Object* playerObj = m_scene->GetObj<PlayerObject>();
+    Object* playerObj = m_scene->GetLocalPlayer();
     Transform* playerTransform = playerObj->GetComponent<Transform>();
     XMVECTOR playerPos = playerTransform->GetPosition();
 
@@ -768,7 +768,7 @@ void TigerObject::TigerBehavior(GameTimer& gTimer)
     Animation* anim = GetComponent<Animation>();
 
     XMVECTOR pos = transform->GetPosition();
-    PlayerObject* player = m_scene->GetObj<PlayerObject>();
+    PlayerObject* player = m_scene->GetLocalPlayer();
     Transform* playerTransform = player->GetComponent<Transform>();
     XMVECTOR playerPos = playerTransform->GetPosition();
     float result = XMVectorGetX(XMVector3Length(playerPos - pos));
@@ -926,7 +926,7 @@ void TigerObject::Fire()
         XMStoreFloat3(&tigerPosFloat, tigerTransform->GetPosition());
         
         // 플레이어 위치 가져오기
-        PlayerObject* player = m_scene->GetObj<PlayerObject>();
+        PlayerObject* player = m_scene->GetLocalPlayer();
         XMFLOAT3 playerPosFloat = {0.0f, 0.0f, 0.0f};
         if (player) {
             Transform* playerTransform = player->GetComponent<Transform>();
@@ -1486,7 +1486,7 @@ void LifeQuadObject::OnUpdate(GameTimer& gTimer)
 {
 
 
-    PlayerObject* player = m_scene->GetObj<PlayerObject>();
+    PlayerObject* player = m_scene->GetLocalPlayer();
     int playerLifeCount = player->GetLifeCount();
     Texture* texture = GetComponent<Texture>();
     switch (playerLifeCount)
@@ -1514,7 +1514,7 @@ void LifeQuadObject::OnUpdate(GameTimer& gTimer)
 void RiceCakeQuadObject::OnUpdate(GameTimer& gTimer)
 {
 
-    PlayerObject* player = m_scene->GetObj<PlayerObject>();
+    PlayerObject* player = m_scene->GetLocalPlayer();
 
     Texture* texture = GetComponent<Texture>();
 
@@ -1757,7 +1757,7 @@ void TigerObject::SetNetworkTransform(float x, float y, float z, float rotY)
             transform->SetPosition(newPos);
             
             // Original 클라이언트처럼 거리에 따라 다른 회전 로직 적용
-            PlayerObject* player = m_scene->GetObj<PlayerObject>();
+            PlayerObject* player = m_scene->GetLocalPlayer();
             if (player) {
                 Transform* playerTransform = player->GetComponent<Transform>();
                 if (playerTransform) {

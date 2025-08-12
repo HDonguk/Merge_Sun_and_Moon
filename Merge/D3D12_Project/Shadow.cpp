@@ -36,13 +36,13 @@ Shadow::Shadow(Scene* parent, UINT width, UINT height) :
 
 void Shadow::UpdateShadow()
 {
-	PlayerObject* player = mParent->GetObj<PlayerObject>();
+	PlayerObject* player = mParent->GetLocalPlayer();
 	Transform* transform = player->GetComponent<Transform>();
 	XMVECTOR pos = transform->GetPosition();
 	float posX = XMVectorGetX(pos);
 	float posZ = XMVectorGetZ(pos);
 	mSceneSphere.Center = { posX, 0.0f, posZ };
-	//±âÈ¸°¡ µÇ¸é Framework ·Î ºÎÅÍ ½Ã°£ °¡Á®¿Í¼­ Á¶¸íÀÇ À§Ä¡¿¡ µû¶ó ±×¸²ÀÚ°¡ »ý¼ºµÇ°Ô ±¸Çö.
+	//ï¿½ï¿½È¸ï¿½ï¿½ ï¿½Ç¸ï¿½ Framework ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½×¸ï¿½ï¿½Ú°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ ï¿½ï¿½ï¿½ï¿½.
 	XMVECTOR lightDir = XMLoadFloat3(&mLightDirection);
 	XMVECTOR lightPos = -100.0f * mSceneSphere.Radius * lightDir;
 	XMVECTOR target = XMLoadFloat3(&mSceneSphere.Center);
@@ -155,10 +155,10 @@ void Shadow::BuildResource()
 
 	D3D12_HEAP_PROPERTIES heapProp{};
 	heapProp.Type = D3D12_HEAP_TYPE_DEFAULT;
-	heapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN; // heapTypeÀÌ customÀÏ °æ¿ì¿¡ »ç¿ë
-	heapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN; // heapTypeÀÌ customÀÏ °æ¿ì¿¡ »ç¿ë
-	heapProp.CreationNodeMask = 0x01; // ¸ÖÆ¼ GPU ÀÏ°æ¿ì Æ¯Á¤ µð¹ÙÀÌ½º ¼±ÅÃ¿ë
-	heapProp.VisibleNodeMask = 0x01; // ¸ÖÆ¼ GPU ÀÏ°æ¿ì Æ¯Á¤ µð¹ÙÀÌ½º ¼±ÅÃ¿ë
+	heapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN; // heapTypeï¿½ï¿½ customï¿½ï¿½ ï¿½ï¿½ì¿¡ ï¿½ï¿½ï¿½
+	heapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN; // heapTypeï¿½ï¿½ customï¿½ï¿½ ï¿½ï¿½ì¿¡ ï¿½ï¿½ï¿½
+	heapProp.CreationNodeMask = 0x01; // ï¿½ï¿½Æ¼ GPU ï¿½Ï°ï¿½ï¿½ Æ¯ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ì½ï¿½ ï¿½ï¿½ï¿½Ã¿ï¿½
+	heapProp.VisibleNodeMask = 0x01; // ï¿½ï¿½Æ¼ GPU ï¿½Ï°ï¿½ï¿½ Æ¯ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ì½ï¿½ ï¿½ï¿½ï¿½Ã¿ï¿½
 	
 	D3D12_RESOURCE_DESC resourceDesc{};
 	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
@@ -180,7 +180,7 @@ void Shadow::BuildResource()
 
 	ID3D12Device* device = GetScene()->GetFramework()->GetDevice();
 
-	// Depth stencil °ú Shader resource ·Î »ç¿ëµÉ ¸®¼Ò½º »ý¼º
+	// Depth stencil ï¿½ï¿½ Shader resource ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ò½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	ThrowIfFailed(device->CreateCommittedResource(
 		&heapProp,
 		D3D12_HEAP_FLAG_NONE,

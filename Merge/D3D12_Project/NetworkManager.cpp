@@ -64,12 +64,12 @@ bool NetworkManager::Initialize(const char* serverIP, int port, Scene* scene) {
     
     while (retryCount < MAX_RETRIES) {
         try {
-            auto* player = m_scene->GetObj<PlayerObject>();
+            auto* player = m_scene->GetLocalPlayer();
             if (player) {
-                LogToFile("[Info] Found PlayerObject in scene after " + std::to_string(retryCount * 100) + "ms");
+                LogToFile("[Info] Found Local PlayerObject in scene after " + std::to_string(retryCount * 100) + "ms");
                 break;
             } else {
-                LogToFile("[Warning] PlayerObject not found in scene, attempt " + std::to_string(retryCount + 1) + "/" + std::to_string(MAX_RETRIES));
+                LogToFile("[Warning] Local PlayerObject not found in scene, attempt " + std::to_string(retryCount + 1) + "/" + std::to_string(MAX_RETRIES));
                 Sleep(100); // 100ms 대기
                 retryCount++;
             }
@@ -530,7 +530,7 @@ void NetworkManager::SendPlayerUpdate(float x, float y, float z, float rotY) {
         
         // 애니메이션 정보 추가
         if (m_scene) {
-            auto* player = m_scene->GetObj<PlayerObject>();
+            auto* player = m_scene->GetLocalPlayer();
             if (player) {
                 Animation* anim = player->GetComponent<Animation>();
                 if (anim) {
@@ -954,15 +954,15 @@ void NetworkManager::Update(GameTimer& gTimer, Scene* scene) {
 
 
 
-    auto* player = scene->GetObj<PlayerObject>();
+    auto* player = scene->GetLocalPlayer();
     if (!player) {
-        LogToFile("[Error] PlayerObject not found in scene");
+        LogToFile("[Error] Local PlayerObject not found in scene");
         return;
     }
     
     auto* transform = player->GetComponent<Transform>();
     if (!transform) {
-        LogToFile("[Error] Transform component not found on PlayerObject");
+        LogToFile("[Error] Transform component not found on Local PlayerObject");
         return;
     }
     

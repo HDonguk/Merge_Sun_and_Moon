@@ -99,6 +99,9 @@ public:
 	// 생명력 관리 메서드 추가
 	void SetLife(int life) { mLife = life; }
 	int GetLife() const { return mLife; }
+	
+	// 리스폰 요청 플래그 추가
+	bool m_respawnRequested = false;
 };
 
 class CameraObject : public Object

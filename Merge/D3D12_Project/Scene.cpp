@@ -1506,8 +1506,8 @@ void Scene::ProcessStageQueue()
     // 스테이지 전환 완료 후 네트워크 상태 확인
     if (m_parent && m_parent->IsNetworkEnabled()) {
         OutputDebugString(L"[Scene] ProcessStageQueue: Stage transition completed, checking network status\n");
-        // 네트워크 매니저가 현재 씬을 참조할 수 있도록 설정
-        m_parent->GetNetworkManager().SetScene(this);
+        // NetworkManager의 Scene 포인터를 변경하지 않음 - 네트워크 연결 보존
+        // m_parent->GetNetworkManager().SetScene(this);  // 이 줄 제거
     }
     
     OutputDebugString(L"[Scene] ProcessStageQueue: Stage transition fully completed\n");

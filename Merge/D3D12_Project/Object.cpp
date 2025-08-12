@@ -504,9 +504,28 @@ void PlayerObject::TimeOut()
 
     if (anim->mCurrentFileName == "boy_dying_fix.fbx")
     {
-        m_scene->ResetLeatherCount();
-        m_scene->SetStage(L"Base");
-        return;
+        // 애니메이션이 끝나면 플레이어를 리스폰하고 스테이지는 변경하지 않음
+        if (!m_respawnRequested) {
+            m_respawnRequested = true;
+            // 플레이어 생명력 복구 및 위치 리셋
+            mLife = 3;
+            mElapseTime = 0.0f;
+            mIsHitted = false;
+            
+            // Hunting 스테이지 진입점 위치로 리스폰 (Base에서 호랑이와 충돌했을 때의 위치)
+            Transform* transform = GetComponent<Transform>();
+            if (transform) {
+                transform->SetPosition({200.0f, 0.0f, 300.0f, 1.0f});
+                transform->SetRotation({0.0f, 0.0f, 0.0f});
+            }
+            
+            // 아이들 상태로 변경
+            ChangeState("1P(boy-idle).fbx");
+            OutputDebugString(L"[PlayerObject] Death animation completed, player respawned\n");
+            
+            // 리스폰 완료 후 플래그 리셋
+            m_respawnRequested = false;
+        }
     }
 }
 

@@ -28,6 +28,7 @@ public:
     Framework* GetFramework();
     UINT GetNumOfTexture();
     void AddObj(Object* object);
+    void RemoveObj(Object* object);  // 특정 오브젝트 제거 메서드 추가
     std::unordered_map<std::string, ComPtr<ID3D12PipelineState>>& GetPSOs();
     void RenderObjects(ID3D12Device* device, ID3D12GraphicsCommandList* commandList);
     char ClampToBounds(XMVECTOR& pos, XMVECTOR offset);

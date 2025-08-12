@@ -408,9 +408,13 @@ void GameServer::ProcessSinglePacket(char* buffer, int clientID, int packetSize)
             pkt->clientID = clientID;
             clientIt->second.lastUpdate = *pkt;
             
+            // 스테이지 정보 추가
+            strcpy_s(pkt->stageName, sizeof(pkt->stageName), clientIt->second.currentStage.c_str());
+            
             // PlayerUpdate 로그 제거 (주기적으로 나오므로)
             
-            BroadcastPacket(pkt, sizeof(PacketPlayerUpdate), clientID);
+            // 같은 스테이지에 있는 클라이언트들에게만 전송
+            BroadcastToStage(pkt, sizeof(PacketPlayerUpdate), clientIt->second.currentStage, clientID);
             break;
         }
         case PACKET_PLAYER_SPAWN: {
@@ -419,7 +423,13 @@ void GameServer::ProcessSinglePacket(char* buffer, int clientID, int packetSize)
                 break;
             }
             PacketPlayerSpawn* pkt = (PacketPlayerSpawn*)buffer;
-            BroadcastPacket(pkt, sizeof(PacketPlayerSpawn), clientID);
+            
+            // 클라이언트 존재 여부 확인
+            auto clientIt = m_clients.find(clientID);
+            if (clientIt != m_clients.end()) {
+                // 같은 스테이지에 있는 클라이언트들에게만 전송
+                BroadcastToStage(pkt, sizeof(PacketPlayerSpawn), clientIt->second.currentStage, clientID);
+            }
             break;
         }
         case PACKET_TIGER_SPAWN: {
@@ -568,6 +578,9 @@ void GameServer::ProcessSinglePacket(char* buffer, int clientID, int packetSize)
             
             std::cout << "[StageChange] Client " << clientID << " (" << clientIt->second.username << ") changed to stage: " << pkt->stageName << std::endl;
             std::cout << "[StageChange] Total clients before stage change: " << m_clients.size() << std::endl;
+            
+            // 클라이언트의 스테이지 정보 업데이트
+            UpdateClientStage(clientID, pkt->stageName);
             
             // Hunting 스테이지로 변경된 경우 호랑이 초기화
             if (strcmp(pkt->stageName, "Hunting") == 0) {
@@ -1128,7 +1141,39 @@ void GameServer::ActivateHuntingStage() {
     }
 }
 
+// 스테이지별 플레이어 관리 메서드들 추가
+void GameServer::UpdateClientStage(int clientID, const std::string& stageName) {
+    auto clientIt = m_clients.find(clientID);
+    if (clientIt != m_clients.end()) {
+        std::string oldStage = clientIt->second.currentStage;
+        clientIt->second.currentStage = stageName;
+        std::cout << "[StageChange] Client " << clientID << " (" << clientIt->second.username 
+                  << ") changed from " << oldStage << " to " << stageName << std::endl;
+    }
+}
 
+void GameServer::BroadcastToStage(const void* packet, int size, const std::string& stageName, int excludeID) {
+    for (auto& [id, client] : m_clients) {
+        if (!client.isLoggedIn || client.socket == INVALID_SOCKET || id == excludeID)
+            continue;
+            
+        if (client.currentStage == stageName) {
+            if (!SendPacket(client.socket, packet, size)) {
+                continue;
+            }
+        }
+    }
+}
+
+std::vector<int> GameServer::GetClientsInStage(const std::string& stageName) {
+    std::vector<int> clientsInStage;
+    for (const auto& [id, client] : m_clients) {
+        if (client.isLoggedIn && client.currentStage == stageName) {
+            clientsInStage.push_back(id);
+        }
+    }
+    return clientsInStage;
+}
 
 int main() {
     GameServer server;

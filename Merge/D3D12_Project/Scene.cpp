@@ -1451,7 +1451,8 @@ void Scene::ProcessStageQueue()
     if (m_stage_queue == L"Base")
     {
         OutputDebugString(L"[Scene] ProcessStageQueue: Switching to Base Stage\n");
-      
+        m_current_stage = L"Base";
+        OtherPlayerManager::GetInstance()->SetCurrentStage("Base");
         BuildBaseStage();
       
     }
@@ -1471,6 +1472,8 @@ void Scene::ProcessStageQueue()
             OutputDebugString(L"[Scene] Warning: m_parent is null, cannot clear NetworkManager tiger info\n");
         }
         
+        m_current_stage = L"Hunting";
+        OtherPlayerManager::GetInstance()->SetCurrentStage("Hunting");
         BuildHuntingStage();
         OutputDebugString(L"[Scene] Hunting Stage built successfully\n");
        
@@ -1478,19 +1481,22 @@ void Scene::ProcessStageQueue()
     else if (m_stage_queue == L"God")
     {
         OutputDebugString(L"[Scene] ProcessStageQueue: Switching to God Stage\n");
-       
+        m_current_stage = L"God";
+        OtherPlayerManager::GetInstance()->SetCurrentStage("God");
         BuildGodStage();
       
     }
     else if (m_stage_queue == L"Title")
     {
-      
+        m_current_stage = L"Title";
+        OtherPlayerManager::GetInstance()->SetCurrentStage("Title");
         BuildTitleStage();
        
     }
      else if (m_stage_queue == L"End")
     {
-       
+        m_current_stage = L"End";
+        OtherPlayerManager::GetInstance()->SetCurrentStage("End");
         BuildEndStage();
        
     }
@@ -1852,6 +1858,22 @@ void Scene::AddObj(Object* object)
 {
     if (m_object_queue_index > MAX_QUEUE - 1) throw; // 
     m_object_queue[m_object_queue_index++] = object;
+}
+
+void Scene::RemoveObj(Object* object)
+{
+    if (!object) return;
+    
+    // 오브젝트를 무효화하고 나중에 제거되도록 표시
+    object->SetValid(false);
+    
+    // m_objects 컬렉션에서도 제거
+    auto it = std::find(m_objects.begin(), m_objects.end(), object);
+    if (it != m_objects.end()) {
+        m_objects.erase(it);
+    }
+    
+    OutputDebugString(L"[Scene] Object marked for removal\n");
 }
 
 void Scene::BuildProjMatrix()

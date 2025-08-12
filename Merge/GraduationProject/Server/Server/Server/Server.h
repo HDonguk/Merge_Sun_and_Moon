@@ -34,10 +34,11 @@ private:
         int sendFailCount = 0; // 송신 실패 횟수
         int connectionErrorCount = 0; // 연결 에러 횟수
         bool connectionErrorLogged = false; // 연결 에러 로그 출력 여부
+        std::string currentStage = "Base"; // 현재 스테이지 정보 추가
         
         // 패킷 버퍼링을 위한 추가 필드
         char packetBuffer[MAX_PACKET_SIZE * 4];  // 여러 패킷을 저장할 수 있는 버퍼
-        int packetBufferSize = 0;  // 현재 버퍼에 저장된 데이터 크기
+        int packetBufferSize = 0;  // 현재 패킷 버퍼에 저장된 데이터 크기
     };
 
     struct TigerInfo {
@@ -104,5 +105,9 @@ private:
     bool IsPlayerNearby(const TigerInfo& tiger, float radius);
     void GetNearestPlayerPosition(const TigerInfo& tiger, float& targetX, float& targetZ);
     
+    // 스테이지별 플레이어 관리 메서드 추가
+    void UpdateClientStage(int clientID, const std::string& stageName);
+    void BroadcastToStage(const void* packet, int size, const std::string& stageName, int excludeID = -1);
+    std::vector<int> GetClientsInStage(const std::string& stageName);
 
 }; 

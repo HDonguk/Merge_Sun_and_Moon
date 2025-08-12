@@ -29,6 +29,7 @@ struct PacketPlayerUpdate {
     float rotY;       // Rotation
     char animationFile[64];  // 현재 애니메이션 파일명
     float animationTime;     // 애니메이션 시간
+    char stageName[32];      // 현재 스테이지 이름 추가
 };
 
 struct PacketPlayerSpawn {

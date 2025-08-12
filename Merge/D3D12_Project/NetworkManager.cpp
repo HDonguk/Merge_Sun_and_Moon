@@ -709,11 +709,14 @@ void NetworkManager::ProcessPacket(char* buffer) {
                 // 애니메이션 정보 추출
                 std::string animationFile = updatePkt->animationFile;
                 float animationTime = updatePkt->animationTime;
+                
+                // 스테이지 정보 추출
+                std::string stageName = updatePkt->stageName;
 
                 OtherPlayerManager::GetInstance()->UpdateOtherPlayer(
                     updatePkt->clientID, updatePkt->x, updatePkt->y, updatePkt->z, updatePkt->rotY, 
-                    animationFile, animationTime);
-                LogToFile("[Update] Successfully updated player: " + std::to_string(updatePkt->clientID));
+                    animationFile, animationTime, stageName);
+                LogToFile("[Update] Successfully updated player: " + std::to_string(updatePkt->clientID) + " in stage: " + stageName);
                 break;
             }
 

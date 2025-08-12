@@ -62,12 +62,26 @@ void OtherPlayerManager::SpawnOtherPlayer(int clientID) {
     }
 }
 
-void OtherPlayerManager::UpdateOtherPlayer(int clientID, float x, float y, float z, float rotY, const std::string& animationFile, float animationTime) {
+void OtherPlayerManager::UpdateOtherPlayer(int clientID, float x, float y, float z, float rotY, const std::string& animationFile, float animationTime, const std::string& stageName) {
     // 스테이지 전환 중이면 업데이트도 차단
     if (m_isStageTransitioning) {
         OutputDebugString(L"[OtherPlayerManager] Stage transitioning, blocking update for player\n");
         if (m_networkManager) {
             m_networkManager->LogToFile("[OtherPlayerManager] Stage transitioning, blocking update for player " + std::to_string(clientID));
+        }
+        return;
+    }
+    
+    // 현재 스테이지와 다른 스테이지에 있는 플레이어는 제거
+    if (m_currentStage != stageName) {
+        auto it = otherPlayers.find(clientID);
+        if (it != otherPlayers.end()) {
+            // 다른 스테이지의 플레이어 제거
+            if (m_currentScene) {
+                m_currentScene->RemoveObj(it->second);
+            }
+            otherPlayers.erase(it);
+            OutputDebugString(L"[OtherPlayerManager] Removed player from different stage\n");
         }
         return;
     }

@@ -19,6 +19,7 @@ public:
 	Scene* GetScene() { return m_scene; }
 	uint32_t GetId();
 	bool GetValid();
+	void SetValid(bool valid) { m_valid = valid; }  // SetValid 메서드 추가
 	void Delete();
 
 	template <typename T>

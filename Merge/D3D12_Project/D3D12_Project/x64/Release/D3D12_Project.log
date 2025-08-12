@@ -122,7 +122,7 @@ C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Mer
   (compiling source file 'NetworkManager.cpp')
   
 C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(710,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
-C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(799,54): warning C4101: 'e': unreferenced local variable
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(802,54): warning C4101: 'e': unreferenced local variable
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(4813,18): warning C4244: '=': conversion from 'const wchar_t' to 'char', possible loss of data
   (compiling source file 'NetworkManager.cpp')
       C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(4813,18):
@@ -160,7 +160,7 @@ C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.3520
   (compiling source file 'NetworkManager.cpp')
       C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(4813,18):
       the template instantiation context (the oldest one first) is
-          C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(805,45):
+          C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(808,45):
           see reference to function template instantiation 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string<std::_String_iterator<std::_String_val<std::_Simple_types<_Elem>>>,0>(_Iter,_Iter,const _Alloc &)' being compiled
           with
           [
@@ -168,7 +168,7 @@ C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.3520
               _Iter=std::_String_iterator<std::_String_val<std::_Simple_types<wchar_t>>>,
               _Alloc=std::allocator<char>
           ]
-              C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(805,45):
+              C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(808,45):
               see the first reference to 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string' in 'NetworkManager::ProcessPacket'
           C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xstring(812,17):
           see reference to function template instantiation 'void std::basic_string<char,std::char_traits<char>,std::allocator<char>>::_Construct_from_iter<wchar_t*,wchar_t*,_Size_type>(_Iter,const _Sent,_Size)' being compiled
@@ -277,16 +277,16 @@ C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Mer
 C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1127,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
 C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1242,28): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
 C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1243,29): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
-C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1543,34): warning C4101: 'e': unreferenced local variable
-C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1612,90): warning C4267: 'argument': conversion from 'size_t' to 'UINT', possible loss of data
-C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1651,79): warning C4267: 'initializing': conversion from 'size_t' to 'UINT', possible loss of data
-C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1651,33): warning C4267: 'initializing': conversion from 'size_t' to 'const UINT', possible loss of data
-C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1684,77): warning C4267: 'initializing': conversion from 'size_t' to 'UINT', possible loss of data
-C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1684,32): warning C4267: 'initializing': conversion from 'size_t' to 'const UINT', possible loss of data
-C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1719,82): warning C4267: '=': conversion from 'size_t' to 'UINT', possible loss of data
-C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1726,80): warning C4267: '=': conversion from 'size_t' to 'UINT', possible loss of data
-C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1795,110): warning C4267: 'argument': conversion from 'size_t' to 'UINT', possible loss of data
-C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1884,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1549,34): warning C4101: 'e': unreferenced local variable
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1618,90): warning C4267: 'argument': conversion from 'size_t' to 'UINT', possible loss of data
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1657,79): warning C4267: 'initializing': conversion from 'size_t' to 'UINT', possible loss of data
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1657,33): warning C4267: 'initializing': conversion from 'size_t' to 'const UINT', possible loss of data
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1690,77): warning C4267: 'initializing': conversion from 'size_t' to 'UINT', possible loss of data
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1690,32): warning C4267: 'initializing': conversion from 'size_t' to 'const UINT', possible loss of data
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1725,82): warning C4267: '=': conversion from 'size_t' to 'UINT', possible loss of data
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1732,80): warning C4267: '=': conversion from 'size_t' to 'UINT', possible loss of data
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1801,110): warning C4267: 'argument': conversion from 'size_t' to 'UINT', possible loss of data
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1887,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
   Shadow.cpp
 C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Shadow.cpp(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
 C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,9): warning C4005: '_WINSOCKAPI_': macro redefinition
@@ -338,8 +338,8 @@ C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Mer
   (compiling source file 'Win32Application.cpp')
   
   Generating code
-  11 of 4018 functions ( 0.3%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    8 functions had inline decision re-evaluated but remain unchanged
+  30 of 4032 functions ( 0.7%) were compiled, the rest were copied from previous compilation.
+    15 functions were new in current compilation
+    82 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   D3D12_Project.vcxproj -> C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\x64\Release\D3D12_Project.exe

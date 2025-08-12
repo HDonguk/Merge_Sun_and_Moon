@@ -121,8 +121,8 @@ C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Mer
 C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\OtherPlayerManager.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
   (compiling source file 'NetworkManager.cpp')
   
-C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(711,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
-C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(789,54): warning C4101: 'e': unreferenced local variable
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(710,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(799,54): warning C4101: 'e': unreferenced local variable
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(4813,18): warning C4244: '=': conversion from 'const wchar_t' to 'char', possible loss of data
   (compiling source file 'NetworkManager.cpp')
       C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(4813,18):
@@ -160,7 +160,7 @@ C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.3520
   (compiling source file 'NetworkManager.cpp')
       C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(4813,18):
       the template instantiation context (the oldest one first) is
-          C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(795,45):
+          C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(805,45):
           see reference to function template instantiation 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string<std::_String_iterator<std::_String_val<std::_Simple_types<_Elem>>>,0>(_Iter,_Iter,const _Alloc &)' being compiled
           with
           [
@@ -168,7 +168,7 @@ C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.3520
               _Iter=std::_String_iterator<std::_String_val<std::_Simple_types<wchar_t>>>,
               _Alloc=std::allocator<char>
           ]
-              C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(795,45):
+              C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(805,45):
               see the first reference to 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string' in 'NetworkManager::ProcessPacket'
           C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xstring(812,17):
           see reference to function template instantiation 'void std::basic_string<char,std::char_traits<char>,std::allocator<char>>::_Construct_from_iter<wchar_t*,wchar_t*,_Size_type>(_Iter,const _Sent,_Size)' being compiled
@@ -338,8 +338,8 @@ C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Mer
   (compiling source file 'Win32Application.cpp')
   
   Generating code
-  26 of 4020 functions ( 0.6%) were compiled, the rest were copied from previous compilation.
-    2 functions were new in current compilation
-    11 functions had inline decision re-evaluated but remain unchanged
+  20 of 4020 functions ( 0.5%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    43 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   D3D12_Project.vcxproj -> C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\x64\Release\D3D12_Project.exe

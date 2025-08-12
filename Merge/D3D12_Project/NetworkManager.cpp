@@ -519,6 +519,16 @@ void NetworkManager::SendPlayerUpdate(float x, float y, float z, float rotY) {
     if (!m_isRunning || !m_isLoggedIn) return;
 
     try {
+        // 회전값 안전성 검증: 로컬 플레이어의 회전값이 올바른 범위 내에 있는지 확인
+        float safeRotY = rotY;
+        if (rotY < -180.0f || rotY > 180.0f) {
+            // 유효하지 않은 회전값인 경우 정규화
+            while (safeRotY < -180.0f) safeRotY += 360.0f;
+            while (safeRotY > 180.0f) safeRotY -= 360.0f;
+            
+            LogToFile("[Warning] Normalized rotation value from " + std::to_string(rotY) + " to " + std::to_string(safeRotY));
+        }
+        
         PacketPlayerUpdate pkt;
         pkt.header.size = sizeof(PacketPlayerUpdate);
         pkt.header.type = PACKET_PLAYER_UPDATE;
@@ -526,7 +536,7 @@ void NetworkManager::SendPlayerUpdate(float x, float y, float z, float rotY) {
         pkt.x = x;
         pkt.y = y;
         pkt.z = z;
-        pkt.rotY = rotY;
+        pkt.rotY = safeRotY;
         
         // 애니메이션 정보 추가
         if (m_scene) {
@@ -969,6 +979,16 @@ void NetworkManager::Update(GameTimer& gTimer, Scene* scene) {
     XMVECTOR pos = transform->GetPosition();
     XMVECTOR rot = transform->GetRotation();
     
+    // 회전값 안전성 검증: 로컬 플레이어의 회전값이 올바른 범위 내에 있는지 확인
+    float rotY = XMVectorGetY(rot);
+    if (rotY < -180.0f || rotY > 180.0f) {
+        // 유효하지 않은 회전값인 경우 정규화
+        while (rotY < -180.0f) rotY += 360.0f;
+        while (rotY > 180.0f) rotY -= 360.0f;
+        
+        LogToFile("[Warning] Normalized rotation value in Update from " + std::to_string(XMVectorGetY(rot)) + " to " + std::to_string(rotY));
+    }
+    
     m_updateTimer += gTimer.DeltaTime();
     const float UPDATE_INTERVAL = 0.016667f;  // 60fps (16.67ms)마다 업데이트
 
@@ -978,7 +998,7 @@ void NetworkManager::Update(GameTimer& gTimer, Scene* scene) {
             XMVectorGetX(pos), 
             XMVectorGetY(pos), 
             XMVectorGetZ(pos),
-            XMVectorGetY(rot)
+            rotY
         );
         m_updateTimer = 0.0f;
     }

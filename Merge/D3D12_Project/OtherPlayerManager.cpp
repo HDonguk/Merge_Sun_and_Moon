@@ -89,7 +89,22 @@ void OtherPlayerManager::UpdateOtherPlayer(int clientID, float x, float y, float
         if (transform) {
             // 위치 업데이트
             transform->SetPosition({x, y, z, 1.0f});
-            transform->SetRotation({0.0f, rotY, 0.0f});
+            
+            // 회전값 안전성 검증: 로컬 플레이어의 회전값과 섞이지 않도록
+            // rotY가 유효한 범위(-180 ~ 180도) 내에 있는지 확인
+            if (rotY >= -180.0f && rotY <= 180.0f) {
+                transform->SetRotation({0.0f, rotY, 0.0f});
+            } else {
+                // 유효하지 않은 회전값인 경우 현재 회전값 유지
+                XMVECTOR currentRot = transform->GetRotation();
+                float currentRotY = XMVectorGetY(currentRot);
+                transform->SetRotation({0.0f, currentRotY, 0.0f});
+                
+                if (m_networkManager) {
+                    m_networkManager->LogToFile("[OtherPlayerManager] Invalid rotation value received for player " + std::to_string(clientID) + 
+                        ": " + std::to_string(rotY) + ", keeping current rotation: " + std::to_string(currentRotY));
+                }
+            }
             
             // 애니메이션 업데이트
             Animation* anim = playerObj->GetComponent<Animation>();

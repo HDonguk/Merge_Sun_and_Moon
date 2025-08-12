@@ -65,14 +65,41 @@ public:
     // 로컬 플레이어(직접 조작하는 플레이어)를 반환하는 메서드 추가
     PlayerObject* GetLocalPlayer()
     {
+        PlayerObject* localPlayer = nullptr;
+        int playerCount = 0;
+        
         for (Object* obj : m_objects) {
             if (!obj->GetValid()) continue;
             PlayerObject* player = dynamic_cast<PlayerObject*>(obj);
-            if (player && !player->IsNetworkPlayer()) {
-                return player;  // 네트워크 플레이어가 아닌 것이 로컬 플레이어
+            if (player) {
+                playerCount++;
+                if (!player->IsNetworkPlayer()) {
+                    localPlayer = player;  // 네트워크 플레이어가 아닌 것이 로컬 플레이어
+                }
             }
         }
-        return nullptr;
+        
+        // 안전장치: 로컬 플레이어가 여러 개 있거나 없는 경우 로그
+        if (playerCount == 0) {
+            OutputDebugString(L"[Scene] No PlayerObject found in scene\n");
+            return nullptr;
+        } else if (playerCount == 1 && localPlayer == nullptr) {
+            // 플레이어가 하나뿐이고 네트워크 플레이어로 설정되어 있다면 로컬 플레이어로 변경
+            for (Object* obj : m_objects) {
+                if (!obj->GetValid()) continue;
+                PlayerObject* player = dynamic_cast<PlayerObject*>(obj);
+                if (player) {
+                    player->SetIsNetworkPlayer(false);
+                    localPlayer = player;
+                    OutputDebugString(L"[Scene] Single player found, set as local player\n");
+                    break;
+                }
+            }
+        } else if (playerCount > 1 && localPlayer == nullptr) {
+            OutputDebugString(L"[Scene] Multiple players found but no local player identified\n");
+        }
+        
+        return localPlayer;
     }
 private:
     void ProcessStageQueue();

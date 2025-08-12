@@ -1,0 +1,9 @@
+[01:43:45] NetworkManager initialized
+[01:44:06] [Stage] Stage transition state set to: false
+[01:44:40] [Info] Found Local PlayerObject in scene after 0ms
+[01:44:40] [Info] OtherPlayerManager initialized with scene and network manager
+[01:44:40] [Client] Connecting to server 127.0.0.1:5000
+[01:44:42] [Error] Connection failed
+[01:44:47] [OtherPlayerManager] Stage transition started
+[01:44:47] [OtherPlayerManager] Clearing all other players
+[01:44:47] [OtherPlayerManager] All other players cleared successfully

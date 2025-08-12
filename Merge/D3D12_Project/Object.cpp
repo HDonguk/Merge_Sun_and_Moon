@@ -202,9 +202,8 @@ void PlayerObject::OnUpdate(GameTimer& gTimer)
     // 네트워크 플레이어는 입력 처리하지 않음
     if (!m_isNetworkPlayer) {
         ProcessInput(gTimer);
+        MoveAndRotate(gTimer.DeltaTime());
     }
-    MoveAndRotate(gTimer.DeltaTime());
-
 
     Object::OnUpdate(gTimer);
     

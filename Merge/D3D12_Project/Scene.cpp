@@ -1385,6 +1385,8 @@ void Scene::SetStage(wstring stage)
     // Hunting 스테이지로 전환할 때 서버에 알림
     if (m_parent && stage == L"Hunting") {
         OutputDebugString(L"[Scene] SetStage: Sending Hunting stage change to server\n");
+        // 스테이지 변경 중임을 표시
+        m_parent->GetNetworkManager().SetStageTransitioning(true);
         m_parent->GetNetworkManager().SendStageChange(L"Hunting");
     }
     
@@ -1493,6 +1495,12 @@ void Scene::ProcessStageQueue()
        
     }
     BuildUI();
+    
+    // 스테이지 변경 완료 표시
+    if (m_parent) {
+        m_parent->GetNetworkManager().SetStageTransitioning(false);
+    }
+    
     m_stage_queue = L"";
     
     // 스테이지 전환 완료 후 네트워크 상태 확인

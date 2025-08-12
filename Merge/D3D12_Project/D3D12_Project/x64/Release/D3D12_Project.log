@@ -1,317 +1,317 @@
 ﻿  Component.cpp
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,1): warning C4005: '_WINSOCKAPI_': 매크로 재정의
-  (소스 파일 'Component.cpp'을(를) 컴파일하는 중)
-  C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,1):
-  이전에 명령줄에서 선언된 '_WINSOCKAPI_'
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,9): warning C4005: '_WINSOCKAPI_': macro redefinition
+  (compiling source file 'Component.cpp')
+      C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,9):
+      '_WINSOCKAPI_' previously declared on the command line
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Component.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Component.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Component.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Component.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Packet.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Component.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Packet.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Component.cpp')
   
   Framework.cpp
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Framework.cpp(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Framework.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Framework.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Framework.cpp(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Framework.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Framework.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,1): warning C4005: '_WINSOCKAPI_': 매크로 재정의
-  (소스 파일 'Framework.cpp'을(를) 컴파일하는 중)
-  C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,1):
-  이전에 명령줄에서 선언된 '_WINSOCKAPI_'
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,9): warning C4005: '_WINSOCKAPI_': macro redefinition
+  (compiling source file 'Framework.cpp')
+      C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,9):
+      '_WINSOCKAPI_' previously declared on the command line
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Framework.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Framework.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Framework.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Framework.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Packet.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Framework.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Packet.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Framework.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\LoginUI.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Framework.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\LoginUI.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Framework.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Framework.cpp(140,34): warning C4101: 'e' :참조되지 않은 지역 변수입니다.
-C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.39.33519\include\xutility(4537,18): warning C4244: '=': 'const WCHAR'에서 'char'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-  (소스 파일 'Framework.cpp'을(를) 컴파일하는 중)
-  C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.39.33519\include\xutility(4537,18):
-  템플릿 인스턴스화 컨텍스트(가장 오래된 인스턴스화 컨텍스트)가
-  	C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Framework.cpp(675,22):
-  	컴파일되는 함수 템플릿 인스턴스화 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string<std::_String_const_iterator<std::_String_val<std::_Simple_types<_Elem>>>,0>(_Iter,_Iter,const _Alloc &)'에 대한 참조를 확인하세요.
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Framework.cpp(140,34): warning C4101: 'e': unreferenced local variable
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(4813,18): warning C4244: '=': conversion from 'const wchar_t' to 'char', possible loss of data
+  (compiling source file 'Framework.cpp')
+      C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(4813,18):
+      the template instantiation context (the oldest one first) is
+          C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Framework.cpp(675,22):
+          see reference to function template instantiation 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string<std::_String_const_iterator<std::_String_val<std::_Simple_types<_Elem>>>,0>(_Iter,_Iter,const _Alloc &)' being compiled
           with
           [
               _Elem=wchar_t,
               _Iter=std::_String_const_iterator<std::_String_val<std::_Simple_types<wchar_t>>>,
               _Alloc=std::allocator<char>
           ]
-  		C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Framework.cpp(675,22):
-  		'Framework::OnConnectToServer'에서 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string'에 대한 첫 번째 참조를 확인하세요.
-  	C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.39.33519\include\xstring(2600,17):
-  	컴파일되는 함수 템플릿 인스턴스화 'void std::basic_string<char,std::char_traits<char>,std::allocator<char>>::_Construct_from_iter<const WCHAR*,const WCHAR*,_Size_type>(_Iter,const _Sent,_Size)'에 대한 참조를 확인하세요.
+              C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Framework.cpp(675,22):
+              see the first reference to 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string' in 'Framework::OnConnectToServer'
+          C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xstring(812,17):
+          see reference to function template instantiation 'void std::basic_string<char,std::char_traits<char>,std::allocator<char>>::_Construct_from_iter<const wchar_t*,const wchar_t*,_Size_type>(_Iter,const _Sent,_Size)' being compiled
           with
           [
               _Size_type=unsigned __int64,
-              _Iter=const WCHAR *,
-              _Sent=const WCHAR *,
+              _Iter=const wchar_t *,
+              _Sent=const wchar_t *,
               _Size=unsigned __int64
           ]
-  	C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.39.33519\include\xstring(2756,18):
-  	컴파일되는 함수 템플릿 인스턴스화 '_OutIt *std::_Copy_n_unchecked4<const WCHAR*,_Size,char*>(_InIt,_SizeTy,_OutIt)'에 대한 참조를 확인하세요.
+          C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xstring(968,18):
+          see reference to function template instantiation '_OutIt *std::_Copy_n_unchecked4<const wchar_t*,_Size,char*>(_InIt,_SizeTy,_OutIt)' being compiled
           with
           [
               _OutIt=char *,
               _Size=unsigned __int64,
-              _InIt=const WCHAR *,
+              _InIt=const wchar_t *,
               _SizeTy=unsigned __int64
           ]
   
   Main.cpp
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,1): warning C4005: '_WINSOCKAPI_': 매크로 재정의
-  (소스 파일 'Main.cpp'을(를) 컴파일하는 중)
-  C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,1):
-  이전에 명령줄에서 선언된 '_WINSOCKAPI_'
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,9): warning C4005: '_WINSOCKAPI_': macro redefinition
+  (compiling source file 'Main.cpp')
+      C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,9):
+      '_WINSOCKAPI_' previously declared on the command line
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Framework.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Main.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Framework.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Main.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Main.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Main.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Main.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Main.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Packet.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Main.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Packet.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Main.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\LoginUI.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Main.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\LoginUI.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Main.cpp')
   
   NetworkManager.cpp
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,1): warning C4005: '_WINSOCKAPI_': 매크로 재정의
-  (소스 파일 'NetworkManager.cpp'을(를) 컴파일하는 중)
-  C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,1):
-  이전에 명령줄에서 선언된 '_WINSOCKAPI_'
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,9): warning C4005: '_WINSOCKAPI_': macro redefinition
+  (compiling source file 'NetworkManager.cpp')
+      C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,9):
+      '_WINSOCKAPI_' previously declared on the command line
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'NetworkManager.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'NetworkManager.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Packet.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'NetworkManager.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Packet.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'NetworkManager.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'NetworkManager.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'NetworkManager.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\OtherPlayerManager.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'NetworkManager.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\OtherPlayerManager.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'NetworkManager.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(706,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(752,54): warning C4101: 'e' :참조되지 않은 지역 변수입니다.
-C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.39.33519\include\xutility(4537,18): warning C4244: '=': 'const WCHAR'에서 'char'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-  (소스 파일 'NetworkManager.cpp'을(를) 컴파일하는 중)
-  C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.39.33519\include\xutility(4537,18):
-  템플릿 인스턴스화 컨텍스트(가장 오래된 인스턴스화 컨텍스트)가
-  	C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(241,47):
-  	컴파일되는 함수 템플릿 인스턴스화 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string<std::_String_const_iterator<std::_String_val<std::_Simple_types<_Elem>>>,0>(_Iter,_Iter,const _Alloc &)'에 대한 참조를 확인하세요.
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(711,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(789,54): warning C4101: 'e': unreferenced local variable
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(4813,18): warning C4244: '=': conversion from 'const wchar_t' to 'char', possible loss of data
+  (compiling source file 'NetworkManager.cpp')
+      C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(4813,18):
+      the template instantiation context (the oldest one first) is
+          C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(255,47):
+          see reference to function template instantiation 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string<std::_String_const_iterator<std::_String_val<std::_Simple_types<_Elem>>>,0>(_Iter,_Iter,const _Alloc &)' being compiled
           with
           [
               _Elem=wchar_t,
               _Iter=std::_String_const_iterator<std::_String_val<std::_Simple_types<wchar_t>>>,
               _Alloc=std::allocator<char>
           ]
-  		C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(241,34):
-  		'NetworkManager::SendStageChange'에서 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string'에 대한 첫 번째 참조를 확인하세요.
-  	C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.39.33519\include\xstring(2600,17):
-  	컴파일되는 함수 템플릿 인스턴스화 'void std::basic_string<char,std::char_traits<char>,std::allocator<char>>::_Construct_from_iter<const WCHAR*,const WCHAR*,_Size_type>(_Iter,const _Sent,_Size)'에 대한 참조를 확인하세요.
+              C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(255,34):
+              see the first reference to 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string' in 'NetworkManager::SendStageChange'
+          C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xstring(812,17):
+          see reference to function template instantiation 'void std::basic_string<char,std::char_traits<char>,std::allocator<char>>::_Construct_from_iter<const wchar_t*,const wchar_t*,_Size_type>(_Iter,const _Sent,_Size)' being compiled
           with
           [
-              _Size_type=unsigned __int64,
-              _Iter=const WCHAR *,
-              _Sent=const WCHAR *,
-              _Size=unsigned __int64
+              _Size_type=std::+::_Size_type,
+              _Iter=const wchar_t *,
+              _Sent=const wchar_t *,
+              _Size=std::+::_Size_type
           ]
-  	C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.39.33519\include\xstring(2756,18):
-  	컴파일되는 함수 템플릿 인스턴스화 '_OutIt *std::_Copy_n_unchecked4<const WCHAR*,_Size,char*>(_InIt,_SizeTy,_OutIt)'에 대한 참조를 확인하세요.
+          C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xstring(968,18):
+          see reference to function template instantiation '_OutIt *std::_Copy_n_unchecked4<const wchar_t*,_Size,char*>(_InIt,_SizeTy,_OutIt)' being compiled
           with
           [
               _OutIt=char *,
-              _Size=unsigned __int64,
-              _InIt=const WCHAR *,
-              _SizeTy=unsigned __int64
+              _Size=std::+::_Size_type,
+              _InIt=const wchar_t *,
+              _SizeTy=std::+::_Size_type
           ]
   
-C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.39.33519\include\xutility(4537,18): warning C4244: '=': 'wchar_t'에서 'char'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-  (소스 파일 'NetworkManager.cpp'을(를) 컴파일하는 중)
-  C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.39.33519\include\xutility(4537,18):
-  템플릿 인스턴스화 컨텍스트(가장 오래된 인스턴스화 컨텍스트)가
-  	C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(758,45):
-  	컴파일되는 함수 템플릿 인스턴스화 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string<std::_String_iterator<std::_String_val<std::_Simple_types<_Elem>>>,0>(_Iter,_Iter,const _Alloc &)'에 대한 참조를 확인하세요.
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(4813,18): warning C4244: '=': conversion from 'wchar_t' to 'char', possible loss of data
+  (compiling source file 'NetworkManager.cpp')
+      C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(4813,18):
+      the template instantiation context (the oldest one first) is
+          C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(795,45):
+          see reference to function template instantiation 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string<std::_String_iterator<std::_String_val<std::_Simple_types<_Elem>>>,0>(_Iter,_Iter,const _Alloc &)' being compiled
           with
           [
               _Elem=wchar_t,
               _Iter=std::_String_iterator<std::_String_val<std::_Simple_types<wchar_t>>>,
               _Alloc=std::allocator<char>
           ]
-  		C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(758,45):
-  		'NetworkManager::ProcessPacket'에서 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string'에 대한 첫 번째 참조를 확인하세요.
-  	C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.39.33519\include\xstring(2600,17):
-  	컴파일되는 함수 템플릿 인스턴스화 'void std::basic_string<char,std::char_traits<char>,std::allocator<char>>::_Construct_from_iter<wchar_t*,wchar_t*,_Size_type>(_Iter,const _Sent,_Size)'에 대한 참조를 확인하세요.
+              C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(795,45):
+              see the first reference to 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string' in 'NetworkManager::ProcessPacket'
+          C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xstring(812,17):
+          see reference to function template instantiation 'void std::basic_string<char,std::char_traits<char>,std::allocator<char>>::_Construct_from_iter<wchar_t*,wchar_t*,_Size_type>(_Iter,const _Sent,_Size)' being compiled
           with
           [
-              _Size_type=unsigned __int64,
+              _Size_type=std::+::_Size_type,
               _Iter=wchar_t *,
               _Sent=wchar_t *,
-              _Size=unsigned __int64
+              _Size=std::+::_Size_type
           ]
-  	C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.39.33519\include\xstring(2756,18):
-  	컴파일되는 함수 템플릿 인스턴스화 '_OutIt *std::_Copy_n_unchecked4<wchar_t*,_Size,char*>(_InIt,_SizeTy,_OutIt)'에 대한 참조를 확인하세요.
+          C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xstring(968,18):
+          see reference to function template instantiation '_OutIt *std::_Copy_n_unchecked4<wchar_t*,_Size,char*>(_InIt,_SizeTy,_OutIt)' being compiled
           with
           [
               _OutIt=char *,
-              _Size=unsigned __int64,
+              _Size=std::+::_Size_type,
               _InIt=wchar_t *,
-              _SizeTy=unsigned __int64
+              _SizeTy=std::+::_Size_type
           ]
   
   Object.cpp
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,1): warning C4005: '_WINSOCKAPI_': 매크로 재정의
-  (소스 파일 'Object.cpp'을(를) 컴파일하는 중)
-  C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,1):
-  이전에 명령줄에서 선언된 '_WINSOCKAPI_'
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,9): warning C4005: '_WINSOCKAPI_': macro redefinition
+  (compiling source file 'Object.cpp')
+      C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,9):
+      '_WINSOCKAPI_' previously declared on the command line
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Object.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Object.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Object.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Object.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Packet.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Object.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Packet.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Object.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Framework.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Object.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Framework.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Object.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\LoginUI.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Object.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\LoginUI.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Object.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(808,31): warning C4244: '초기화 중': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(881,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1190,26): warning C4244: '초기화 중': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1198,22): warning C4244: '=': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1394,19): warning C4244: '초기화 중': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1628,15): warning C4244: '초기화 중': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1704,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(808,31): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(881,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1190,26): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1198,22): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1394,19): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1628,15): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1704,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
   OtherPlayerManager.cpp
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\OtherPlayerManager.cpp(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,1): warning C4005: '_WINSOCKAPI_': 매크로 재정의
-  (소스 파일 'OtherPlayerManager.cpp'을(를) 컴파일하는 중)
-  C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,1):
-  이전에 명령줄에서 선언된 '_WINSOCKAPI_'
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\OtherPlayerManager.cpp(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,9): warning C4005: '_WINSOCKAPI_': macro redefinition
+  (compiling source file 'OtherPlayerManager.cpp')
+      C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,9):
+      '_WINSOCKAPI_' previously declared on the command line
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\OtherPlayerManager.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'OtherPlayerManager.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\OtherPlayerManager.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'OtherPlayerManager.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'OtherPlayerManager.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'OtherPlayerManager.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'OtherPlayerManager.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'OtherPlayerManager.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Packet.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'OtherPlayerManager.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Packet.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'OtherPlayerManager.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\OtherPlayerManager.cpp(57,34): warning C4101: 'e' :참조되지 않은 지역 변수입니다.
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\OtherPlayerManager.cpp(57,34): warning C4101: 'e': unreferenced local variable
   Scene.cpp
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,1): warning C4005: '_WINSOCKAPI_': 매크로 재정의
-  (소스 파일 'Scene.cpp'을(를) 컴파일하는 중)
-  C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,1):
-  이전에 명령줄에서 선언된 '_WINSOCKAPI_'
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,9): warning C4005: '_WINSOCKAPI_': macro redefinition
+  (compiling source file 'Scene.cpp')
+      C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,9):
+      '_WINSOCKAPI_' previously declared on the command line
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Scene.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Scene.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Scene.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Scene.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Packet.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Scene.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Packet.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Scene.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\OtherPlayerManager.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Scene.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\OtherPlayerManager.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Scene.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Framework.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Scene.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Framework.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Scene.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\LoginUI.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Scene.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\LoginUI.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Scene.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(572,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1026,13): warning C4305: '=': 'double'에서 'float'(으)로 잘립니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1127,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1242,28): warning C4244: '=': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1243,29): warning C4244: '=': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1535,34): warning C4101: 'e' :참조되지 않은 지역 변수입니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1604,90): warning C4267: '인수': 'size_t'에서 'UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1643,79): warning C4267: '초기화 중': 'size_t'에서 'UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1643,33): warning C4267: '초기화 중': 'size_t'에서 'const UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1676,77): warning C4267: '초기화 중': 'size_t'에서 'UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1676,32): warning C4267: '초기화 중': 'size_t'에서 'const UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1711,82): warning C4267: '=': 'size_t'에서 'UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1718,80): warning C4267: '=': 'size_t'에서 'UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1787,110): warning C4267: '인수': 'size_t'에서 'UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1884,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(572,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1026,13): warning C4305: '=': truncation from 'double' to 'float'
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1127,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1242,28): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1243,29): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1543,34): warning C4101: 'e': unreferenced local variable
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1612,90): warning C4267: 'argument': conversion from 'size_t' to 'UINT', possible loss of data
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1651,79): warning C4267: 'initializing': conversion from 'size_t' to 'UINT', possible loss of data
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1651,33): warning C4267: 'initializing': conversion from 'size_t' to 'const UINT', possible loss of data
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1684,77): warning C4267: 'initializing': conversion from 'size_t' to 'UINT', possible loss of data
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1684,32): warning C4267: 'initializing': conversion from 'size_t' to 'const UINT', possible loss of data
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1719,82): warning C4267: '=': conversion from 'size_t' to 'UINT', possible loss of data
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1726,80): warning C4267: '=': conversion from 'size_t' to 'UINT', possible loss of data
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1795,110): warning C4267: 'argument': conversion from 'size_t' to 'UINT', possible loss of data
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1884,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
   Shadow.cpp
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,1): warning C4005: '_WINSOCKAPI_': 매크로 재정의
-  (소스 파일 'Shadow.cpp'을(를) 컴파일하는 중)
-  C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,1):
-  이전에 명령줄에서 선언된 '_WINSOCKAPI_'
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,9): warning C4005: '_WINSOCKAPI_': macro redefinition
+  (compiling source file 'Shadow.cpp')
+      C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,9):
+      '_WINSOCKAPI_' previously declared on the command line
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Shadow.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Shadow.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Shadow.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Shadow.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Packet.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Shadow.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Packet.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Shadow.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Framework.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Shadow.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Framework.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Shadow.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\LoginUI.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Shadow.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\LoginUI.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Shadow.cpp')
   
   Win32Application.cpp
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Win32Application.cpp(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,1): warning C4005: '_WINSOCKAPI_': 매크로 재정의
-  (소스 파일 'Win32Application.cpp'을(를) 컴파일하는 중)
-  C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,1):
-  이전에 명령줄에서 선언된 '_WINSOCKAPI_'
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Win32Application.cpp(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,9): warning C4005: '_WINSOCKAPI_': macro redefinition
+  (compiling source file 'Win32Application.cpp')
+      C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,9):
+      '_WINSOCKAPI_' previously declared on the command line
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Framework.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Win32Application.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Framework.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Win32Application.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Win32Application.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Win32Application.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Win32Application.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Win32Application.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Packet.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Win32Application.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\Packet.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Win32Application.cpp')
   
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\LoginUI.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-  (소스 파일 'Win32Application.cpp'을(를) 컴파일하는 중)
+C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\LoginUI.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  (compiling source file 'Win32Application.cpp')
   
-  코드를 생성하고 있습니다.
-  87 of 3966 functions ( 2.2%) were compiled, the rest were copied from previous compilation.
-    18 functions were new in current compilation
-    149 functions had inline decision re-evaluated but remain unchanged
-  코드를 생성했습니다.
-  D3D12_Project.vcxproj -> C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\x64\Release\D3D12_Project.exe
+  Generating code
+  36 of 4019 functions ( 0.9%) were compiled, the rest were copied from previous compilation.
+    1 functions were new in current compilation
+    106 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  D3D12_Project.vcxproj -> C:\Users\hsj03\OneDrive - UTS\바탕 화면\D3D12_Project\Merge_Sun_and_Moon\Merge\D3D12_Project\x64\Release\D3D12_Project.exe

@@ -90,4 +90,7 @@ private:
     // 콜백 함수
     std::function<void(int, const std::string&)> m_loginSuccessCallback;
     std::function<void(const std::string&)> m_loginFailedCallback;
+    
+    // 스테이지 변경 상태
+    bool m_isStageChanging{false};
 }; 

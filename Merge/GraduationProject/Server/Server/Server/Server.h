@@ -1,4 +1,4 @@
-#pragma once
+//#pragma once
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -98,7 +98,8 @@ private:
     void UpdateTigers(float deltaTime);
     void BroadcastTigerUpdates();
     void UpdateTigerBehavior(TigerInfo& tiger, float deltaTime);
-    void ActivateHuntingStage();  // Hunting 스테이지 활성화 메서드
+    void ActivateHuntingStage();
+    void MonitorClientConnections();
     float GetRandomFloat(float min, float max);
     bool IsPlayerNearby(const TigerInfo& tiger, float radius);
     void GetNearestPlayerPosition(const TigerInfo& tiger, float& targetX, float& targetZ);

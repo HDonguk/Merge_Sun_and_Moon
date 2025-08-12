@@ -58,17 +58,31 @@ bool NetworkManager::Initialize(const char* serverIP, int port, Scene* scene) {
     }
     m_scene = scene;
     
-    try {
-        auto* player = m_scene->GetObj<PlayerObject>();
-        if (player) {
-            LogToFile("[Info] Found PlayerObject in scene");
-        } else {
-            LogToFile("[Error] PlayerObject not found in scene");
-            return false;
+    // PlayerObject가 생성될 때까지 대기 (최대 10초)
+    int retryCount = 0;
+    const int MAX_RETRIES = 100; // 100번 시도 (10초)
+    
+    while (retryCount < MAX_RETRIES) {
+        try {
+            auto* player = m_scene->GetObj<PlayerObject>();
+            if (player) {
+                LogToFile("[Info] Found PlayerObject in scene after " + std::to_string(retryCount * 100) + "ms");
+                break;
+            } else {
+                LogToFile("[Warning] PlayerObject not found in scene, attempt " + std::to_string(retryCount + 1) + "/" + std::to_string(MAX_RETRIES));
+                Sleep(100); // 100ms 대기
+                retryCount++;
+            }
+        }
+        catch (const std::exception& e) {
+            LogToFile("[Error] Failed to find PlayerObject: " + std::string(e.what()));
+            Sleep(100);
+            retryCount++;
         }
     }
-    catch (const std::exception& e) {
-        LogToFile("[Error] Failed to find PlayerObject: " + std::string(e.what()));
+    
+    if (retryCount >= MAX_RETRIES) {
+        LogToFile("[Error] PlayerObject not found after all retries");
         return false;
     }
     
@@ -306,7 +320,9 @@ DWORD WINAPI NetworkManager::NetworkThread(LPVOID arg) {
                     continue;  // 일시적 에러, 무시
                 }
                 if (error == WSAECONNRESET || error == WSAECONNABORTED || error == WSAENOTSOCK) {
-                    // 연결 문제가 있어도 계속 시도 (로그 제거)
+                    // 실제 연결 문제가 있는 경우에만 로그 출력
+                    network->LogToFile("[Warning] Connection issue detected: " + std::to_string(error));
+                    // 연결 문제가 있어도 계속 시도 (재연결 로직으로 처리)
                     continue;
                 }
                 network->LogToFile("[Error] Receive failed: " + std::to_string(error));
@@ -437,10 +453,14 @@ bool NetworkManager::AttemptReconnect() {
     
     LogToFile("[Reconnect] Attempting reconnection #" + std::to_string(m_reconnectAttempts));
     
+    // 기존 소켓 정리
     if (sock != INVALID_SOCKET) {
         closesocket(sock);
         sock = INVALID_SOCKET;
     }
+    
+    // WSA 정리 후 재시작
+    WSACleanup();
     
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
@@ -454,21 +474,36 @@ bool NetworkManager::AttemptReconnect() {
         return false;
     }
 
+    // 소켓 옵션 설정 (더 안정적인 연결을 위해)
+    int optval = 1;
+    setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (char*)&optval, sizeof(optval));
+    
+    // 연결 시도
     SOCKADDR_IN serverAddr = { 0 };
     serverAddr.sin_family = AF_INET;
     inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
     serverAddr.sin_port = htons(5000);
 
     if (connect(sock, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
-        LogToFile("[Error] Reconnection failed");
+        int error = WSAGetLastError();
+        LogToFile("[Error] Reconnection failed with error: " + std::to_string(error));
         return false;
     }
 
     LogToFile("[Reconnect] Successfully reconnected to server");
     
+    // 재연결 성공 시 상태 초기화
     m_shouldReconnect = false;
     m_reconnectAttempts = 0;
     ResetErrorInfo();
+    
+    // 로그인 상태 복구 시도 (스테이지 변경 중이 아닐 때만)
+    if (!m_username.empty() && !m_isStageChanging) {
+        LogToFile("[Reconnect] Attempting to restore login session");
+        SendLoginRequest(m_username);
+    } else if (m_isStageChanging) {
+        LogToFile("[Reconnect] Skipping login restore during stage change");
+    }
     
     return true;
 }
@@ -514,9 +549,11 @@ void NetworkManager::SendPlayerUpdate(float x, float y, float z, float rotY) {
             if (error == WSAECONNRESET || error == WSAECONNABORTED) {
                 HandleError("Connection lost during send: " + std::to_string(error));
             } else if (error == WSAEWOULDBLOCK) {
-                // 일시적 에러, 무시
+                // 일시적 에러, 무시하고 계속 진행
+                LogToFile("[Warning] Send buffer full, packet dropped");
             } else {
-                HandleError("Send failed: " + std::to_string(error));
+                // 기타 에러는 로그만 남기고 계속 진행
+                LogToFile("[Warning] Send error: " + std::to_string(error) + ", continuing...");
             }
         } else {
             // Player 테스트를 위해 위치 업데이트 로그 추가
@@ -950,4 +987,9 @@ void NetworkManager::Update(GameTimer& gTimer, Scene* scene) {
 void NetworkManager::ClearTigerInfo() {
     m_tigers.clear();
     OutputDebugString(L"[NetworkManager] Tiger info cleared\n");
+}
+
+void NetworkManager::SetStageTransitioning(bool transitioning) {
+    m_isStageChanging = transitioning;
+    LogToFile("[Stage] Stage transition state set to: " + std::string(transitioning ? "true" : "false"));
 } 

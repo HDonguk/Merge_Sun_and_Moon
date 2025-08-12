@@ -5,6 +5,7 @@
 #include <algorithm>
 #define NOMINMAX
 #include <windows.h>
+#include <chrono>
 
 GameServer::GameServer()
     : m_nextClientID(1)
@@ -105,6 +106,9 @@ DWORD GameServer::WorkerThread() {
         // 호랑이 업데이트
         UpdateTigers(deltaTime);
         
+        // 클라이언트 연결 상태 모니터링
+        MonitorClientConnections();
+        
         // 기존 IOCP 처리 코드
         DWORD bytesTransferred;
         ULONG_PTR completionKey;
@@ -132,26 +136,25 @@ DWORD GameServer::WorkerThread() {
         if (!result && bytesTransferred == 0) {
             int error = WSAGetLastError();
             
-            // 연결 관련 에러인 경우에도 연결을 유지 (최대한 관대하게)
-            if (error == WSAENOTSOCK || error == WSAECONNRESET || error == WSAECONNABORTED || error == WSAENETDOWN) {
-                // 클라이언트가 존재하는지 확인
+            // 실제 연결 해제인 경우만 처리
+            if (error == WSAECONNRESET || error == WSAECONNABORTED || error == WSAENETDOWN) {
+                // 클라이언트 제거
                 auto clientIt = m_clients.find(clientID);
                 if (clientIt != m_clients.end()) {
-                    // 연결 에러 카운트만 증가하고 연결은 유지
-                    clientIt->second.connectionErrorCount++;
-                    
-                    // 연결 에러 로그를 한 번만 출력
-                    if (!clientIt->second.connectionErrorLogged) {
-                        std::cout << "[Connection] Client " << clientID << " connection error (Error: " << error << ")" << std::endl;
-                        clientIt->second.connectionErrorLogged = true;
-                    }
-                    
-                    // 에러 카운트가 너무 많으면 연결 제거
-                    if (clientIt->second.connectionErrorCount > 10) {
-                        std::cout << "[Warning] Client " << clientID << " has too many connection errors, removing" << std::endl;
-                        closesocket(clientIt->second.socket);
-                        m_clients.erase(clientIt);
-                        delete ioContext;
+                    std::cout << "[Connection] Client " << clientID << " disconnected (Error: " << error << ")" << std::endl;
+                    closesocket(clientIt->second.socket);
+                    m_clients.erase(clientIt);
+                }
+                delete ioContext;
+                continue;
+            }
+            
+            // 일시적 에러는 무시하고 계속 진행
+            if (error == WSAEWOULDBLOCK || error == ERROR_IO_PENDING) {
+                // 다음 수신 준비
+                auto clientIt = m_clients.find(clientID);
+                if (clientIt != m_clients.end() && clientIt->second.socket != INVALID_SOCKET) {
+                    if (StartReceive(clientIt->second.socket, clientID, ioContext)) {
                         continue;
                     }
                 }
@@ -186,6 +189,25 @@ DWORD GameServer::WorkerThread() {
         // 다음 수신 준비
         if (!StartReceive(clientIt->second.socket, clientID, ioContext)) {
             std::cout << "[Error] Failed to start next receive for client " << clientID << std::endl;
+            
+            // StartReceive 실패 시 클라이언트 상태 확인
+            if (clientIt->second.socket == INVALID_SOCKET) {
+                // 소켓이 이미 무효화된 경우 클라이언트 제거
+                m_clients.erase(clientIt);
+                std::cout << "[Info] Removed invalid client " << clientID << std::endl;
+            } else {
+                // 소켓은 유효하지만 StartReceive 실패한 경우 재시도
+                Sleep(100); // 잠시 대기 후 재시도
+                if (StartReceive(clientIt->second.socket, clientID, ioContext)) {
+                    continue;
+                } else {
+                    // 재시도 실패 시 클라이언트 제거
+                    std::cout << "[Warning] StartReceive retry failed for client " << clientID << ", removing client" << std::endl;
+                    closesocket(clientIt->second.socket);
+                    m_clients.erase(clientIt);
+                }
+            }
+            
             delete ioContext;
             continue;
         }
@@ -273,7 +295,24 @@ void GameServer::ProcessSinglePacket(char* buffer, int clientID, int packetSize)
             }
             PacketLoginRequest* pkt = (PacketLoginRequest*)buffer;
             
-            // 사용자명 중복 체크
+            // 현재 클라이언트가 이미 로그인되어 있는지 확인
+            auto currentClientIt = m_clients.find(clientID);
+            if (currentClientIt != m_clients.end() && currentClientIt->second.isLoggedIn) {
+                // 이미 로그인된 클라이언트의 재로그인 요청
+                std::cout << "[Login] Client " << clientID << " already logged in, sending success response" << std::endl;
+                
+                PacketLoginResponse response;
+                response.header.type = PACKET_LOGIN_RESPONSE;
+                response.header.size = sizeof(PacketLoginResponse);
+                response.clientID = clientID;
+                response.success = true;
+                strncpy_s(response.message, "Already logged in", sizeof(response.message) - 1);
+                
+                SendPacket(m_clients[clientID].socket, &response, sizeof(response));
+                break;
+            }
+            
+            // 사용자명 중복 체크 (다른 클라이언트와의 중복)
             bool usernameExists = false;
             for (const auto& clientPair : m_clients) {
                 const auto& client = clientPair.second;
@@ -313,8 +352,6 @@ void GameServer::ProcessSinglePacket(char* buffer, int clientID, int packetSize)
                 
                 // 로그인 성공 후 클라이언트 준비 완료 신호를 기다림
                 std::cout << "[Login] Waiting for client " << clientID << " to send ready signal" << std::endl;
-                
-                // BroadcastNewPlayer 호출 제거 - 클라이언트가 ready 신호를 보낸 후 처리하도록 변경
             }
             
             SendPacket(m_clients[clientID].socket, &response, sizeof(response));
@@ -521,12 +558,23 @@ void GameServer::ProcessSinglePacket(char* buffer, int clientID, int packetSize)
                 break;
             }
             PacketStageChange* pkt = (PacketStageChange*)buffer;
-            std::cout << "[StageChange] Client " << clientID << " changed to stage: " << pkt->stageName << std::endl;
+            
+            // 클라이언트 존재 여부 확인
+            auto clientIt = m_clients.find(clientID);
+            if (clientIt == m_clients.end()) {
+                std::cout << "[Error] Client " << clientID << " not found for STAGE_CHANGE" << std::endl;
+                break;
+            }
+            
+            std::cout << "[StageChange] Client " << clientID << " (" << clientIt->second.username << ") changed to stage: " << pkt->stageName << std::endl;
+            std::cout << "[StageChange] Total clients before stage change: " << m_clients.size() << std::endl;
             
             // Hunting 스테이지로 변경된 경우 호랑이 초기화
             if (strcmp(pkt->stageName, "Hunting") == 0) {
                 ActivateHuntingStage();
             }
+            
+            std::cout << "[StageChange] Total clients after stage change: " << m_clients.size() << std::endl;
             break;
         }
         default:
@@ -956,6 +1004,27 @@ void GameServer::UpdateTigers(float deltaTime) {
     }
     
     BroadcastTigerUpdates();
+}
+
+void GameServer::MonitorClientConnections() {
+    static DWORD lastCheckTime = GetTickCount();
+    DWORD currentTime = GetTickCount();
+    
+    if (currentTime - lastCheckTime > 5000) { // 5초마다 체크
+        lastCheckTime = currentTime;
+        
+        for (auto it = m_clients.begin(); it != m_clients.end();) {
+            if (it->second.socket == INVALID_SOCKET) {
+                std::cout << "[Monitor] Removing invalid client " << it->first << " (" << it->second.username << ")" << std::endl;
+                it = m_clients.erase(it);
+            } else {
+                std::cout << "[Monitor] Client " << it->first << " (" << it->second.username << ") - Socket: " << it->second.socket << ", LoggedIn: " << (it->second.isLoggedIn ? "Yes" : "No") << std::endl;
+                ++it;
+            }
+        }
+        
+        std::cout << "[Monitor] Total active clients: " << m_clients.size() << std::endl;
+    }
 }
 
 void GameServer::BroadcastTigerUpdates() {

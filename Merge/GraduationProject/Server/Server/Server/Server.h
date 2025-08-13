@@ -48,6 +48,7 @@ private:
         float targetX, targetZ;  // 목표 위치
         float moveTimer;         // 이동 타이머
         bool isChasing;         // 플레이어 추적 여부
+        int targetClientID;     // 추적 중인 클라이언트 ID (-1이면 추적 중이 아님)
         std::string currentAnimation;  // 현재 애니메이션 파일명
         float animationTime;     // 애니메이션 시간
         float attackTime;        // 공격 타이머 (원본과 동일)

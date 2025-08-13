@@ -793,9 +793,10 @@ void TigerObject::TigerBehavior(GameTimer& gTimer)
     XMVECTOR dir = XMVector3Normalize(playerPos - pos);
     float yaw = atan2f(XMVectorGetX(dir), XMVectorGetZ(dir)) * 180 / 3.141592f;
 
-    if (result < 200.f) // ÷̾ Ž  ȿ ... 
+    // 로컬 호랑이는 로컬 플레이어만을 대상으로 함 (네트워크 호랑이는 서버에서 관리)
+    if (result < 200.f) // 탐색 범위 안에 있을 때
     {
-        if (result < 17.0f) // Ž ȿ ÷̾ ְ, ſ ٸ....
+        if (result < 17.0f) // 공격 범위 안에 있을 때
         {
             Attack();
             if (anim->mCurrentFileName == "0208_tiger_attack.fbx" && mElapseTime == 0)
@@ -803,7 +804,7 @@ void TigerObject::TigerBehavior(GameTimer& gTimer)
                 transform->SetRotation({ 0.0f, yaw, 0.0f });
             }
         }
-        else // Ž ȿ ÷̾ , ſ  ʴٸ...
+        else // 공격 범위 밖이지만 탐색 범위 안에 있을 때
         {
             Run();
             if (anim->mCurrentFileName == "0722_tiger_run.fbx")
@@ -813,7 +814,7 @@ void TigerObject::TigerBehavior(GameTimer& gTimer)
             }
         }
     }
-    else // ÷̾ Ž  ۿ ִ.
+    else // 탐색 범위 밖에 있을 때
     {
         Walk();
 

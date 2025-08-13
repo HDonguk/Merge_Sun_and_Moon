@@ -816,6 +816,7 @@ void GameServer::InitializeTigers() {
             tiger.rotY = 0.0f;  // 초기 회전값
             tiger.moveTimer = 0.0f;
             tiger.isChasing = false;
+            tiger.targetClientID = -1;  // 초기에는 추적 중인 클라이언트 없음
             tiger.currentAnimation = "0113_tiger_walk.fbx";  // Original과 동일한 초기 애니메이션
             tiger.animationTime = 0.0f;
             tiger.attackTime = 0.0f;
@@ -911,19 +912,89 @@ void GameServer::UpdateTigerBehavior(TigerInfo& tiger, float deltaTime) {
         }
     }
     
-    // 가장 가까운 플레이어 찾기 (Original과 동일한 로직)
+    // 가장 가까운 플레이어 찾기 (수정된 로직)
     float nearestDist = FLT_MAX;
     float targetX = tiger.x, targetZ = tiger.z;
-    for (const auto& [id, client] : m_clients) {
-        if (!client.isLoggedIn) continue;
+    int nearestClientID = -1;
+    
+    // 이미 추적 중인 클라이언트가 있는지 확인
+    if (tiger.targetClientID != -1 && m_clients.find(tiger.targetClientID) != m_clients.end()) {
+        const auto& targetClient = m_clients.at(tiger.targetClientID);
+        if (targetClient.isLoggedIn) {
+            // 추적 중인 클라이언트가 여전히 로그인되어 있음
+            
+            // 추적 중인 클라이언트가 Hunting 스테이지에 있는지 확인
+            if (targetClient.currentStage != "Hunting") {
+                // Hunting 스테이지가 아니면 추적 중단
+                int oldTargetID = tiger.targetClientID;
+                tiger.targetClientID = -1;
+                tiger.isChasing = false;
+                OutputDebugStringA(("[Tiger] " + std::to_string(tiger.tigerID) + " stopped chasing client " + std::to_string(oldTargetID) + " (left Hunting stage)\n").c_str());
+            } else {
+                float dx = targetClient.lastUpdate.x - tiger.x;
+                float dz = targetClient.lastUpdate.z - tiger.z;
+                float distSq = dx * dx + dz * dz;
+                float dist = sqrt(distSq);
+                
+                // 추적 중인 클라이언트가 탐색 범위 밖으로 나갔는지 확인
+                if (dist > CHASE_RADIUS * 1.5f) {  // 여유를 두어 탐색 범위를 약간 넘어서도 추적 유지
+                    // 추적 중인 클라이언트가 너무 멀리 갔으면 추적 중단
+                    int oldTargetID = tiger.targetClientID;
+                    tiger.targetClientID = -1;
+                    tiger.isChasing = false;
+                    OutputDebugStringA(("[Tiger] " + std::to_string(tiger.tigerID) + " stopped chasing client " + std::to_string(oldTargetID) + " (too far)\n").c_str());
+                } else {
+                    // 추적 중인 클라이언트 계속 추적
+                    nearestDist = distSq;
+                    targetX = targetClient.lastUpdate.x;
+                    targetZ = targetClient.lastUpdate.z;
+                    nearestClientID = tiger.targetClientID;
+                }
+            }
+        } else {
+            // 추적 중인 클라이언트가 로그아웃했으면 추적 중단
+            int oldTargetID = tiger.targetClientID;
+            tiger.targetClientID = -1;
+            tiger.isChasing = false;
+            OutputDebugStringA(("[Tiger] " + std::to_string(tiger.tigerID) + " stopped chasing client " + std::to_string(oldTargetID) + " (logged out)\n").c_str());
+        }
+    } else if (tiger.targetClientID != -1) {
+        // 추적 중인 클라이언트가 더 이상 존재하지 않음 (연결 해제 등)
+        int oldTargetID = tiger.targetClientID;
+        OutputDebugStringA(("[Tiger] " + std::to_string(tiger.tigerID) + " stopped chasing client " + std::to_string(oldTargetID) + " (client disconnected)\n").c_str());
+        tiger.targetClientID = -1;
+        tiger.isChasing = false;
+    }
+    
+    // 추적 중인 클라이언트가 없거나 추적을 중단한 경우, 새로운 타겟 찾기
+    if (nearestClientID == -1) {
+        for (const auto& [id, client] : m_clients) {
+            if (!client.isLoggedIn) continue;
+            
+            // Hunting 스테이지에 있는 클라이언트만을 대상으로 함
+            if (client.currentStage != "Hunting") continue;
+            
+            float dx = client.lastUpdate.x - tiger.x;
+            float dz = client.lastUpdate.z - tiger.z;
+            float distSq = dx * dx + dz * dz;
+            if (distSq < nearestDist) {
+                nearestDist = distSq;
+                targetX = client.lastUpdate.x;
+                targetZ = client.lastUpdate.z;
+                nearestClientID = id;
+            }
+        }
         
-        float dx = client.lastUpdate.x - tiger.x;
-        float dz = client.lastUpdate.z - tiger.z;
-        float distSq = dx * dx + dz * dz;
-        if (distSq < nearestDist) {
-            nearestDist = distSq;
-            targetX = client.lastUpdate.x;
-            targetZ = client.lastUpdate.z;
+        // 새로운 타겟을 찾았고 탐색 범위 안에 있으면 추적 시작
+        if (nearestClientID != -1) {
+            float dist = sqrt(nearestDist);
+            if (dist < CHASE_RADIUS) {
+                tiger.targetClientID = nearestClientID;
+                const auto& newTargetClient = m_clients.at(nearestClientID);
+                OutputDebugStringA(("[Tiger] " + std::to_string(tiger.tigerID) + " started chasing client " + std::to_string(nearestClientID) + 
+                    " at distance " + std::to_string(dist) + " (pos: " + std::to_string(newTargetClient.lastUpdate.x) + 
+                    ", " + std::to_string(newTargetClient.lastUpdate.z) + ")\n").c_str());
+            }
         }
     }
     
@@ -933,10 +1004,11 @@ void GameServer::UpdateTigerBehavior(TigerInfo& tiger, float deltaTime) {
     if (dist < CHASE_RADIUS) {  // 플레이어가 탐색 범위 안에 있을 때
         tiger.isChasing = true;
         
-        if (dist < ATTACK_RADIUS) {  // 공격 범위 안이면
+        // 공격 범위 내에 있는지 확인 (추적 중인 클라이언트 기준)
+        if (tiger.targetClientID != -1 && dist < ATTACK_RADIUS) {  // 공격 범위 안이면
             // Attack() 함수 로직 (Original과 동일)
-            if (tiger.currentAnimation != "0208_tiger_hit.fbx" && 
-                tiger.currentAnimation != "0208_tiger_dying.fbx" && 
+            if (tiger.currentAnimation != "0208_tiger_attack.fbx" && 
+                tiger.currentAnimation != "0208_tiger_hit.fbx" && 
                 tiger.attackTime >= 2.0f &&
                 tiger.hitProtectionTimer <= 0.0f) {  // hit 보호 타이머가 만료된 후에만 attack 허용
                 
@@ -945,17 +1017,20 @@ void GameServer::UpdateTigerBehavior(TigerInfo& tiger, float deltaTime) {
                     tiger.animationTime = 0.0f;
                     tiger.elapseTime = 0.0f;
                     tiger.isFired = false;
+                    
+                    // 공격 시작 시 로그 출력
+                    OutputDebugStringA(("[Tiger] " + std::to_string(tiger.tigerID) + " started attacking client " + std::to_string(tiger.targetClientID) + "\n").c_str());
                 }
             }
             
-            // 공격 애니메이션 중 방향 설정 (Original과 동일)
+            // 공격 애니메이션 중 방향 설정 (추적 중인 클라이언트를 향해)
             if (tiger.currentAnimation == "0208_tiger_attack.fbx" && tiger.elapseTime == 0.0f) {
                 float dx = targetX - tiger.x;
                 float dz = targetZ - tiger.z;
                 tiger.rotY = atan2(dx, dz) * (180.0f / 3.141592f);
             }
-        } else {  // 공격 범위 밖이면
-            // Run() 함수 로직 (Original과 동일)
+        } else if (tiger.targetClientID != -1) {  // 공격 범위 밖이지만 추적 중인 클라이언트가 있으면
+            // Run() 함수 로직 (추적 중인 클라이언트를 향해 달리기)
             if (tiger.currentAnimation != "0208_tiger_attack.fbx" && 
                 tiger.currentAnimation != "0208_tiger_hit.fbx" && 
                 tiger.currentAnimation != "0208_tiger_dying.fbx" && 
@@ -965,10 +1040,13 @@ void GameServer::UpdateTigerBehavior(TigerInfo& tiger, float deltaTime) {
                 if (tiger.currentAnimation != "0722_tiger_run.fbx") {
                     tiger.currentAnimation = "0722_tiger_run.fbx";
                     tiger.animationTime = 0.0f;
+                    
+                    // 달리기 시작 시 로그 출력
+                    OutputDebugStringA(("[Tiger] " + std::to_string(tiger.tigerID) + " started running towards client " + std::to_string(tiger.targetClientID) + "\n").c_str());
                 }
             }
             
-            // 달리기 애니메이션 중일 때만 이동 (Original과 동일)
+            // 달리기 애니메이션 중일 때만 이동 (추적 중인 클라이언트를 향해)
             if (tiger.currentAnimation == "0722_tiger_run.fbx") {
                 float dx = targetX - tiger.x;
                 float dz = targetZ - tiger.z;
@@ -979,16 +1057,32 @@ void GameServer::UpdateTigerBehavior(TigerInfo& tiger, float deltaTime) {
                     tiger.rotY = atan2(dx, dz) * (180.0f / 3.141592f);
                 }
             }
+        } else {  // 추적 중인 클라이언트가 없거나 공격 범위 밖이면
+            // 탐색 상태로 전환
+            if (tiger.currentAnimation != "0113_tiger_walk.fbx" && tiger.hitProtectionTimer <= 0.0f) {
+                tiger.currentAnimation = "0113_tiger_walk.fbx";
+                tiger.animationTime = 0.0f;
+            }
         }
     } else {  // 플레이어가 탐색 범위 밖에 있을 때
-        // Search() 함수 로직 (Original과 동일)
+        // Search() 함수 로직 (수정된 로직)
         tiger.isChasing = false;
+        
+        // 추적 중인 클라이언트가 탐색 범위 밖으로 나갔으면 추적 중단
+        if (tiger.targetClientID != -1) {
+            int oldTargetID = tiger.targetClientID;
+            tiger.targetClientID = -1;
+            OutputDebugStringA(("[Tiger] " + std::to_string(tiger.tigerID) + " stopped chasing client " + std::to_string(oldTargetID) + " (out of range)\n").c_str());
+        }
         
         if (tiger.searchTime > 2.0f) {  // Original과 동일한 2초
             tiger.searchTime = 0.0f;
             // 랜덤 방향 설정
             float randYaw = GetRandomFloat(-180.0f, 180.0f);
             tiger.rotY = randYaw;
+            
+            // 탐색 방향 변경 시 로그 출력
+            OutputDebugStringA(("[Tiger] " + std::to_string(tiger.tigerID) + " changed search direction to " + std::to_string(randYaw) + " degrees\n").c_str());
         }
         
         // 현재 방향으로 이동 (Original과 동일한 로직)

@@ -1,0 +1,2 @@
+[17:46:34] NetworkManager initialized
+[17:47:52] [Stage] Stage transition state set to: false

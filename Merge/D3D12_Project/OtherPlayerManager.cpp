@@ -14,6 +14,8 @@ void OtherPlayerManager::SpawnOtherPlayer(int clientID) {
         return;
     }
     
+
+    
     if (otherPlayers.find(clientID) != otherPlayers.end()) {
         wchar_t debugMsg[256];
         swprintf_s(debugMsg, L"[OtherPlayerManager] Player already exists: %d\n", clientID);
@@ -72,16 +74,12 @@ void OtherPlayerManager::UpdateOtherPlayer(int clientID, float x, float y, float
         return;
     }
     
-    // 현재 스테이지와 다른 스테이지에 있는 플레이어는 제거
-    if (m_currentStage != stageName) {
-        auto it = otherPlayers.find(clientID);
-        if (it != otherPlayers.end()) {
-            // 다른 스테이지의 플레이어 제거
-            if (m_currentScene) {
-                m_currentScene->RemoveObj(it->second);
-            }
-            otherPlayers.erase(it);
-            OutputDebugString(L"[OtherPlayerManager] Removed player from different stage\n");
+    // 현재 스테이지와 다른 스테이지에 있는 플레이어는 업데이트만 차단 (God Stage에서는 모든 플레이어 허용)
+    if (m_currentStage != stageName && m_currentStage != "God") {
+        OutputDebugString(L"[OtherPlayerManager] Player from different stage, skipping update\n");
+        if (m_networkManager) {
+            m_networkManager->LogToFile("[OtherPlayerManager] Player " + std::to_string(clientID) + 
+                " from different stage (" + stageName + "), current stage: " + m_currentStage);
         }
         return;
     }

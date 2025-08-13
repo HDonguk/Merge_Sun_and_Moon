@@ -720,6 +720,10 @@ void Scene::BuildGodStage()
         
         if (otherPlayers.empty()) {
             OutputDebugString(L"[Scene] No other players found in OtherPlayerManager\n");
+            // 서버에 다른 플레이어들의 최신 정보 요청
+            if (m_parent && m_parent->IsNetworkEnabled()) {
+                OutputDebugString(L"[Scene] Requesting latest player info from server...\n");
+            }
         } else {
             OutputDebugString(L"[Scene] Found other players, recreating them...\n");
             for (auto& pair : otherPlayers) {
@@ -736,19 +740,22 @@ void Scene::BuildGodStage()
                         XMFLOAT3 position;
                         XMStoreFloat3(&position, transform->GetPosition());
                         
+                        // 기존 플레이어 객체를 Scene에서 제거 (메모리 해제는 하지 않음)
+                        existingPlayer->Delete();
+                        
                         // 새로운 플레이어 객체 생성
-                                            float scale = 0.1f;
-                    Object* newPlayer = new PlayerObject(this, AllocateId());
-                    dynamic_cast<PlayerObject*>(newPlayer)->SetIsNetworkPlayer(true);  // 네트워크 플레이어로 설정
-                    dynamic_cast<PlayerObject*>(newPlayer)->SetLife(3);  // 네트워크 플레이어 생명력도 3으로 설정
-                    newPlayer->AddComponent(new Transform{ {position.x, position.y, position.z} });
-                    newPlayer->AddComponent(new AdjustTransform{ {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {scale, scale, scale} });
-                    newPlayer->AddComponent(new Mesh{ "1P(boy-idle).fbx" });
-                    newPlayer->AddComponent(new Texture{ L"boy" , 1.0f, 0.4f });
-                    newPlayer->AddComponent(new Animation{ "1P(boy-idle).fbx" });
-                    newPlayer->AddComponent(new Gravity);
-                    newPlayer->AddComponent(new Collider{ {0.0f, 8.0f, 0.0f}, {2.0f, 8.0f, 2.0f} });
-                    AddObj(newPlayer);
+                        float scale = 0.1f;
+                        Object* newPlayer = new PlayerObject(this, AllocateId());
+                        dynamic_cast<PlayerObject*>(newPlayer)->SetIsNetworkPlayer(true);  // 네트워크 플레이어로 설정
+                        dynamic_cast<PlayerObject*>(newPlayer)->SetLife(3);  // 네트워크 플레이어 생명력도 3으로 설정
+                        newPlayer->AddComponent(new Transform{ {position.x, position.y, position.z} });
+                        newPlayer->AddComponent(new AdjustTransform{ {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {scale, scale, scale} });
+                        newPlayer->AddComponent(new Mesh{ "1P(boy-idle).fbx" });
+                        newPlayer->AddComponent(new Texture{ L"boy" , 1.0f, 0.4f });
+                        newPlayer->AddComponent(new Animation{ "1P(boy-idle).fbx" });
+                        newPlayer->AddComponent(new Gravity);
+                        newPlayer->AddComponent(new Collider{ {0.0f, 8.0f, 0.0f}, {2.0f, 8.0f, 2.0f} });
+                        AddObj(newPlayer);
                         
                         // OtherPlayerManager에서 참조 업데이트
                         pair.second = dynamic_cast<PlayerObject*>(newPlayer);
@@ -792,11 +799,6 @@ void Scene::BuildGodStage()
             }
         }
         OutputDebugString(L"[Scene] Other players recreation completed\n");
-        
-        // 서버에 다른 플레이어들의 최신 정보 요청
-        if (m_parent && m_parent->IsNetworkEnabled()) {
-            OutputDebugString(L"[Scene] Requesting latest player info from server...\n");
-        }
     } else {
         OutputDebugString(L"[Scene] m_parent is null, cannot access OtherPlayerManager\n");
     }
@@ -963,6 +965,12 @@ void Scene::BuildGodStage()
             objectPtr->AddComponent(new Gravity);
             AddObj(objectPtr);
         }
+    }
+    
+    // 스테이지 전환 완료 - 다른 플레이어 생성 허용
+    if (m_parent) {
+        OtherPlayerManager::GetInstance()->SetStageTransitioning(false);
+        OutputDebugString(L"[Scene] BuildGodStage: Stage transition completed\n");
     }
     
     OutputDebugString(L"[Scene] BuildGodStage completed successfully\n");
@@ -1483,8 +1491,9 @@ void Scene::ProcessStageQueue()
         OutputDebugString(L"[Scene] ProcessStageQueue: Switching to God Stage\n");
         m_current_stage = L"God";
         OtherPlayerManager::GetInstance()->SetCurrentStage("God");
+        OtherPlayerManager::GetInstance()->SetStageTransitioning(true);  // 스테이지 전환 시작
         BuildGodStage();
-      
+        OutputDebugString(L"[Scene] God Stage built successfully\n");
     }
     else if (m_stage_queue == L"Title")
     {

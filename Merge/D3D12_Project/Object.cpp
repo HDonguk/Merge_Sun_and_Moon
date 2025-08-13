@@ -1817,9 +1817,9 @@ void TigerObject::SetNetworkAnimation(const std::string& animationFile, float an
                     mElapseTime = 0.0f;
                     m_serverAttackSignal = false;  // 공격 신호 리셋
                 } else {
-                    // 일반 애니메이션은 현재 애니메이션이 끝날 때까지 기다림
-                    // 애니메이션 시간이 0.9 이상이면 거의 끝난 것으로 간주
-                    if (anim->mAnimationTime >= 0.9f) {
+                    // 일반 애니메이션은 더 세밀한 전환 (FPS 향상)
+                    // 애니메이션 시간이 0.95 이상이면 거의 끝난 것으로 간주 (더 정확한 전환)
+                    if (anim->mAnimationTime >= 0.95f) {
                         ChangeState(animationFile);
                         // Original 클라이언트와 동일하게 0으로 리셋
                         anim->ResetAnim(animationFile, 0.0f);

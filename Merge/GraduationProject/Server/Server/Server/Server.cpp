@@ -115,7 +115,7 @@ DWORD GameServer::WorkerThread() {
         OVERLAPPED* pOverlapped;
         
         BOOL result = GetQueuedCompletionStatus(m_hIOCP, &bytesTransferred, 
-            &completionKey, &pOverlapped, 16); // 타임아웃을 16ms로 설정 (60fps 업데이트 주기와 맞춤)
+            &completionKey, &pOverlapped, 8); // 타임아웃을 8ms로 설정 (120fps 업데이트 주기와 맞춤)
         
         if (!m_isRunning) break;
         
@@ -1135,13 +1135,16 @@ void GameServer::UpdateTigers(float deltaTime) {
     // Hunting 스테이지가 활성화된 경우에만 호랑이 업데이트
     if (!m_huntingStageActive) return;
     
-    // 고정 주기 대신 실제 deltaTime 사용하여 더 부드러운 움직임
-    for (auto& tigerPair : m_tigers) {
-        auto& tiger = tigerPair.second;
-        UpdateTigerBehavior(tiger, deltaTime); // 실제 deltaTime 사용
+    // deltaTime을 더 세밀하게 처리하여 부드러운 움직임 보장
+    // 매우 작은 deltaTime 값도 정확하게 처리
+    if (deltaTime > 0.0f && deltaTime < 0.1f) { // 100ms 이상의 큰 점프는 무시
+        for (auto& tigerPair : m_tigers) {
+            auto& tiger = tigerPair.second;
+            UpdateTigerBehavior(tiger, deltaTime); // 실제 deltaTime 사용
+        }
+        
+        BroadcastTigerUpdates();
     }
-    
-    BroadcastTigerUpdates();
 }
 
 void GameServer::MonitorClientConnections() {

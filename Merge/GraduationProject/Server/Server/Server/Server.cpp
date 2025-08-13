@@ -826,6 +826,7 @@ void GameServer::InitializeTigers() {
             tiger.isHitted = false;  // Original과 동일
             tiger.life = 3;          // Original과 동일
             tiger.hitProtectionTimer = 0.0f;  // hit 보호 타이머 초기화
+            tiger.attackDelayTimer = 0.0f;    // 공격 후 딜레이 타이머 초기화
             
             // 초기 목표 위치 설정
             tiger.targetX = tiger.x;
@@ -851,6 +852,13 @@ void GameServer::UpdateTigerBehavior(TigerInfo& tiger, float deltaTime) {
     const float ATTACK_RADIUS = 17.0f;
     const float WALK_SPEED = 20.0f;  // Original과 동일하게 수정
     const float RUN_SPEED = 35.0f;   // Original과 동일하게 수정
+    
+    // 공격 후 딜레이 타이머가 활성화된 동안에는 위치 업데이트를 완전히 차단
+    if (tiger.attackDelayTimer > 0.0f) {
+        // 딜레이 타이머만 업데이트하고 즉시 반환
+        tiger.attackDelayTimer -= deltaTime;
+        return;
+    }
     
     // 애니메이션 시간 업데이트 (모든 애니메이션에 대해)
     tiger.animationTime += deltaTime;
@@ -883,6 +891,8 @@ void GameServer::UpdateTigerBehavior(TigerInfo& tiger, float deltaTime) {
             tiger.elapseTime = 0.0f;
             tiger.isFired = false;
             tiger.attackTime = 0.0f;
+            // 공격 후 딜레이 타이머 시작
+            tiger.attackDelayTimer = 1.5f;
         }
     } else {
         tiger.attackTime += deltaTime;
@@ -896,6 +906,8 @@ void GameServer::UpdateTigerBehavior(TigerInfo& tiger, float deltaTime) {
             tiger.elapseTime = 0.0f;
             tiger.isHitted = false;
             tiger.hitProtectionTimer = 2.0f;  // 2초 동안 보호
+            // hit 후에도 딜레이 타이머 설정
+            tiger.attackDelayTimer = 1.5f;
         }
     }
     
@@ -903,6 +915,8 @@ void GameServer::UpdateTigerBehavior(TigerInfo& tiger, float deltaTime) {
     if (tiger.hitProtectionTimer > 0.0f) {
         tiger.hitProtectionTimer -= deltaTime;
     }
+    
+    // 공격 후 딜레이 타이머는 함수 시작 부분에서 처리됨
     
     if (tiger.currentAnimation == "0208_tiger_dying.fbx") {
         tiger.elapseTime += deltaTime;
@@ -1047,7 +1061,7 @@ void GameServer::UpdateTigerBehavior(TigerInfo& tiger, float deltaTime) {
             }
             
             // 달리기 애니메이션 중일 때만 이동 (추적 중인 클라이언트를 향해)
-            if (tiger.currentAnimation == "0722_tiger_run.fbx") {
+            if (tiger.currentAnimation == "0722_tiger_run.fbx" && tiger.attackDelayTimer <= 0.0f) {
                 float dx = targetX - tiger.x;
                 float dz = targetZ - tiger.z;
                 float moveDist = sqrt(dx * dx + dz * dz);
@@ -1058,8 +1072,14 @@ void GameServer::UpdateTigerBehavior(TigerInfo& tiger, float deltaTime) {
                 }
             }
         } else {  // 추적 중인 클라이언트가 없거나 공격 범위 밖이면
-            // 탐색 상태로 전환
-            if (tiger.currentAnimation != "0113_tiger_walk.fbx" && tiger.hitProtectionTimer <= 0.0f) {
+            // idle 상태일 때는 움직이지 않음 (공격 후 딜레이 애니메이션이 끝날 때까지)
+            if (tiger.currentAnimation == "0722_tiger_idle2.fbx") {
+                // idle 애니메이션이 1.5초 재생된 후에만 walk 상태로 전환
+                if (tiger.animationTime >= 1.5f && tiger.hitProtectionTimer <= 0.0f) {
+                    tiger.currentAnimation = "0113_tiger_walk.fbx";
+                    tiger.animationTime = 0.0f;
+                }
+            } else if (tiger.currentAnimation != "0113_tiger_walk.fbx" && tiger.hitProtectionTimer <= 0.0f) {
                 tiger.currentAnimation = "0113_tiger_walk.fbx";
                 tiger.animationTime = 0.0f;
             }
@@ -1085,17 +1105,28 @@ void GameServer::UpdateTigerBehavior(TigerInfo& tiger, float deltaTime) {
             OutputDebugStringA(("[Tiger] " + std::to_string(tiger.tigerID) + " changed search direction to " + std::to_string(randYaw) + " degrees\n").c_str());
         }
         
-        // 현재 방향으로 이동 (Original과 동일한 로직)
-        float angleRad = tiger.rotY * (3.141592f / 180.0f);
-        float dirX = sin(angleRad);
-        float dirZ = cos(angleRad);
-        
-        tiger.x += dirX * WALK_SPEED * deltaTime;
-        tiger.z += dirZ * WALK_SPEED * deltaTime;
-        
-        if (tiger.currentAnimation != "0113_tiger_walk.fbx" && tiger.hitProtectionTimer <= 0.0f) {
-            tiger.currentAnimation = "0113_tiger_walk.fbx";
-            tiger.animationTime = 0.0f;
+        // idle 상태일 때는 움직이지 않음 (공격 후 딜레이 애니메이션이 끝날 때까지)
+        if (tiger.currentAnimation == "0722_tiger_idle2.fbx") {
+            // idle 애니메이션이 1.5초 재생된 후에만 walk 상태로 전환
+            if (tiger.animationTime >= 1.5f && tiger.hitProtectionTimer <= 0.0f) {
+                tiger.currentAnimation = "0113_tiger_walk.fbx";
+                tiger.animationTime = 0.0f;
+            }
+        } else {
+            // 현재 방향으로 이동 (Original과 동일한 로직) - 딜레이 타이머가 만료된 후에만
+            if (tiger.attackDelayTimer <= 0.0f) {
+                float angleRad = tiger.rotY * (3.141592f / 180.0f);
+                float dirX = sin(angleRad);
+                float dirZ = cos(angleRad);
+                
+                tiger.x += dirX * WALK_SPEED * deltaTime;
+                tiger.z += dirZ * WALK_SPEED * deltaTime;
+            }
+            
+            if (tiger.currentAnimation != "0113_tiger_walk.fbx" && tiger.hitProtectionTimer <= 0.0f) {
+                tiger.currentAnimation = "0113_tiger_walk.fbx";
+                tiger.animationTime = 0.0f;
+            }
         }
     }
 }

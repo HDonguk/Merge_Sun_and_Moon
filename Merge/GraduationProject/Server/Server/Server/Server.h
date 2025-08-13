@@ -58,6 +58,7 @@ private:
         bool isHitted;          // 피격 상태 (Original과 동일)
         int life;               // 생명력 (Original과 동일)
         float hitProtectionTimer;  // hit 애니메이션 후 보호 타이머
+        float attackDelayTimer;    // 공격 후 딜레이 타이머
     };
 
 

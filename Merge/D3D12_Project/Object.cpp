@@ -1775,85 +1775,8 @@ void TigerObject::SetNetworkTransform(float x, float y, float z, float rotY)
             XMVECTOR newPos = {x, XMVectorGetY(currentPos), z, 1.0f};
             transform->SetPosition(newPos);
             
-            // Original 클라이언트처럼 거리에 따라 다른 회전 로직 적용
-            PlayerObject* player = m_scene->GetLocalPlayer();
-            if (player) {
-                Transform* playerTransform = player->GetComponent<Transform>();
-                if (playerTransform) {
-                    XMVECTOR playerPos = playerTransform->GetPosition();
-                    float distance = XMVectorGetX(XMVector3Length(playerPos - newPos));
-                    
-                    // Original 클라이언트와 동일한 거리 기준 사용
-                    if (distance < 200.0f) {
-                        // 플레이어가 탐색 범위 내에 있을 때만 플레이어를 향해 회전
-                        XMVECTOR dir = XMVector3Normalize(playerPos - newPos);
-                        float yaw = atan2f(XMVectorGetX(dir), XMVectorGetZ(dir)) * 180.0f / 3.141592f;
-                        
-                        // 현재 회전과 목표 회전의 차이를 계산하여 자연스러운 회전 적용
-                        XMVECTOR currentRotation = transform->GetRotation();
-                        float currentYaw = XMVectorGetY(currentRotation);
-                        
-                        // 회전 차이를 계산하고 부드럽게 보간
-                        float rotationDiff = yaw - currentYaw;
-                        
-                        // 180도 이상 차이나는 경우 반대 방향으로 회전
-                        if (rotationDiff > 180.0f) rotationDiff -= 360.0f;
-                        if (rotationDiff < -180.0f) rotationDiff += 360.0f;
-                        
-                        // 부드러운 회전을 위해 회전 속도 제한 (60fps 기준으로 3도/프레임)
-                        float maxRotationPerFrame = 3.0f;
-                        if (abs(rotationDiff) > maxRotationPerFrame) {
-                            if (rotationDiff > 0) {
-                                rotationDiff = maxRotationPerFrame;
-                            } else {
-                                rotationDiff = -maxRotationPerFrame;
-                            }
-                        }
-                        
-                        float newYaw = currentYaw + rotationDiff;
-                        transform->SetRotation({0.0f, newYaw, 0.0f});
-                    } else {
-                        // 플레이어가 탐색 범위 밖에 있을 때는 이동 방향에 따른 자연스러운 회전
-                        // 이전 위치와 현재 위치를 비교하여 이동 방향 계산
-                        XMVECTOR zeroVector = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
-                        if (!XMVector4Equal(m_previousNetworkPos, zeroVector)) {
-                            XMVECTOR moveDir = newPos - m_previousNetworkPos;
-                            float moveDistance = XMVectorGetX(XMVector3Length(moveDir));
-                            
-                            // 이동 거리가 충분할 때만 회전 적용 (떨림 방지)
-                            if (moveDistance > 0.1f) {
-                                // 이동 방향으로 회전 (Original 클라이언트의 Search 로직과 동일)
-                                XMVECTOR normalizedDir = XMVector3Normalize(moveDir);
-                                float yaw = atan2f(XMVectorGetX(normalizedDir), XMVectorGetZ(normalizedDir)) * 180.0f / 3.141592f;
-                                
-                                // 현재 회전과 목표 회전의 차이를 계산하여 자연스러운 회전 적용
-                                XMVECTOR currentRotation = transform->GetRotation();
-                                float currentYaw = XMVectorGetY(currentRotation);
-                                
-                                // 회전 차이를 계산하고 부드럽게 보간
-                                float rotationDiff = yaw - currentYaw;
-                                
-                                // 180도 이상 차이나는 경우 반대 방향으로 회전
-                                if (rotationDiff > 180.0f) rotationDiff -= 360.0f;
-                                if (rotationDiff < -180.0f) rotationDiff += 360.0f;
-                                
-                                // 부드러운 회전을 위해 회전 속도 제한 (60fps 기준으로 3도/프레임)
-                                float maxRotationPerFrame = 3.0f;
-                                if (abs(rotationDiff) > maxRotationPerFrame) {
-                                    if (rotationDiff > 0) {
-                                        rotationDiff = maxRotationPerFrame;
-                                    } else {
-                                        rotationDiff = -maxRotationPerFrame;
-                                    }
-                                }
-                                
-                                float newYaw = currentYaw + rotationDiff;
-                                transform->SetRotation({0.0f, newYaw, 0.0f});
-                            }
-                        }
-                    }
-                }
-            }
+            // ✅ 서버에서 받은 rotY 값을 우선적으로 사용하여 모든 클라이언트에서 동일한 회전값 보장
+            transform->SetRotation({0.0f, rotY, 0.0f});
             
             // 이전 위치 저장 (다음 프레임에서 사용)
             m_previousNetworkPos = newPos;

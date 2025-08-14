@@ -531,9 +531,21 @@ void PlayerObject::TimeOut()
 
 void PlayerObject::Fire()
 {
-    if (mIsFired) return;
+    if (mIsFired) {
+        // 이미 발사된 상태라면 로그 출력 (무한 생성 추적)
+        wchar_t debugMsg[256];
+        swprintf_s(debugMsg, L"[PlayerObject] Fire() called but already fired - ignoring (mIsFired: %s)\n", 
+                   mIsFired ? L"true" : L"false");
+        OutputDebugString(debugMsg);
+        return;
+    }
 
     mIsFired = true;
+
+    // 발사 시작 로그
+    wchar_t debugMsg[256];
+    swprintf_s(debugMsg, L"[PlayerObject] Fire() started - mIsFired set to true\n");
+    OutputDebugString(debugMsg);
 
     Animation* anim = GetComponent<Animation>();
     if (anim->mCurrentFileName == "boy_attack(45).fbx")
@@ -552,7 +564,30 @@ void PlayerObject::Fire()
         XMVECTOR pos = transform->GetPosition();
         XMVECTOR offset = XMVector3TransformNormal(XMVECTOR{ 4.0f, 15.0f, 8.0f }, transform->GetRotationM());
         float scale = 0.03f;
-        RiceCakeProjectileObject* obj = new RiceCakeProjectileObject(m_scene, m_scene->AllocateId());
+        
+        // 하나의 ID만 생성하여 사용
+        int projectileID = m_scene->AllocateId();
+        
+        // 네트워크가 활성화된 경우에만 서버에 떡 발사체 스폰 정보 전송
+        if (m_scene && m_scene->GetFramework() && m_scene->GetFramework()->IsNetworkEnabled()) {
+            NetworkManager& networkManager = m_scene->GetFramework()->GetNetworkManager();
+            if (networkManager.IsLoggedIn()) {
+                XMFLOAT3 spawnPos, dir;
+                XMStoreFloat3(&spawnPos, pos + offset);
+                XMStoreFloat3(&dir, XMLoadFloat3(&mCameraLookDir));
+                
+                // 동일한 ID를 네트워크로 전송
+                networkManager.SendRiceCakeSpawn(projectileID, spawnPos.x, spawnPos.y, spawnPos.z, 
+                                              dir.x, dir.y, dir.z, 200.0f);
+                
+                wchar_t debugMsg[256];
+                swprintf_s(debugMsg, L"[PlayerObject] Sent rice cake spawn packet to server with ID: %d\n", projectileID);
+                OutputDebugString(debugMsg);
+            }
+        }
+        
+        // 로컬 떡 발사체 생성 - 동일한 ID 사용
+        RiceCakeProjectileObject* obj = new RiceCakeProjectileObject(m_scene, projectileID);
         obj->SetDir(XMLoadFloat3(&mCameraLookDir));
         obj->AddComponent(new Transform{ pos + offset });
         obj->AddComponent(new AdjustTransform{ {-20.0f * scale, 22.0f * scale, 0.0f}, {0.0f, 0.0f, -90.0f}, {scale, scale, scale} });
@@ -560,7 +595,19 @@ void PlayerObject::Fire()
         obj->AddComponent(new Texture{ L"RiceCakePink", 1.0f, 0.4f });
         obj->AddComponent(new Gravity);
         obj->AddComponent(new Collider{ {0.0f, 30.0f * scale, 0.0f}, {25.0f * scale, 30.0f * scale, 25.0f * scale} });
+<<<<<<< Updated upstream
+=======
+        
+        // 로컬 발사체임을 명확히 표시
+        obj->SetIsNetworkProjectile(false);
+        obj->SetNetworkProjectileID(projectileID);
+        
+>>>>>>> Stashed changes
         m_scene->AddObj(obj);
+        
+        wchar_t debugMsg[256];
+        swprintf_s(debugMsg, L"[PlayerObject] Created local rice cake projectile with ID: %d\n", projectileID);
+        OutputDebugString(debugMsg);
     }
 }
 
@@ -596,13 +643,19 @@ void PlayerObject::CalcTime(float deltaTime)
     if (anim->mCurrentFileName == "boy_attack(45).fbx") 
     {
         mElapseTime += deltaTime;
-        if (mElapseTime > 0.5f) Fire();
+        if (mElapseTime > 0.5f && !mIsFired) {
+            Fire();
+            mElapseTime = 0.0f;  // Fire() 호출 후 타이머 리셋
+        }
         if (mElapseTime > 1.0f) TimeOut();
     }
     else if (anim->mCurrentFileName == "boy_throw.fbx")
     {
         mElapseTime += deltaTime;
-        if (mElapseTime > 0.7f) Fire();
+        if (mElapseTime > 0.7f && !mIsFired) {
+            Fire();
+            mElapseTime = 0.0f;  // Fire() 호출 후 타이머 리셋
+        }
         if (mElapseTime > 1.0f) TimeOut();
     }
     else 
@@ -629,7 +682,6 @@ void PlayerObject::CalcTime(float deltaTime)
         mElapseTime += deltaTime;
         if (mElapseTime > 2.0f) TimeOut();
     }
-
 }
 
 
@@ -1663,6 +1715,35 @@ void RiceCakeProjectileObject::OnUpdate(GameTimer& gTimer)
     pos += XMLoadFloat3(&mDir) * mSpeed * gTimer.DeltaTime();
     transform->SetPosition(pos);
 
+<<<<<<< Updated upstream
+=======
+    // 로컬 발사체인 경우에만 서버에 위치 업데이트 전송 (무한 생성 방지)
+    if (!m_isNetworkProjectile && m_scene && m_scene->GetFramework() && m_scene->GetFramework()->IsNetworkEnabled()) {
+        NetworkManager& networkManager = m_scene->GetFramework()->GetNetworkManager();
+        if (networkManager.IsLoggedIn()) {
+            // 위치 업데이트 빈도 제한 (0.1초마다만 전송)
+            static float lastUpdateTime = 0.0f;
+            lastUpdateTime += gTimer.DeltaTime();
+            
+            if (lastUpdateTime >= 0.1f) {
+                XMFLOAT3 currentPos;
+                XMStoreFloat3(&currentPos, pos);
+                
+                // 동일한 ID를 사용하여 전송 (ID 변환 없음)
+                networkManager.SendRiceCakeUpdate(m_networkProjectileID, currentPos.x, currentPos.y, currentPos.z);
+                
+                lastUpdateTime = 0.0f;
+                
+                // 디버그 로그 (무한 생성 추적)
+                wchar_t debugMsg[256];
+                swprintf_s(debugMsg, L"[RiceCakeProjectile] Sent position update to server - ID: %d, Pos: (%.1f, %.1f, %.1f)\n", 
+                           m_networkProjectileID, currentPos.x, currentPos.y, currentPos.z);
+                OutputDebugString(debugMsg);
+            }
+        }
+    }
+
+>>>>>>> Stashed changes
     Object::OnUpdate(gTimer);
 
 }

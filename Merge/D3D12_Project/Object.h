@@ -19,8 +19,11 @@ public:
 	Scene* GetScene() { return m_scene; }
 	uint32_t GetId();
 	bool GetValid();
-	void SetValid(bool valid) { m_valid = valid; }  // SetValid 메서드 추가
+	void SetValid(bool valid) { m_valid = true; }  // SetValid 메서드 추가
 	void Delete();
+	
+	// 객체 타입을 반환하는 가상 메서드 추가
+	virtual const char* GetType() const { return "Object"; }
 
 	template <typename T>
 	T* GetComponent() 
@@ -314,7 +317,24 @@ public:
 	void OnUpdate(GameTimer& gTimer) override;
 	void OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration) override;
 	void SetDir(XMVECTOR dir);
+<<<<<<< Updated upstream
 
+=======
+	
+	// 네트워크 동기화를 위한 메서드 추가
+	void SetIsNetworkProjectile(bool isNetwork) { m_isNetworkProjectile = isNetwork; }
+	bool IsNetworkProjectile() const { return m_isNetworkProjectile; }
+	bool GetIsNetworkProjectile() const { return m_isNetworkProjectile; }  // GetIsNetworkProjectile 메서드 추가
+	void SetNetworkProjectileID(int id) { m_networkProjectileID = id; }
+	int GetNetworkProjectileID() const { return m_networkProjectileID; }
+	
+	// 속도 접근자 추가
+	float GetSpeed() const { return mSpeed; }
+	void SetSpeed(float speed) { mSpeed = speed; }
+	
+	// 객체 타입 오버라이드
+	const char* GetType() const override { return "RiceCakeProjectileObject"; }
+>>>>>>> Stashed changes
 
 private:
 	XMFLOAT3 mDir{};

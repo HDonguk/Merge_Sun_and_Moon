@@ -1303,6 +1303,124 @@ std::vector<int> GameServer::GetClientsInStage(const std::string& stageName) {
     return clientsInStage;
 }
 
+<<<<<<< Updated upstream
+=======
+// 퍼즐 관련 메서드들 구현
+void GameServer::InitializePuzzle() {
+    // 기본 퍼즐 상태 설정 (클라이언트와 동일한 초기값)
+    m_puzzleStatus[0][0] = 0; m_puzzleStatus[0][1] = 0; m_puzzleStatus[0][2] = 0;
+    m_puzzleStatus[1][0] = 1; m_puzzleStatus[1][1] = 1; m_puzzleStatus[1][2] = 1;
+    m_puzzleStatus[2][0] = 0; m_puzzleStatus[2][1] = 0; m_puzzleStatus[2][2] = 0;
+    
+    m_puzzleInitialized = true;
+    std::cout << "[Server] Puzzle initialized with default state" << std::endl;
+}
+
+void GameServer::UpdatePuzzleStatus(int clientID, int puzzleStatus[3][3]) {
+    // 퍼즐 상태 업데이트
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            m_puzzleStatus[i][j] = puzzleStatus[i][j];
+        }
+    }
+    
+    std::cout << "[Server] Puzzle status updated by client " << clientID << std::endl;
+    
+    // 다른 클라이언트들에게 퍼즐 상태 동기화
+    BroadcastPuzzleStatus(clientID);
+}
+
+void GameServer::BroadcastPuzzleStatus(int excludeID) {
+    PacketPuzzleSync syncPacket;
+    syncPacket.header.type = PACKET_PUZZLE_SYNC;
+    syncPacket.header.size = sizeof(PacketPuzzleSync);
+    
+    // 현재 퍼즐 상태 복사
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            syncPacket.puzzleStatus[i][j] = m_puzzleStatus[i][j];
+        }
+    }
+    
+    // God 스테이지에 있는 클라이언트 수 확인
+    int clientsInGodStage = 0;
+    for (const auto& [id, client] : m_clients) {
+        if (client.isLoggedIn && client.currentStage == "God" && id != excludeID) {
+            clientsInGodStage++;
+        }
+    }
+    
+    std::cout << "[Server] Clients in God stage: " << clientsInGodStage << " (excluding client " << excludeID << ")" << std::endl;
+    
+    // God 스테이지에 있는 모든 클라이언트에게 전송
+    BroadcastToStage(&syncPacket, sizeof(syncPacket), "God", excludeID);
+    
+    std::cout << "[Server] Puzzle status broadcasted to all clients in God stage" << std::endl;
+}
+
+void GameServer::SendPuzzleStatusToClient(int clientID) {
+    auto clientIt = m_clients.find(clientID);
+    if (clientIt == m_clients.end() || !clientIt->second.isLoggedIn) {
+        return;
+    }
+    
+    PacketPuzzleSync syncPacket;
+    syncPacket.header.type = PACKET_PUZZLE_SYNC;
+    syncPacket.header.size = sizeof(PacketPuzzleSync);
+    
+    // 현재 퍼즐 상태 복사
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            syncPacket.puzzleStatus[i][j] = m_puzzleStatus[i][j];
+        }
+    }
+    
+    if (SendPacket(clientIt->second.socket, &syncPacket, sizeof(syncPacket))) {
+        std::cout << "[Server] Puzzle status sent to client " << clientID << std::endl;
+    }
+}
+
+// 떡 발사체 관련 메서드들 구현
+void GameServer::BroadcastRiceCakeSpawn(int clientID, int projectileID, float x, float y, float z, float dirX, float dirY, float dirZ, float speed) {
+    PacketRiceCakeSpawn spawnPacket;
+    spawnPacket.header.type = PACKET_RICE_CAKE_SPAWN;
+    spawnPacket.header.size = sizeof(PacketRiceCakeSpawn);
+    spawnPacket.clientID = clientID;
+    spawnPacket.projectileID = projectileID;
+    spawnPacket.x = x;
+    spawnPacket.y = y;
+    spawnPacket.z = z;
+    spawnPacket.dirX = dirX;
+    spawnPacket.dirY = dirY;
+    spawnPacket.dirZ = dirZ;
+    spawnPacket.speed = speed;
+    
+    // 발사한 클라이언트를 제외한 모든 클라이언트에게 전송
+    BroadcastPacket(&spawnPacket, sizeof(spawnPacket), clientID);
+    
+    std::cout << "[Server] Rice cake spawn broadcasted - Client: " << clientID 
+              << ", Projectile: " << projectileID << std::endl;
+}
+
+void GameServer::BroadcastRiceCakeUpdate(int clientID, int projectileID, float x, float y, float z) {
+    PacketRiceCakeUpdate updatePacket;
+    updatePacket.header.type = PACKET_RICE_CAKE_UPDATE;
+    updatePacket.header.size = sizeof(PacketRiceCakeUpdate);
+    updatePacket.clientID = clientID;
+    updatePacket.projectileID = projectileID;
+    updatePacket.x = x;
+    updatePacket.y = y;
+    updatePacket.z = z;
+    
+    // 발사한 클라이언트를 제외한 모든 클라이언트에게 전송
+    BroadcastPacket(&updatePacket, sizeof(updatePacket), clientID);
+    
+    // 로그 제거 - 너무 많은 업데이트 로그로 인한 스팸 방지
+    // std::cout << "[Server] Rice cake update broadcasted - Client: " << clientID 
+    //           << ", Projectile: " << projectileID << std::endl;
+}
+
+>>>>>>> Stashed changes
 int main() {
     GameServer server;
     

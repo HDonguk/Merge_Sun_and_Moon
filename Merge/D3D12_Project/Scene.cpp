@@ -2247,3 +2247,100 @@ ID3D12DescriptorHeap* Scene::GetDescriptorHeap()
 {
     return m_descriptorHeap.Get();
 }
+<<<<<<< Updated upstream
+=======
+
+// 떡 발사체 동기화 메서드들 구현
+void Scene::CreateOtherPlayerRiceCakeProjectile(int projectileID, float x, float y, float z, float dirX, float dirY, float dirZ, float speed) {
+    // 네트워크 ID는 음수여야 함 (로컬 ID와 구분)
+    if (projectileID >= 0) {
+        wchar_t debugMsg[256];
+        swprintf_s(debugMsg, L"[Scene] Invalid network projectile ID: %d (should be negative), skipping creation\n", projectileID);
+        OutputDebugString(debugMsg);
+        return;
+    }
+    
+    // 이미 존재하는 발사체인지 확인 (중복 생성 방지)
+    Object* existingObj = GetObjFromId(projectileID);
+    if (existingObj) {
+        wchar_t debugMsg[256];
+        swprintf_s(debugMsg, L"[Scene] Rice cake projectile with ID %d already exists, skipping creation\n", projectileID);
+        OutputDebugString(debugMsg);
+        return;
+    }
+    
+    // 다른 플레이어가 발사한 떡 발사체 생성
+    float scale = 0.03f;
+    RiceCakeProjectileObject* obj = new RiceCakeProjectileObject(this, projectileID);
+    
+    // 방향과 속도 설정
+    obj->SetDir(XMVectorSet(dirX, dirY, dirZ, 0.0f));
+    obj->SetSpeed(speed);
+    
+    // 네트워크 발사체임을 표시
+    obj->SetIsNetworkProjectile(true);
+    obj->SetNetworkProjectileID(projectileID);
+    
+    // 컴포넌트 추가
+    obj->AddComponent(new Transform{ XMVectorSet(x, y, z, 1.0f) });
+    obj->AddComponent(new AdjustTransform{ {-20.0f * scale, 22.0f * scale, 0.0f}, {0.0f, 0.0f, -90.0f}, {scale, scale, scale} });
+    obj->AddComponent(new Mesh{ "ricecake.fbx" });
+    obj->AddComponent(new Texture{ L"RiceCakePink", 1.0f, 0.4f });
+    obj->AddComponent(new Gravity);
+    obj->AddComponent(new Collider{ {0.0f, 30.0f * scale, 0.0f}, {25.0f * scale, 30.0f * scale, 25.0f * scale} });
+    
+    // 씬에 추가
+    AddObj(obj);
+    
+    wchar_t debugMsg[256];
+    swprintf_s(debugMsg, L"[Scene] Created other player rice cake projectile with network ID: %d at (%.1f, %.1f, %.1f)\n", 
+               projectileID, x, y, z);
+    OutputDebugString(debugMsg);
+}
+
+void Scene::UpdateOtherPlayerRiceCakeProjectile(int projectileID, float x, float y, float z) {
+    // 네트워크 ID는 음수여야 함 (로컬 ID와 구분)
+    if (projectileID >= 0) {
+        wchar_t debugMsg[256];
+        swprintf_s(debugMsg, L"[Scene] Invalid network projectile ID: %d (should be negative), skipping update\n", projectileID);
+        OutputDebugString(debugMsg);
+        return;
+    }
+    
+    // 다른 플레이어의 떡 발사체 위치 업데이트
+    Object* obj = GetObjFromId(projectileID);
+    if (obj) {
+        RiceCakeProjectileObject* projectile = dynamic_cast<RiceCakeProjectileObject*>(obj);
+        if (projectile) {
+            // 네트워크 발사체인지 확인
+            if (!projectile->GetIsNetworkProjectile()) {
+                wchar_t debugMsg[256];
+                swprintf_s(debugMsg, L"[Scene] Warning: Trying to update non-network rice cake projectile with ID: %d\n", projectileID);
+                OutputDebugString(debugMsg);
+                return;
+            }
+            
+            Transform* transform = projectile->GetComponent<Transform>();
+            if (transform) {
+                transform->SetPosition(XMVectorSet(x, y, z, 1.0f));
+                
+                // 디버그 모드에서만 위치 업데이트 로그 출력
+                #ifdef _DEBUG
+                wchar_t debugMsg[256];
+                swprintf_s(debugMsg, L"[Scene] Updated network rice cake projectile ID: %d to position (%.1f, %.1f, %.1f)\n", 
+                           projectileID, x, y, z);
+                OutputDebugString(debugMsg);
+                #endif
+            }
+        } else {
+            wchar_t debugMsg[256];
+            swprintf_s(debugMsg, L"[Scene] Warning: Object with ID %d is not a RiceCakeProjectileObject\n", projectileID);
+            OutputDebugString(debugMsg);
+        }
+    } else {
+        wchar_t debugMsg[256];
+        swprintf_s(debugMsg, L"[Scene] Warning: Rice cake projectile with ID %d not found for update\n", projectileID);
+        OutputDebugString(debugMsg);
+    }
+}
+>>>>>>> Stashed changes

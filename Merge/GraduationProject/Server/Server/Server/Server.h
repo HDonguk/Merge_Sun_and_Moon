@@ -122,4 +122,8 @@ private:
     void BroadcastPuzzleStatus(int excludeID = -1);
     void SendPuzzleStatusToClient(int clientID);
 
+    // 떡 발사체 관련 메서드 추가
+    void BroadcastRiceCakeSpawn(int clientID, int projectileID, float x, float y, float z, float dirX, float dirY, float dirZ, float speed);
+    void BroadcastRiceCakeUpdate(int clientID, int projectileID, float x, float y, float z);
+
 }; 

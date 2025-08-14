@@ -21,7 +21,9 @@ enum PacketType {
     PACKET_TIGER_HIT = 12,     // 호랑이 Hit 패킷
     PACKET_STAGE_CHANGE = 13,  // 스테이지 변경 패킷
     PACKET_PUZZLE_UPDATE = 14, // 퍼즐 상태 업데이트 패킷
-    PACKET_PUZZLE_SYNC = 15    // 퍼즐 상태 동기화 패킷
+    PACKET_PUZZLE_SYNC = 15,   // 퍼즐 상태 동기화 패킷
+    PACKET_RICE_CAKE_SPAWN = 16,    // 떡 발사체 스폰 패킷
+    PACKET_RICE_CAKE_UPDATE = 17    // 떡 발사체 업데이트 패킷
 };
 
 struct PacketPlayerUpdate {
@@ -114,5 +116,21 @@ struct PacketPuzzleUpdate {
 struct PacketPuzzleSync {
     PacketHeader header;
     int puzzleStatus[3][3];  // 서버에서 전송하는 퍼즐 상태
+};
+
+struct PacketRiceCakeSpawn {
+    PacketHeader header;
+    int clientID;
+    int projectileID;
+    float x, y, z;    // 초기 위치
+    float dirX, dirY, dirZ;  // 방향 벡터
+    float speed;      // 속도
+};
+
+struct PacketRiceCakeUpdate {
+    PacketHeader header;
+    int clientID;
+    int projectileID;
+    float x, y, z;    // 현재 위치
 };
 #pragma pack(pop)

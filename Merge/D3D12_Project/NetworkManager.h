@@ -39,6 +39,11 @@ public:
     void SendStageChange(const std::wstring& stageName);  // 스테이지 변경 알림
     void SendPuzzleUpdate(int puzzleStatus[3][3]);  // 퍼즐 상태 업데이트 전송
     void ClearTigerInfo();  // 호랑이 정보 초기화
+    
+    // 떡 발사체 동기화 메서드 추가
+    void SendRiceCakeSpawn(int projectileID, float x, float y, float z, float dirX, float dirY, float dirZ, float speed);
+    void SendRiceCakeUpdate(int projectileID, float x, float y, float z);
+    
     void Shutdown();
     bool IsRunning() const { return m_isRunning; }
     bool IsLoggedIn() const { return m_isLoggedIn; }

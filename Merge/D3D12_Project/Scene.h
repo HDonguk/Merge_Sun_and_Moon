@@ -51,6 +51,10 @@ public:
     void UpdatePuzzleCellsFromStatus();  // 퍼즐 상태를 실제 퍼즐 셀들에 적용
     void UpdatePuzzleStatusFromCells();  // 실제 퍼즐 셀들의 상태를 mPuzzleStatus 배열에 반영
 
+    // 떡 발사체 동기화 메서드 추가
+    void CreateOtherPlayerRiceCakeProjectile(int projectileID, float x, float y, float z, float dirX, float dirY, float dirZ, float speed);
+    void UpdateOtherPlayerRiceCakeProjectile(int projectileID, float x, float y, float z);
+
     wstring GetCurrentStage() const { return m_current_stage; }
     const vector<Object*>& GetObjects() const { return m_objects; }
 

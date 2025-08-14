@@ -936,6 +936,42 @@ void NetworkManager::ProcessPacket(char* buffer) {
                 }
                 break;
             }
+            
+            case PACKET_RICE_CAKE_SPAWN: {
+                PacketRiceCakeSpawn* spawnPkt = (PacketRiceCakeSpawn*)buffer;
+                
+                if (!m_isLoggedIn || spawnPkt->clientID == m_myClientID) {
+                    break;  // 자신이 발사한 떡은 처리하지 않음
+                }
+                
+                if (m_scene) {
+                    // 다른 플레이어가 발사한 떡 발사체 생성
+                    m_scene->CreateOtherPlayerRiceCakeProjectile(
+                        spawnPkt->projectileID,
+                        spawnPkt->x, spawnPkt->y, spawnPkt->z,
+                        spawnPkt->dirX, spawnPkt->dirY, spawnPkt->dirZ,
+                        spawnPkt->speed
+                    );
+                }
+                break;
+            }
+            
+            case PACKET_RICE_CAKE_UPDATE: {
+                PacketRiceCakeUpdate* updatePkt = (PacketRiceCakeUpdate*)buffer;
+                
+                if (!m_isLoggedIn || updatePkt->clientID == m_myClientID) {
+                    break;  // 자신이 발사한 떡은 처리하지 않음
+                }
+                
+                if (m_scene) {
+                    // 다른 플레이어의 떡 발사체 위치 업데이트
+                    m_scene->UpdateOtherPlayerRiceCakeProjectile(
+                        updatePkt->projectileID,
+                        updatePkt->x, updatePkt->y, updatePkt->z
+                    );
+                }
+                break;
+            }
 
             default:
                 // LogToFile 제거 - 디버그 메시지로 대체
@@ -1054,4 +1090,59 @@ void NetworkManager::ClearTigerInfo() {
 void NetworkManager::SetStageTransitioning(bool transitioning) {
     m_isStageChanging = transitioning;
     // LogToFile 제거 - 디버그 메시지로 대체
+}
+
+// 떡 발사체 동기화 메서드들 구현
+void NetworkManager::SendRiceCakeSpawn(int projectileID, float x, float y, float z, float dirX, float dirY, float dirZ, float speed) {
+    if (!m_isRunning || !m_isLoggedIn) return;
+
+    try {
+        PacketRiceCakeSpawn pkt;
+        pkt.header.size = sizeof(PacketRiceCakeSpawn);
+        pkt.header.type = PACKET_RICE_CAKE_SPAWN;
+        pkt.clientID = m_myClientID;
+        pkt.projectileID = projectileID;
+        pkt.x = x;
+        pkt.y = y;
+        pkt.z = z;
+        pkt.dirX = dirX;
+        pkt.dirY = dirY;
+        pkt.dirZ = dirZ;
+        pkt.speed = speed;
+
+        int sendResult = send(sock, (char*)&pkt, sizeof(pkt), 0);
+        if (sendResult == SOCKET_ERROR) {
+            int error = WSAGetLastError();
+            OutputDebugString(L"[NetworkManager] Failed to send rice cake spawn packet\n");
+        } else {
+            OutputDebugString(L"[NetworkManager] Rice cake spawn packet sent successfully\n");
+        }
+    }
+    catch (const std::exception& e) {
+        OutputDebugString(L"[NetworkManager] Exception in SendRiceCakeSpawn\n");
+    }
+}
+
+void NetworkManager::SendRiceCakeUpdate(int projectileID, float x, float y, float z) {
+    if (!m_isRunning || !m_isLoggedIn) return;
+
+    try {
+        PacketRiceCakeUpdate pkt;
+        pkt.header.size = sizeof(PacketRiceCakeUpdate);
+        pkt.header.type = PACKET_RICE_CAKE_UPDATE;
+        pkt.clientID = m_myClientID;
+        pkt.projectileID = projectileID;
+        pkt.x = x;
+        pkt.y = y;
+        pkt.z = z;
+
+        int sendResult = send(sock, (char*)&pkt, sizeof(pkt), 0);
+        if (sendResult == SOCKET_ERROR) {
+            int error = WSAGetLastError();
+            OutputDebugString(L"[NetworkManager] Failed to send rice cake update packet\n");
+        }
+    }
+    catch (const std::exception& e) {
+        OutputDebugString(L"[NetworkManager] Exception in SendRiceCakeUpdate\n");
+    }
 } 

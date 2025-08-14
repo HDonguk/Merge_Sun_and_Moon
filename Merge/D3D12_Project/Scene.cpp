@@ -2355,5 +2355,48 @@ void* Scene::GetConstantBufferMappedData()
 
 ID3D12DescriptorHeap* Scene::GetDescriptorHeap()
 {
+    // TODO:  մϴ.
     return m_descriptorHeap.Get();
+}
+
+// 떡 발사체 동기화 메서드들 구현
+void Scene::CreateOtherPlayerRiceCakeProjectile(int projectileID, float x, float y, float z, float dirX, float dirY, float dirZ, float speed) {
+    // 다른 플레이어가 발사한 떡 발사체 생성
+    float scale = 0.03f;
+    RiceCakeProjectileObject* obj = new RiceCakeProjectileObject(this, projectileID);
+    
+    // 방향과 속도 설정
+    obj->SetDir(XMVectorSet(dirX, dirY, dirZ, 0.0f));
+    obj->SetSpeed(speed);
+    
+    // 네트워크 발사체임을 표시
+    obj->SetIsNetworkProjectile(true);
+    obj->SetNetworkProjectileID(projectileID);
+    
+    // 컴포넌트 추가
+    obj->AddComponent(new Transform{ XMVectorSet(x, y, z, 1.0f) });
+    obj->AddComponent(new AdjustTransform{ {-20.0f * scale, 22.0f * scale, 0.0f}, {0.0f, 0.0f, -90.0f}, {scale, scale, scale} });
+    obj->AddComponent(new Mesh{ "ricecake.fbx" });
+    obj->AddComponent(new Texture{ L"RiceCakePink", 1.0f, 0.4f });
+    obj->AddComponent(new Gravity);
+    obj->AddComponent(new Collider{ {0.0f, 30.0f * scale, 0.0f}, {25.0f * scale, 30.0f * scale, 25.0f * scale} });
+    
+    // 씬에 추가
+    AddObj(obj);
+    
+    OutputDebugString(L"[Scene] Created other player rice cake projectile\n");
+}
+
+void Scene::UpdateOtherPlayerRiceCakeProjectile(int projectileID, float x, float y, float z) {
+    // 다른 플레이어의 떡 발사체 위치 업데이트
+    Object* obj = GetObjFromId(projectileID);
+    if (obj) {
+        RiceCakeProjectileObject* projectile = dynamic_cast<RiceCakeProjectileObject*>(obj);
+        if (projectile) {
+            Transform* transform = projectile->GetComponent<Transform>();
+            if (transform) {
+                transform->SetPosition(XMVectorSet(x, y, z, 1.0f));
+            }
+        }
+    }
 }

@@ -560,6 +560,24 @@ void PlayerObject::Fire()
         obj->AddComponent(new Texture{ L"RiceCakePink", 1.0f, 0.4f });
         obj->AddComponent(new Gravity);
         obj->AddComponent(new Collider{ {0.0f, 30.0f * scale, 0.0f}, {25.0f * scale, 30.0f * scale, 25.0f * scale} });
+        
+        // 네트워크가 활성화된 경우 서버에 떡 발사체 스폰 정보 전송
+        if (m_scene && m_scene->GetFramework() && m_scene->GetFramework()->IsNetworkEnabled()) {
+            NetworkManager& networkManager = m_scene->GetFramework()->GetNetworkManager();
+            if (networkManager.IsLoggedIn()) {
+                XMFLOAT3 spawnPos, dir;
+                XMStoreFloat3(&spawnPos, pos + offset);
+                XMStoreFloat3(&dir, XMLoadFloat3(&mCameraLookDir));
+                
+                networkManager.SendRiceCakeSpawn(obj->GetId(), spawnPos.x, spawnPos.y, spawnPos.z, 
+                                              dir.x, dir.y, dir.z, obj->mSpeed);
+                
+                // 로컬 발사체임을 표시
+                obj->SetIsNetworkProjectile(false);
+                obj->SetNetworkProjectileID(obj->GetId());
+            }
+        }
+        
         m_scene->AddObj(obj);
     }
 }
@@ -1663,8 +1681,17 @@ void RiceCakeProjectileObject::OnUpdate(GameTimer& gTimer)
     pos += XMLoadFloat3(&mDir) * mSpeed * gTimer.DeltaTime();
     transform->SetPosition(pos);
 
-    Object::OnUpdate(gTimer);
+    // 네트워크 발사체가 아닌 경우에만 서버에 위치 업데이트 전송
+    if (!m_isNetworkProjectile && m_scene && m_scene->GetFramework() && m_scene->GetFramework()->IsNetworkEnabled()) {
+        NetworkManager& networkManager = m_scene->GetFramework()->GetNetworkManager();
+        if (networkManager.IsLoggedIn()) {
+            XMFLOAT3 currentPos;
+            XMStoreFloat3(&currentPos, pos);
+            networkManager.SendRiceCakeUpdate(m_networkProjectileID, currentPos.x, currentPos.y, currentPos.z);
+        }
+    }
 
+    Object::OnUpdate(gTimer);
 }
 
 void RiceCakeProjectileObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration)

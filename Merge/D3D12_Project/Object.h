@@ -314,11 +314,24 @@ public:
 	void OnUpdate(GameTimer& gTimer) override;
 	void OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration) override;
 	void SetDir(XMVECTOR dir);
-
+	
+	// 네트워크 동기화를 위한 메서드 추가
+	void SetIsNetworkProjectile(bool isNetwork) { m_isNetworkProjectile = isNetwork; }
+	bool IsNetworkProjectile() const { return m_isNetworkProjectile; }
+	void SetNetworkProjectileID(int id) { m_networkProjectileID = id; }
+	int GetNetworkProjectileID() const { return m_networkProjectileID; }
+	
+	// 속도 접근자 추가
+	float GetSpeed() const { return mSpeed; }
+	void SetSpeed(float speed) { mSpeed = speed; }
 
 private:
 	XMFLOAT3 mDir{};
-	float mSpeed = 200.0f;
+	bool m_isNetworkProjectile = false;  // 네트워크 발사체 여부
+	int m_networkProjectileID = -1;      // 네트워크 발사체 ID
+
+public:
+	float mSpeed = 200.0f;  // 속도를 public으로 이동
 };
 
 class GoToBaseObject : public Object

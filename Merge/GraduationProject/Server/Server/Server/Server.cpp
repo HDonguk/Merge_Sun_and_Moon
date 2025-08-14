@@ -245,7 +245,7 @@ void GameServer::HandlePacket(IOContext* ioContext, int clientID, DWORD bytesTra
         
         // 패킷 헤더 유효성 검사
         if (header->size < sizeof(PacketHeader) || header->size > MAX_PACKET_SIZE || 
-            header->type <= 0 || header->type > 15) {
+            header->type <= 0 || header->type > 17) {
             std::cout << "[Error] Invalid packet header - Size: " << header->size 
                       << ", Type: " << header->type << ", Client: " << clientID << std::endl;
             
@@ -626,6 +626,33 @@ void GameServer::ProcessSinglePacket(char* buffer, int clientID, int packetSize)
             
             // 서버의 퍼즐 상태 업데이트 및 다른 클라이언트들과 동기화
             UpdatePuzzleStatus(clientID, pkt->puzzleStatus);
+            break;
+        }
+        
+        case PACKET_RICE_CAKE_SPAWN: {
+            if (header->size != sizeof(PacketRiceCakeSpawn)) {
+                std::cout << "[Error] Invalid RICE_CAKE_SPAWN packet size" << std::endl;
+                break;
+            }
+            PacketRiceCakeSpawn* pkt = (PacketRiceCakeSpawn*)buffer;
+            
+            std::cout << "[RiceCake] Client " << clientID << " spawned rice cake projectile " << pkt->projectileID << std::endl;
+            
+            // 다른 클라이언트들에게 떡 발사체 스폰 정보 브로드캐스트
+            BroadcastRiceCakeSpawn(clientID, pkt->projectileID, pkt->x, pkt->y, pkt->z, 
+                                 pkt->dirX, pkt->dirY, pkt->dirZ, pkt->speed);
+            break;
+        }
+        
+        case PACKET_RICE_CAKE_UPDATE: {
+            if (header->size != sizeof(PacketRiceCakeUpdate)) {
+                std::cout << "[Error] Invalid RICE_CAKE_UPDATE packet size" << std::endl;
+                break;
+            }
+            PacketRiceCakeUpdate* pkt = (PacketRiceCakeUpdate*)buffer;
+            
+            // 다른 클라이언트들에게 떡 발사체 위치 업데이트 브로드캐스트
+            BroadcastRiceCakeUpdate(clientID, pkt->projectileID, pkt->x, pkt->y, pkt->z);
             break;
         }
         
@@ -1427,6 +1454,45 @@ void GameServer::SendPuzzleStatusToClient(int clientID) {
     if (SendPacket(clientIt->second.socket, &syncPacket, sizeof(syncPacket))) {
         std::cout << "[Server] Puzzle status sent to client " << clientID << std::endl;
     }
+}
+
+// 떡 발사체 관련 메서드들 구현
+void GameServer::BroadcastRiceCakeSpawn(int clientID, int projectileID, float x, float y, float z, float dirX, float dirY, float dirZ, float speed) {
+    PacketRiceCakeSpawn spawnPacket;
+    spawnPacket.header.type = PACKET_RICE_CAKE_SPAWN;
+    spawnPacket.header.size = sizeof(PacketRiceCakeSpawn);
+    spawnPacket.clientID = clientID;
+    spawnPacket.projectileID = projectileID;
+    spawnPacket.x = x;
+    spawnPacket.y = y;
+    spawnPacket.z = z;
+    spawnPacket.dirX = dirX;
+    spawnPacket.dirY = dirY;
+    spawnPacket.dirZ = dirZ;
+    spawnPacket.speed = speed;
+    
+    // 발사한 클라이언트를 제외한 모든 클라이언트에게 전송
+    BroadcastPacket(&spawnPacket, sizeof(spawnPacket), clientID);
+    
+    std::cout << "[Server] Rice cake spawn broadcasted - Client: " << clientID 
+              << ", Projectile: " << projectileID << std::endl;
+}
+
+void GameServer::BroadcastRiceCakeUpdate(int clientID, int projectileID, float x, float y, float z) {
+    PacketRiceCakeUpdate updatePacket;
+    updatePacket.header.type = PACKET_RICE_CAKE_UPDATE;
+    updatePacket.header.size = sizeof(PacketRiceCakeUpdate);
+    updatePacket.clientID = clientID;
+    updatePacket.projectileID = projectileID;
+    updatePacket.x = x;
+    updatePacket.y = y;
+    updatePacket.z = z;
+    
+    // 발사한 클라이언트를 제외한 모든 클라이언트에게 전송
+    BroadcastPacket(&updatePacket, sizeof(updatePacket), clientID);
+    
+    std::cout << "[Server] Rice cake update broadcasted - Client: " << clientID 
+              << ", Projectile: " << projectileID << std::endl;
 }
 
 int main() {

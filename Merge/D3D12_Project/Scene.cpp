@@ -1469,6 +1469,12 @@ void Scene::ProcessStageQueue()
         OutputDebugString(L"[Scene] ProcessStageQueue: Switching to Base Stage\n");
         m_current_stage = L"Base";
         OtherPlayerManager::GetInstance()->SetCurrentStage("Base");
+        
+        // 서버에 Base 스테이지 변경 알림
+        if (m_parent && m_parent->IsNetworkEnabled()) {
+            m_parent->GetNetworkManager().SendStageChange(L"Base");
+        }
+        
         BuildBaseStage();
       
     }
@@ -1490,6 +1496,12 @@ void Scene::ProcessStageQueue()
         
         m_current_stage = L"Hunting";
         OtherPlayerManager::GetInstance()->SetCurrentStage("Hunting");
+        
+        // 서버에 Hunting 스테이지 변경 알림
+        if (m_parent && m_parent->IsNetworkEnabled()) {
+            m_parent->GetNetworkManager().SendStageChange(L"Hunting");
+        }
+        
         BuildHuntingStage();
         OutputDebugString(L"[Scene] Hunting Stage built successfully\n");
        
@@ -1500,6 +1512,12 @@ void Scene::ProcessStageQueue()
         m_current_stage = L"God";
         OtherPlayerManager::GetInstance()->SetCurrentStage("God");
         OtherPlayerManager::GetInstance()->SetStageTransitioning(true);  // 스테이지 전환 시작
+        
+        // 서버에 God 스테이지 변경 알림
+        if (m_parent && m_parent->IsNetworkEnabled()) {
+            m_parent->GetNetworkManager().SendStageChange(L"God");
+        }
+        
         BuildGodStage();
         OutputDebugString(L"[Scene] God Stage built successfully\n");
     }
@@ -1507,6 +1525,12 @@ void Scene::ProcessStageQueue()
     {
         m_current_stage = L"Title";
         OtherPlayerManager::GetInstance()->SetCurrentStage("Title");
+        
+        // 서버에 Title 스테이지 변경 알림
+        if (m_parent && m_parent->IsNetworkEnabled()) {
+            m_parent->GetNetworkManager().SendStageChange(L"Title");
+        }
+        
         BuildTitleStage();
        
     }
@@ -1514,6 +1538,12 @@ void Scene::ProcessStageQueue()
     {
         m_current_stage = L"End";
         OtherPlayerManager::GetInstance()->SetCurrentStage("End");
+        
+        // 서버에 End 스테이지 변경 알림
+        if (m_parent && m_parent->IsNetworkEnabled()) {
+            m_parent->GetNetworkManager().SendStageChange(L"End");
+        }
+        
         BuildEndStage();
        
     }
@@ -1543,52 +1573,46 @@ int(*Scene::GetPuzzleStatus())[3]
 
 void Scene::UpdatePuzzleCellsFromStatus()
 {
-    OutputDebugString(L"[Scene] UpdatePuzzleCellsFromStatus() called\n");
-    
     // PuzzleFrameObject를 찾아서 퍼즐 셀들을 업데이트
+    bool foundPuzzleFrame = false;
     for (Object* obj : m_objects) {
         PuzzleFrameObject* puzzleFrame = dynamic_cast<PuzzleFrameObject*>(obj);
         if (puzzleFrame) {
-            OutputDebugString(L"[Scene] Found PuzzleFrameObject, updating puzzle cells\n");
-            
-            // PuzzleFrameObject의 메서드를 사용하여 퍼즐 셀들을 업데이트
+            OutputDebugString(L"[Scene] PuzzleFrameObject found, updating cells\n");
             puzzleFrame->UpdatePuzzleCellsFromStatus(mPuzzleStatus);
-            
-            OutputDebugString(L"[Scene] Puzzle cells updated successfully\n");
-            break; // PuzzleFrameObject를 찾았으면 종료
+            foundPuzzleFrame = true;
+            break;
         }
     }
     
-    // PuzzleFrameObject를 찾지 못한 경우
-    static bool notFoundLogged = false;
-    if (!notFoundLogged) {
-        OutputDebugString(L"[Scene] Warning: PuzzleFrameObject not found in scene objects\n");
-        notFoundLogged = true;
+    if (!foundPuzzleFrame) {
+        OutputDebugString(L"[Scene] Warning: PuzzleFrameObject not found in scene\n");
     }
 }
 
 void Scene::UpdatePuzzleStatusFromCells()
 {
     // PuzzleFrameObject를 찾아서 현재 퍼즐 셀들의 상태를 mPuzzleStatus 배열에 반영
+    bool foundPuzzleFrame = false;
     for (Object* obj : m_objects) {
         PuzzleFrameObject* puzzleFrame = dynamic_cast<PuzzleFrameObject*>(obj);
         if (puzzleFrame) {
-            // PuzzleFrameObject의 GetPuzzleCellStatus 메서드를 사용하여 현재 상태를 가져옴
+            OutputDebugString(L"[Scene] PuzzleFrameObject found, getting cell status\n");
             puzzleFrame->GetPuzzleCellStatus(mPuzzleStatus);
-            OutputDebugString(L"[Scene] Updated mPuzzleStatus from actual puzzle cells\n");
-            break; // PuzzleFrameObject를 찾았으면 종료
+            foundPuzzleFrame = true;
+            break;
         }
+    }
+    
+    if (!foundPuzzleFrame) {
+        OutputDebugString(L"[Scene] Warning: PuzzleFrameObject not found in UpdatePuzzleStatusFromCells\n");
     }
 }
 
 void Scene::SyncPuzzleStatus() {
-    // Framework를 통해 NetworkManager에 접근하여 퍼즐 상태 전송
     if (m_parent && m_parent->IsNetworkEnabled()) {
-        // 먼저 현재 퍼즐 셀들의 상태를 mPuzzleStatus 배열에 반영
         UpdatePuzzleStatusFromCells();
-        
         m_parent->GetNetworkManager().SendPuzzleUpdate(mPuzzleStatus);
-        OutputDebugString(L"[Scene] Puzzle status synced with server\n");
     }
 }
 

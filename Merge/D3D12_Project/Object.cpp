@@ -1742,8 +1742,6 @@ bool PuzzleFrameObject::AllCellMatch()
 
 void PuzzleFrameObject::UpdatePuzzleCellsFromStatus(int puzzleStatus[3][3])
 {
-    OutputDebugString(L"[PuzzleFrame] UpdatePuzzleCellsFromStatus() called\n");
-    
     // 모든 퍼즐 셀의 상태를 서버에서 받은 상태로 업데이트
     for (int i = 0; i < 3; ++i)
     {
@@ -1755,21 +1753,18 @@ void PuzzleFrameObject::UpdatePuzzleCellsFromStatus(int puzzleStatus[3][3])
                 mCells[i][j]->SetStatus(puzzleStatus[i][j]);
                 int newStatus = mCells[i][j]->GetStatus();
                 
-                // 상태가 변경된 경우에만 로그 출력
-                if (oldStatus != newStatus) {
-                    wchar_t debugMsg[128];
-                    swprintf_s(debugMsg, L"[PuzzleFrame] Cell[%d][%d] status changed: %d -> %d\n", i, j, oldStatus, newStatus);
-                    OutputDebugString(debugMsg);
-                }
+                wchar_t debugMsg[256];
+                swprintf_s(debugMsg, L"[PuzzleFrameObject] Cell[%d][%d]: %d -> %d\n", i, j, oldStatus, newStatus);
+                OutputDebugString(debugMsg);
             }
             else
             {
-                OutputDebugString(L"[PuzzleFrame] Warning: mCells[i][j] is null\n");
+                wchar_t debugMsg[256];
+                swprintf_s(debugMsg, L"[PuzzleFrameObject] Warning: Cell[%d][%d] is null\n", i, j);
+                OutputDebugString(debugMsg);
             }
         }
     }
-    
-    OutputDebugString(L"[PuzzleFrame] All puzzle cells updated\n");
 }
 
 void PuzzleFrameObject::GetPuzzleCellStatus(int puzzleStatus[3][3])
@@ -1821,26 +1816,34 @@ int PuzzleCellObject::GetStatus()
     return mStatus % 2;
 }
 
-void PuzzleCellObject::SetStatus(int status)
+void PuzzleCellObject::SetStatus(int value)
 {
     int oldStatus = mStatus;
-    mStatus = status;
+    mStatus = value;
     
-    // 텍스처도 즉시 업데이트
+    wchar_t debugMsg[256];
+    swprintf_s(debugMsg, L"[PuzzleCellObject] SetStatus: %d -> %d\n", oldStatus, value);
+    OutputDebugString(debugMsg);
+    
+    // 텍스처도 함께 업데이트
     Texture* texture = GetComponent<Texture>();
     if (texture) {
-        if (status == 0) {
+        switch (value % 2)
+        {
+        case 0:
             texture->mName = L"PuzzleO";
-        } else {
+            OutputDebugString(L"[PuzzleCellObject] Texture changed to PuzzleO\n");
+            break;
+        case 1:
             texture->mName = L"PuzzleX";
+            OutputDebugString(L"[PuzzleCellObject] Texture changed to PuzzleX\n");
+            break;
+        default:
+            OutputDebugString(L"[PuzzleCellObject] Unknown status value\n");
+            break;
         }
-        
-        wchar_t debugMsg[128];
-        swprintf_s(debugMsg, L"[PuzzleCell] Status changed: %d -> %d, Texture set to: %s\n", 
-                   oldStatus, status, status == 0 ? L"PuzzleO" : L"PuzzleX");
-        OutputDebugString(debugMsg);
     } else {
-        OutputDebugString(L"[PuzzleCell] Warning: Texture component not found\n");
+        OutputDebugString(L"[PuzzleCellObject] Warning: Texture component not found\n");
     }
 }
 

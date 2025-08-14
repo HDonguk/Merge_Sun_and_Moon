@@ -918,16 +918,12 @@ void NetworkManager::ProcessPacket(char* buffer) {
             case PACKET_PUZZLE_SYNC: {
                 PacketPuzzleSync* puzzleSyncPkt = (PacketPuzzleSync*)buffer;
                 
-                // 로그인 상태 확인
                 if (!m_isLoggedIn) {
                     break;
                 }
                 
-                OutputDebugString(L"[Puzzle] Received PACKET_PUZZLE_SYNC from server\n");
-                
-                // Scene의 퍼즐 상태를 서버에서 받은 상태로 동기화
                 if (m_scene) {
-                    // 퍼즐 상태를 Scene에 전달
+                    // Scene의 퍼즐 상태를 직접 업데이트
                     int(*puzzleStatus)[3] = m_scene->GetPuzzleStatus();
                     for (int i = 0; i < 3; ++i) {
                         for (int j = 0; j < 3; ++j) {
@@ -935,22 +931,8 @@ void NetworkManager::ProcessPacket(char* buffer) {
                         }
                     }
                     
-                    OutputDebugString(L"[Puzzle] Updated Scene's mPuzzleStatus array\n");
-                    
-                    // 퍼즐 상태가 업데이트되었으므로 실제 퍼즐 셀들의 텍스처도 업데이트
+                    // 퍼즐 셀들의 시각적 표현을 업데이트
                     m_scene->UpdatePuzzleCellsFromStatus();
-                    
-                    OutputDebugString(L"[Puzzle] Called UpdatePuzzleCellsFromStatus()\n");
-                    
-                    // 디버그: 퍼즐 상태 출력
-                    wchar_t debugMsg[256];
-                    swprintf_s(debugMsg, L"[Puzzle] Final puzzle status: [%d,%d,%d] [%d,%d,%d] [%d,%d,%d]\n",
-                        puzzleSyncPkt->puzzleStatus[0][0], puzzleSyncPkt->puzzleStatus[0][1], puzzleSyncPkt->puzzleStatus[0][2],
-                        puzzleSyncPkt->puzzleStatus[1][0], puzzleSyncPkt->puzzleStatus[1][1], puzzleSyncPkt->puzzleStatus[1][2],
-                        puzzleSyncPkt->puzzleStatus[2][0], puzzleSyncPkt->puzzleStatus[2][1], puzzleSyncPkt->puzzleStatus[2][2]);
-                    OutputDebugString(debugMsg);
-                } else {
-                    OutputDebugString(L"[Puzzle] Error: m_scene is null!\n");
                 }
                 break;
             }

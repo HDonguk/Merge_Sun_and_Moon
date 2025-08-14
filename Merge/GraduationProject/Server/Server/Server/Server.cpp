@@ -552,11 +552,11 @@ void GameServer::ProcessSinglePacket(char* buffer, int clientID, int packetSize)
                 
                 // 각 호랑이 스폰 사이에 짧은 지연 추가
                 Sleep(50);
-            }
+         }
             
             std::cout << "[TigerRespawn] Completed sending all tiger respawn packets to client " << clientID << std::endl;
             break;
-        }
+        
         case PACKET_CLIENT_READY: {
             if (header->size != sizeof(PacketClientReady)) {
                 std::cout << "[Error] Invalid CLIENT_READY packet size" << std::endl;
@@ -1390,6 +1390,16 @@ void GameServer::BroadcastPuzzleStatus(int excludeID) {
             syncPacket.puzzleStatus[i][j] = m_puzzleStatus[i][j];
         }
     }
+    
+    // God 스테이지에 있는 클라이언트 수 확인
+    int clientsInGodStage = 0;
+    for (const auto& [id, client] : m_clients) {
+        if (client.isLoggedIn && client.currentStage == "God" && id != excludeID) {
+            clientsInGodStage++;
+        }
+    }
+    
+    std::cout << "[Server] Clients in God stage: " << clientsInGodStage << " (excluding client " << excludeID << ")" << std::endl;
     
     // God 스테이지에 있는 모든 클라이언트에게 전송
     BroadcastToStage(&syncPacket, sizeof(syncPacket), "God", excludeID);

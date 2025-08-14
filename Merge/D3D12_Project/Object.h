@@ -391,6 +391,7 @@ public:
 	Object::Object;
 	void OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration) override;
 	int GetStatus();
+	void SetStatus(int status);
 private:
 	int mStatus = 0;
 };
@@ -401,6 +402,8 @@ public:
 	PuzzleFrameObject(Scene* scene, uint32_t id, uint32_t parentId = -1);
 	void OnUpdate(GameTimer& gTimer) override;
 	bool AllCellMatch();
+	void UpdatePuzzleCellsFromStatus(int puzzleStatus[3][3]);
+	void GetPuzzleCellStatus(int puzzleStatus[3][3]);  // 현재 퍼즐 셀들의 상태를 가져오는 메서드
 private:
 	PuzzleCellObject* mCells[3][3] = {};
 };

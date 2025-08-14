@@ -143,8 +143,17 @@ void SkinnedData::GetFinalTransforms(const std::string& clipName, float timePos,
 	std::vector<XMFLOAT4X4> toParentTransforms(numBones);
 
 	// Interpolate all the bones of this clip at the given time instance.
-	auto clip = mAnimations.at(clipName);
-	clip.Interpolate(timePos, toParentTransforms);
+	auto clipIt = mAnimations.find(clipName);
+	if (clipIt != mAnimations.end()) {
+		const auto& clip = clipIt->second;
+		clip.Interpolate(timePos, toParentTransforms);
+	} else {
+		// ì• ë‹ˆë©”ì´ì…˜ í´ë¦½ì„ ì°¾ì„ ìˆ˜ ì—†ëŠ” ê²½ìš° ê¸°ë³¸ê°’ìœ¼ë¡œ ì²˜ë¦¬
+		OutputDebugString(L"[SkinnedData] Animation clip not found: ");
+		OutputDebugStringA(clipName.c_str());
+		OutputDebugString(L"\n");
+		return;
+	}
 
 	//
 	// Traverse the hierarchy and transform all the bones to the root space.
@@ -176,7 +185,7 @@ void SkinnedData::GetFinalTransforms(const std::string& clipName, float timePos,
 		XMMATRIX toRoot = XMLoadFloat4x4(&toRootTransforms[i]);
         XMMATRIX finalTransform = XMMatrixMultiply(offset, toRoot);
 
-		// ¾Ö´Ï¸ŞÀÌ¼Ç¸¸ Àû¿ëÇÏ¸é x Ãà ¹æÇâÀ¸·Î 90µµ È¸ÀüÇÔ ¿Ö ±×·±Áö ¸ğ¸£°ÚÀ½. µû¶ó¼­ xÃà ¹æÇâÀ¸·Î -90µµ È¸Àü½ÃÅ´.
+		// ï¿½Ö´Ï¸ï¿½ï¿½Ì¼Ç¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¸ï¿½ x ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 90ï¿½ï¿½ È¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½×·ï¿½ï¿½ï¿½ ï¿½ğ¸£°ï¿½ï¿½ï¿½. ï¿½ï¿½ï¿½ï¿½ xï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ -90ï¿½ï¿½ È¸ï¿½ï¿½ï¿½ï¿½Å´.
 		XMMATRIX adjustRotXM = XMMatrixRotationX(XMConvertToRadians(-90.0f));
 		XMStoreFloat4x4(&finalTransforms[i], XMMatrixTranspose(finalTransform * adjustRotXM));
 	}

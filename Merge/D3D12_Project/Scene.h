@@ -47,6 +47,9 @@ public:
     void SetTigerQuestState(bool state);
     XMVECTOR GetInputDir();
     int(*GetPuzzleStatus())[3];
+    void SyncPuzzleStatus();  // 퍼즐 상태를 서버와 동기화
+    void UpdatePuzzleCellsFromStatus();  // 퍼즐 상태를 실제 퍼즐 셀들에 적용
+    void UpdatePuzzleStatusFromCells();  // 실제 퍼즐 셀들의 상태를 mPuzzleStatus 배열에 반영
 
     wstring GetCurrentStage() const { return m_current_stage; }
     const vector<Object*>& GetObjects() const { return m_objects; }

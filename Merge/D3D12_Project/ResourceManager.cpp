@@ -36,7 +36,7 @@ void ResourceManager::CreatePlane(const string& name, float size, float wrap)
 {
 	vector<Vertex> vertexData;
 
-	// Æò¸é
+	// ï¿½ï¿½ï¿½
 	{
 		vertexData.push_back(Vertex{ { 0.0f, 0.0f, size},{0.0f,1.0f,0.0f},{0.0f,0.0f} });
 		vertexData.push_back(Vertex{ {size, 0.0f, size},{0.0f,1.0f,0.0f},{wrap,0.0f} });
@@ -79,8 +79,8 @@ void ResourceManager::CreateTerrain(const string& name, int maxHeight , int scal
 	vector<float> heightData(width * height);
 	for (int z = 0; z < height; ++z) {
 		for (int x = 0; x < width; ++x) {
-			heightData[z * width + x] = (heightMap[(height - 1 - z) * width + x] / 255.f - down) * maxHeight; // (height - 1 - z)´Â ¿ŞÂÊ ¾Æ·¡¸¦ ¿øÁ¡(¿ø·¡ ¿øÁ¡Àº ¿ŞÂÊ À§)À¸·Î ÇÏ±â À§ÇÔÀÌ´Ù.
-			//heightData[z * width + x] = heightMap[z * width + x] / 255.f * maxHeight; // (height - 1 - z) ÀÇ ÀÇ¹Ì´Â ¿ŞÂÊ ¾Æ·¡¸¦ ¿øÁ¡À¸·Î ÇÏ±â À§ÇÔÀÌ´Ù.
+			heightData[z * width + x] = (heightMap[(height - 1 - z) * width + x] / 255.f - down) * maxHeight; // (height - 1 - z)ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Æ·ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½(ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½)ï¿½ï¿½ï¿½ï¿½ ï¿½Ï±ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ì´ï¿½.
+			//heightData[z * width + x] = heightMap[z * width + x] / 255.f * maxHeight; // (height - 1 - z) ï¿½ï¿½ ï¿½Ç¹Ì´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Æ·ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ï±ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ì´ï¿½.
 
 		}
 	}
@@ -178,12 +178,24 @@ vector<uint32_t>& ResourceManager::GetIndexBuffer()
 
 SubMeshData& ResourceManager::GetSubMeshData(string name)
 {
-	return mSubMeshData.at(name);
+	auto it = mSubMeshData.find(name);
+	if (it != mSubMeshData.end()) {
+		return it->second;
+	}
+	// ê¸°ë³¸ê°’ ë°˜í™˜ ë˜ëŠ” ì˜ˆì™¸ ì²˜ë¦¬
+	static SubMeshData defaultData{};
+	return defaultData;
 }
 
 SkinnedData& ResourceManager::GetAnimationData(string name)
 {
-	return mAnimData.at(name);
+	auto it = mAnimData.find(name);
+	if (it != mAnimData.end()) {
+		return it->second;
+	}
+	// ê¸°ë³¸ê°’ ë°˜í™˜ ë˜ëŠ” ì˜ˆì™¸ ì²˜ë¦¬
+	static SkinnedData defaultData{};
+	return defaultData;
 }
 
 TerrainData& ResourceManager::GetTerrainData()

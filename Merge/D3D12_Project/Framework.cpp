@@ -80,12 +80,13 @@ void Framework::OnUpdate()
     // 게임 화면에서는 마우스 커서 숨기기 유지
     ShowCursor(FALSE);
     
-    if (m_scenes.find(L"BaseScene") != m_scenes.end()) {
-        m_scenes.at(L"BaseScene")->OnUpdate(m_Timer);
+    auto baseSceneIt = m_scenes.find(L"BaseScene");
+    if (baseSceneIt != m_scenes.end()) {
+        baseSceneIt->second->OnUpdate(m_Timer);
         
         // 네트워크 업데이트
         if (m_isNetworkEnabled) {
-            m_networkManager.Update(m_Timer, m_scenes.at(L"BaseScene"));
+            m_networkManager.Update(m_Timer, baseSceneIt->second);
         }
     }
 }
@@ -97,12 +98,18 @@ void Framework::OnProcessCollision()
         return;
     }
     
-    m_scenes.at(L"BaseScene")->OnProcessCollision();
+    auto baseSceneIt = m_scenes.find(L"BaseScene");
+    if (baseSceneIt != m_scenes.end()) {
+        baseSceneIt->second->OnProcessCollision();
+    }
 }
 
 void Framework::LateUpdate()
 {
-    m_scenes.at(L"BaseScene")->LateUpdate(m_Timer);
+    auto baseSceneIt = m_scenes.find(L"BaseScene");
+    if (baseSceneIt != m_scenes.end()) {
+        baseSceneIt->second->LateUpdate(m_Timer);
+    }
 }
 
 // Render the scene.
@@ -170,7 +177,10 @@ void Framework::OnResize(UINT width, UINT height, bool minimized)
         BuildDepthStencilBuffer(width, height);
         BuildDsv();
 
-        m_scenes.at(m_currentSceneName)->OnResize(width, height);
+        auto currentSceneIt = m_scenes.find(m_currentSceneName);
+        if (currentSceneIt != m_scenes.end()) {
+            currentSceneIt->second->OnResize(width, height);
+        }
 
         ThrowIfFailed(m_commandList->Close());
         ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };

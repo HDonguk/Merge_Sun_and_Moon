@@ -37,6 +37,7 @@ public:
     void SendTigerHit(int tigerID, int life);  // 호랑이 Hit 상태 전송
     void SendTigerAttack(int tigerID);  // 호랑이 공격 이벤트 전송
     void SendStageChange(const std::wstring& stageName);  // 스테이지 변경 알림
+    void SendPuzzleUpdate(int puzzleStatus[3][3]);  // 퍼즐 상태 업데이트 전송
     void ClearTigerInfo();  // 호랑이 정보 초기화
     void Shutdown();
     bool IsRunning() const { return m_isRunning; }

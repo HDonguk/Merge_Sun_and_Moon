@@ -84,6 +84,10 @@ private:
     std::mt19937 m_randomEngine;
     bool m_huntingStageActive;  // Hunting 스테이지 활성화 여부
 
+    // 퍼즐 상태 관리 추가
+    int m_puzzleStatus[3][3];  // God 스테이지 퍼즐 상태
+    bool m_puzzleInitialized;   // 퍼즐 초기화 여부
+
     // 내부 메서드
     static DWORD WINAPI WorkerThreadProc(LPVOID lpParam);
     DWORD WorkerThread();
@@ -111,5 +115,11 @@ private:
     void UpdateClientStage(int clientID, const std::string& stageName);
     void BroadcastToStage(const void* packet, int size, const std::string& stageName, int excludeID = -1);
     std::vector<int> GetClientsInStage(const std::string& stageName);
+    
+    // 퍼즐 관련 메서드 추가
+    void InitializePuzzle();
+    void UpdatePuzzleStatus(int clientID, int puzzleStatus[3][3]);
+    void BroadcastPuzzleStatus(int excludeID = -1);
+    void SendPuzzleStatusToClient(int clientID);
 
 }; 

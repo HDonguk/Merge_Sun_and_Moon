@@ -8,17 +8,13 @@ void OtherPlayerManager::SpawnOtherPlayer(int clientID) {
     // 스테이지 전환 중이면 플레이어 생성 차단
     if (m_isStageTransitioning) {
         OutputDebugString(L"[OtherPlayerManager] Stage transitioning, blocking spawn for player\n");
-        if (m_networkManager) {
-            m_networkManager->LogToFile("[OtherPlayerManager] Stage transitioning, blocking spawn for player " + std::to_string(clientID));
-        }
         return;
     }
     
-
-    
+    // 이미 존재하는 플레이어인지 확인
     if (otherPlayers.find(clientID) != otherPlayers.end()) {
         wchar_t debugMsg[256];
-        swprintf_s(debugMsg, L"[OtherPlayerManager] Player already exists: %d\n", clientID);
+        swprintf_s(debugMsg, L"[OtherPlayerManager] Player already exists: %d, skipping spawn\n", clientID);
         OutputDebugString(debugMsg);
         return;
     }
@@ -34,21 +30,64 @@ void OtherPlayerManager::SpawnOtherPlayer(int clientID) {
             return;
         }
         
+        // Scene이 유효한지 추가 검사 (null 포인터가 아닌지만 확인)
+        if (m_currentScene == nullptr) {
+            OutputDebugString(L"[OtherPlayerManager] Scene is null, cannot spawn player\n");
+            return;
+        }
+        
         // 실제 PlayerObject 생성
         float scale = 0.1f;
-        PlayerObject* playerObj = new PlayerObject(m_currentScene, m_currentScene->AllocateId());
+        uint32_t newId = m_currentScene->AllocateId();
+        if (newId == 0) {
+            OutputDebugString(L"[OtherPlayerManager] Failed to allocate ID for new player\n");
+            return;
+        }
+        
+        PlayerObject* playerObj = new PlayerObject(m_currentScene, newId);
+        if (!playerObj) {
+            OutputDebugString(L"[OtherPlayerManager] Failed to create PlayerObject\n");
+            return;
+        }
+        
         playerObj->SetIsNetworkPlayer(true);  // 네트워크 플레이어로 설정
         playerObj->SetLife(3);  // 네트워크 플레이어 생명력도 3으로 설정
-        playerObj->AddComponent(new Transform{ {0.0f, 0.0f, 0.0f} });
-        playerObj->AddComponent(new AdjustTransform{ {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {scale, scale, scale} });
-        playerObj->AddComponent(new Mesh{ "1P(boy-idle).fbx" });
-        playerObj->AddComponent(new Texture{ L"boy" , 1.0f, 0.4f });
-        playerObj->AddComponent(new Animation{ "1P(boy-idle).fbx" });
-        playerObj->AddComponent(new Gravity);
-        playerObj->AddComponent(new Collider{ {0.0f, 8.0f, 0.0f}, {2.0f, 8.0f, 2.0f} });
+        
+        // 컴포넌트 추가 시 예외 처리
+        try {
+            playerObj->AddComponent(new Transform{ {0.0f, 0.0f, 0.0f} });
+            playerObj->AddComponent(new AdjustTransform{ {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {scale, scale, scale} });
+            playerObj->AddComponent(new Mesh{ "1P(boy-idle).fbx" });
+            playerObj->AddComponent(new Texture{ L"boy" , 1.0f, 0.4f });
+            playerObj->AddComponent(new Animation{ "1P(boy-idle).fbx" });
+            playerObj->AddComponent(new Gravity);
+            playerObj->AddComponent(new Collider{ {0.0f, 8.0f, 0.0f}, {2.0f, 8.0f, 2.0f} });
+        }
+        catch (const std::exception& e) {
+            OutputDebugString(L"[OtherPlayerManager] Exception during component addition\n");
+            delete playerObj;
+            return;
+        }
+        catch (...) {
+            OutputDebugString(L"[OtherPlayerManager] Unknown exception during component addition\n");
+            delete playerObj;
+            return;
+        }
         
         // Scene에 추가
-        m_currentScene->AddObj(playerObj);
+        try {
+            m_currentScene->AddObj(playerObj);
+        }
+        catch (const std::exception& e) {
+            OutputDebugString(L"[OtherPlayerManager] Exception during adding player to scene\n");
+            delete playerObj;
+            return;
+        }
+        catch (...) {
+            OutputDebugString(L"[OtherPlayerManager] Unknown exception during adding player to scene\n");
+            delete playerObj;
+            return;
+        }
         
         // 맵에 저장
         otherPlayers[clientID] = playerObj;
@@ -69,7 +108,7 @@ void OtherPlayerManager::UpdateOtherPlayer(int clientID, float x, float y, float
     if (m_isStageTransitioning) {
         OutputDebugString(L"[OtherPlayerManager] Stage transitioning, blocking update for player\n");
         if (m_networkManager) {
-            m_networkManager->LogToFile("[OtherPlayerManager] Stage transitioning, blocking update for player " + std::to_string(clientID));
+            // LogToFile 제거 - 디버그 메시지로 대체
         }
         return;
     }
@@ -78,8 +117,7 @@ void OtherPlayerManager::UpdateOtherPlayer(int clientID, float x, float y, float
     if (m_currentStage != stageName && m_currentStage != "God") {
         OutputDebugString(L"[OtherPlayerManager] Player from different stage, skipping update\n");
         if (m_networkManager) {
-            m_networkManager->LogToFile("[OtherPlayerManager] Player " + std::to_string(clientID) + 
-                " from different stage (" + stageName + "), current stage: " + m_currentStage);
+            // LogToFile 제거 - 디버그 메시지로 대체
         }
         return;
     }
@@ -113,8 +151,7 @@ void OtherPlayerManager::UpdateOtherPlayer(int clientID, float x, float y, float
                 transform->SetRotation({0.0f, currentRotY, 0.0f});
                 
                 if (m_networkManager) {
-                    m_networkManager->LogToFile("[OtherPlayerManager] Invalid rotation value received for player " + std::to_string(clientID) + 
-                        ": " + std::to_string(rotY) + ", keeping current rotation: " + std::to_string(currentRotY));
+                    // LogToFile 제거 - 디버그 메시지로 대체
                 }
             }
             
@@ -131,17 +168,16 @@ void OtherPlayerManager::UpdateOtherPlayer(int clientID, float x, float y, float
             }
             
             if (m_networkManager) {
-                m_networkManager->LogToFile("[OtherPlayerManager] Updated player " + std::to_string(clientID) + 
-                    " to position (" + std::to_string(x) + ", " + std::to_string(y) + ", " + std::to_string(z) + ")");
+                // LogToFile 제거 - 디버그 메시지로 대체
             }
         } else {
             if (m_networkManager) {
-                m_networkManager->LogToFile("[OtherPlayerManager] Transform component not found for player " + std::to_string(clientID));
+                // LogToFile 제거 - 디버그 메시지로 대체
             }
         }
     } else {
         if (m_networkManager) {
-            m_networkManager->LogToFile("[OtherPlayerManager] Player object is null for ID " + std::to_string(clientID));
+            // LogToFile 제거 - 디버그 메시지로 대체
         }
     }
 }
@@ -150,7 +186,7 @@ void OtherPlayerManager::RemoveOtherPlayer(int clientID) {
     auto it = otherPlayers.find(clientID);
     if (it != otherPlayers.end()) {
         if (m_networkManager) {
-            m_networkManager->LogToFile("[OtherPlayerManager] Remove request for player: " + std::to_string(clientID));
+            // LogToFile 제거 - 디버그 메시지로 대체
         }
         
         // 실제 PlayerObject 제거
@@ -162,7 +198,7 @@ void OtherPlayerManager::RemoveOtherPlayer(int clientID) {
             }
             
             if (m_networkManager) {
-                m_networkManager->LogToFile("[OtherPlayerManager] Deleted player object: " + std::to_string(clientID));
+                // LogToFile 제거 - 디버그 메시지로 대체
             }
         }
         
@@ -170,7 +206,7 @@ void OtherPlayerManager::RemoveOtherPlayer(int clientID) {
         otherPlayers.erase(it);
         
         if (m_networkManager) {
-            m_networkManager->LogToFile("[OtherPlayerManager] Removed player: " + std::to_string(clientID));
+            // LogToFile 제거 - 디버그 메시지로 대체
         }
     }
 }
@@ -179,7 +215,7 @@ void OtherPlayerManager::ClearAllPlayers() {
     OutputDebugString(L"[OtherPlayerManager] Clearing all other players\n");
     
     if (m_networkManager) {
-        m_networkManager->LogToFile("[OtherPlayerManager] Clearing all other players");
+        // LogToFile 제거 - 디버그 메시지로 대체
     }
     
     // 모든 플레이어 객체 삭제
@@ -191,9 +227,7 @@ void OtherPlayerManager::ClearAllPlayers() {
                 playerObj->Delete();
             }
             
-            if (m_networkManager) {
-                m_networkManager->LogToFile("[OtherPlayerManager] Deleted player object: " + std::to_string(pair.first));
-            }
+                    // LogToFile 제거 - 디버그 메시지로 대체
         }
     }
     
@@ -202,16 +236,12 @@ void OtherPlayerManager::ClearAllPlayers() {
     
     OutputDebugString(L"[OtherPlayerManager] All other players cleared\n");
     
-    if (m_networkManager) {
-        m_networkManager->LogToFile("[OtherPlayerManager] All other players cleared successfully");
-    }
+    // LogToFile 제거 - 디버그 메시지로 대체
 }
 
 void OtherPlayerManager::SetStageTransitioning(bool transitioning) {
     m_isStageTransitioning = transitioning;
     OutputDebugString(transitioning ? L"[OtherPlayerManager] Stage transition started\n" : L"[OtherPlayerManager] Stage transition ended\n");
     
-    if (m_networkManager) {
-        m_networkManager->LogToFile("[OtherPlayerManager] Stage transition " + std::string(transitioning ? "started" : "ended"));
-    }
+    // LogToFile 제거 - 디버그 메시지로 대체
 } 

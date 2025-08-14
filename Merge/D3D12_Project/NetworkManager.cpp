@@ -31,10 +31,7 @@ NetworkManager::NetworkManager() : sock(INVALID_SOCKET), m_networkThread(NULL), 
             ltm.tm_hour, ltm.tm_min, ltm.tm_sec);
         
         m_logFile.open(filename);
-        if (m_logFile.is_open()) {
-            LogToFile("NetworkManager initialized");
-        }
-        else {
+        if (!m_logFile.is_open()) {
             std::cerr << "Failed to open log file: " << filename << std::endl;
         }
     }
@@ -52,10 +49,10 @@ NetworkManager::~NetworkManager() {
 }
 
 bool NetworkManager::Initialize(const char* serverIP, int port, Scene* scene) {
-    if (!scene) {
-        LogToFile("[Error] Scene is null");
-        return false;
-    }
+            if (!scene) {
+            // LogToFile 제거 - 디버그 메시지로 대체
+            return false;
+        }
     m_scene = scene;
     
     // PlayerObject가 생성될 때까지 대기 (최대 10초)
@@ -66,43 +63,39 @@ bool NetworkManager::Initialize(const char* serverIP, int port, Scene* scene) {
         try {
             auto* player = m_scene->GetLocalPlayer();
             if (player) {
-                LogToFile("[Info] Found Local PlayerObject in scene after " + std::to_string(retryCount * 100) + "ms");
+                // LogToFile 제거 - 디버그 메시지로 대체
                 break;
             } else {
-                LogToFile("[Warning] Local PlayerObject not found in scene, attempt " + std::to_string(retryCount + 1) + "/" + std::to_string(MAX_RETRIES));
+                // LogToFile 제거 - 디버그 메시지로 대체
                 Sleep(100); // 100ms 대기
                 retryCount++;
             }
         }
         catch (const std::exception& e) {
-            LogToFile("[Error] Failed to find PlayerObject: " + std::string(e.what()));
+            // LogToFile 제거 - 디버그 메시지로 대체
             Sleep(100);
             retryCount++;
         }
     }
     
     if (retryCount >= MAX_RETRIES) {
-        LogToFile("[Error] PlayerObject not found after all retries");
+        // LogToFile 제거 - 디버그 메시지로 대체
         return false;
     }
     
     // OtherPlayerManager 초기화
     OtherPlayerManager::GetInstance()->SetScene(scene);
     OtherPlayerManager::GetInstance()->SetNetworkManager(this);
-    LogToFile("[Info] OtherPlayerManager initialized with scene and network manager");
-    
-    std::string logMsg = "[Client] Connecting to server " + std::string(serverIP) + ":" + std::to_string(port);
-    LogToFile(logMsg);
     
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        LogToFile("[Error] WSAStartup failed");
+        // LogToFile 제거 - 디버그 메시지로 대체
         return false;
     }
 
     sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock == INVALID_SOCKET) {
-        LogToFile("[Error] Socket creation failed");
+        // LogToFile 제거 - 디버그 메시지로 대체
         return false;
     }
 
@@ -112,7 +105,7 @@ bool NetworkManager::Initialize(const char* serverIP, int port, Scene* scene) {
     serverAddr.sin_port = htons(port);
 
     if (connect(sock, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
-        LogToFile("[Error] Connection failed");
+        // LogToFile 제거 - 디버그 메시지로 대체
         return false;
     }
 
@@ -128,8 +121,8 @@ bool NetworkManager::Initialize(const char* serverIP, int port, Scene* scene) {
         return false;
     }
 
-    LogToFile("[Client] Successfully connected to server");
-
+        // LogToFile 제거 - 디버그 메시지로 대체
+    
     return true;
 }
 
@@ -149,7 +142,7 @@ void NetworkManager::SendLoginRequest(const std::string& username) {
             int error = WSAGetLastError();
             HandleError("Login request failed: " + std::to_string(error));
         } else {
-            LogToFile("[Login] Sent login request for user: " + username);
+            // LogToFile 제거 - 디버그 메시지로 대체
         }
     }
     catch (const std::exception& e) {
@@ -168,10 +161,10 @@ void NetworkManager::SendPlayerDisconnect() {
         strncpy_s(pkt.username, m_username.c_str(), sizeof(pkt.username) - 1);
 
         send(sock, (char*)&pkt, sizeof(pkt), 0);
-        LogToFile("[Disconnect] Sent disconnect packet for user: " + m_username);
+        // LogToFile 제거 - 디버그 메시지로 대체
     }
     catch (const std::exception& e) {
-        LogToFile("[Error] Failed to send disconnect packet: " + std::string(e.what()));
+        // LogToFile 제거 - 디버그 메시지로 대체
     }
 }
 
@@ -187,13 +180,13 @@ void NetworkManager::SendTigerRespawnRequest() {
         int sendResult = send(sock, (char*)&pkt, sizeof(pkt), 0);
         if (sendResult == SOCKET_ERROR) {
             int error = WSAGetLastError();
-            LogToFile("[Error] Failed to send tiger respawn request: " + std::to_string(error));
+            // LogToFile 제거 - 디버그 메시지로 대체
         } else {
-            LogToFile("[Tiger] Sent tiger respawn request to server");
+            // LogToFile 제거 - 디버그 메시지로 대체
         }
     }
     catch (const std::exception& e) {
-        LogToFile("[Error] Exception in SendTigerRespawnRequest: " + std::string(e.what()));
+        // LogToFile 제거 - 디버그 메시지로 대체
     }
 }
 
@@ -210,13 +203,13 @@ void NetworkManager::SendTigerHit(int tigerID, int life) {
         int sendResult = send(sock, (char*)&pkt, sizeof(pkt), 0);
         if (sendResult == SOCKET_ERROR) {
             int error = WSAGetLastError();
-            LogToFile("[Error] Failed to send tiger hit: " + std::to_string(error));
+            // LogToFile 제거 - 디버그 메시지로 대체
         } else {
-            LogToFile("[Tiger] Sent tiger hit to server, tigerID: " + std::to_string(tigerID) + ", life: " + std::to_string(life));
+            // LogToFile 제거 - 디버그 메시지로 대체
         }
     }
     catch (const std::exception& e) {
-        LogToFile("[Error] Exception in SendTigerHit: " + std::string(e.what()));
+        // LogToFile 제거 - 디버그 메시지로 대체
     }
 }
 
@@ -232,13 +225,13 @@ void NetworkManager::SendTigerAttack(int tigerID) {
         int sendResult = send(sock, (char*)&pkt, sizeof(pkt), 0);
         if (sendResult == SOCKET_ERROR) {
             int error = WSAGetLastError();
-            LogToFile("[Error] Failed to send tiger attack: " + std::to_string(error));
+            // LogToFile 제거 - 디버그 메시지로 대체
         } else {
-            LogToFile("[Tiger] Sent tiger attack to server, tigerID: " + std::to_string(tigerID));
+            // LogToFile 제거 - 디버그 메시지로 대체
         }
     }
     catch (const std::exception& e) {
-        LogToFile("[Error] Exception in SendTigerAttack: " + std::string(e.what()));
+        // LogToFile 제거 - 디버그 메시지로 대체
     }
 }
 
@@ -259,13 +252,42 @@ void NetworkManager::SendStageChange(const std::wstring& stageName) {
         int sendResult = send(sock, (char*)&pkt, sizeof(pkt), 0);
         if (sendResult == SOCKET_ERROR) {
             int error = WSAGetLastError();
-            LogToFile("[Error] Failed to send stage change: " + std::to_string(error));
+            // LogToFile 제거 - 디버그 메시지로 대체
         } else {
-            LogToFile("[Stage] Sent stage change to server: " + stageNameStr);
+            // LogToFile 제거 - 디버그 메시지로 대체
         }
     }
     catch (const std::exception& e) {
-        LogToFile("[Error] Exception in SendStageChange: " + std::string(e.what()));
+        // LogToFile 제거 - 디버그 메시지로 대체
+    }
+}
+
+void NetworkManager::SendPuzzleUpdate(int puzzleStatus[3][3]) {
+    if (!m_isRunning || !m_isLoggedIn) return;
+
+    try {
+        PacketPuzzleUpdate pkt;
+        pkt.header.size = sizeof(PacketPuzzleUpdate);
+        pkt.header.type = PACKET_PUZZLE_UPDATE;
+        pkt.clientID = m_myClientID;
+        
+        // 퍼즐 상태 복사
+        for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 3; ++j) {
+                pkt.puzzleStatus[i][j] = puzzleStatus[i][j];
+            }
+        }
+
+        int sendResult = send(sock, (char*)&pkt, sizeof(pkt), 0);
+        if (sendResult == SOCKET_ERROR) {
+            int error = WSAGetLastError();
+            // LogToFile 제거 - 디버그 메시지로 대체
+        } else {
+            // LogToFile 제거 - 디버그 메시지로 대체
+        }
+    }
+    catch (const std::exception& e) {
+        // LogToFile 제거 - 디버그 메시지로 대체
     }
 }
 
@@ -279,7 +301,7 @@ void NetworkManager::SetLoginFailedCallback(std::function<void(const std::string
 
 DWORD WINAPI NetworkManager::NetworkThread(LPVOID arg) {
     NetworkManager* network = (NetworkManager*)arg;
-    network->LogToFile("[Thread] Network thread started");
+    // LogToFile 제거 - 디버그 메시지로 대체
     
     int errorCount = 0;
     const int MAX_ERRORS = 10;  // 최대 연속 에러 허용 횟수 증가 (더 관대하게)
@@ -302,9 +324,9 @@ DWORD WINAPI NetworkManager::NetworkThread(LPVOID arg) {
                 if (error == WSAEWOULDBLOCK) {
                     continue;  // 일시적 에러, 무시
                 }
-                network->LogToFile("[Error] Select failed with error: " + std::to_string(error));
+                // LogToFile 제거 - 디버그 메시지로 대체
                 if (++errorCount >= MAX_ERRORS) {
-                    network->LogToFile("[Warning] Many select errors, but continuing...");
+                    // LogToFile 제거 - 디버그 메시지로 대체
                     // 에러가 많아도 연결 유지
                     continue;
                 }
@@ -321,13 +343,13 @@ DWORD WINAPI NetworkManager::NetworkThread(LPVOID arg) {
                 }
                 if (error == WSAECONNRESET || error == WSAECONNABORTED || error == WSAENOTSOCK) {
                     // 실제 연결 문제가 있는 경우에만 로그 출력
-                    network->LogToFile("[Warning] Connection issue detected: " + std::to_string(error));
+                    // LogToFile 제거 - 디버그 메시지로 대체
                     // 연결 문제가 있어도 계속 시도 (재연결 로직으로 처리)
                     continue;
                 }
-                network->LogToFile("[Error] Receive failed: " + std::to_string(error));
+                // LogToFile 제거 - 디버그 메시지로 대체
                 if (++errorCount >= MAX_ERRORS) {
-                    network->LogToFile("[Warning] Many receive errors, but continuing...");
+                    // LogToFile 제거 - 디버그 메시지로 대체
                     // 에러가 많아도 연결 유지
                     continue;
                 }
@@ -337,17 +359,17 @@ DWORD WINAPI NetworkManager::NetworkThread(LPVOID arg) {
             // 수신된 데이터 로그 (디버깅용) - 빈도 감소
             static int packetCount = 0;
             if (++packetCount % 50 == 0) { // 50개 패킷마다 로그 (로그 부하 감소)
-                network->LogToFile("[Network] Received " + std::to_string(recvBytes) + " bytes");
+                // LogToFile 제거 - 디버그 메시지로 대체
             }
 
             if (recvBytes > sizeof(network->m_recvBuffer)) {
-                network->LogToFile("[Error] Receive buffer overflow: " + std::to_string(recvBytes) + " bytes");
+                // LogToFile 제거 - 디버그 메시지로 대체
                 return 1;
             }
 
             // 수신된 데이터를 패킷 버퍼에 추가
             if (network->m_packetBufferSize + recvBytes > sizeof(network->m_packetBuffer)) {
-                network->LogToFile("[Error] Packet buffer overflow, clearing buffer");
+                // LogToFile 제거 - 디버그 메시지로 대체
                 network->m_packetBufferSize = 0;
                 memset(network->m_packetBuffer, 0, sizeof(network->m_packetBuffer));
                 continue;
@@ -363,11 +385,11 @@ DWORD WINAPI NetworkManager::NetworkThread(LPVOID arg) {
                 
                 // 패킷 크기 검증
                 if (header->size < sizeof(PacketHeader) || header->size > sizeof(network->m_packetBuffer)) {
-                    network->LogToFile("[Error] Invalid packet size: " + std::to_string(header->size));
+                    // LogToFile 제거 - 디버그 메시지로 대체
                     network->m_packetBufferSize = 0;
                     memset(network->m_packetBuffer, 0, sizeof(network->m_packetBuffer));
                     if (++errorCount >= MAX_ERRORS) {
-                        network->LogToFile("[Warning] Many invalid packets, but continuing...");
+                        // LogToFile 제거 - 디버그 메시지로 대체
                         // 에러가 많아도 연결 유지
                         continue;
                     }
@@ -384,10 +406,10 @@ DWORD WINAPI NetworkManager::NetworkThread(LPVOID arg) {
                     network->ProcessPacket(network->m_packetBuffer + processedBytes);
                 } catch (const std::exception& e) {
                     // 패킷 처리 중 예외 발생 시 무시하고 계속 진행
-                    network->LogToFile("[Error] Exception during packet processing: " + std::string(e.what()));
+                    // LogToFile 제거 - 디버그 메시지로 대체
                 } catch (...) {
                     // 패킷 처리 중 예외 발생 시 무시하고 계속 진행
-                    network->LogToFile("[Error] Unknown exception during packet processing");
+                    // LogToFile 제거 - 디버그 메시지로 대체
                 }
                 processedBytes += header->size;
             }
@@ -406,9 +428,9 @@ DWORD WINAPI NetworkManager::NetworkThread(LPVOID arg) {
             lastErrorTime = GetTickCount();
         }
         catch (const std::exception& e) {
-            network->LogToFile("[Error] Exception in network thread: " + std::string(e.what()));
+            // LogToFile 제거 - 디버그 메시지로 대체
             if (++errorCount >= MAX_ERRORS) {
-                network->LogToFile("[Warning] Many exceptions, but continuing...");
+                // LogToFile 제거 - 디버그 메시지로 대체
                 // 에러가 많아도 연결 유지
                 continue;
             }
@@ -416,7 +438,7 @@ DWORD WINAPI NetworkManager::NetworkThread(LPVOID arg) {
         }
     }
     
-    network->LogToFile("[Thread] Network thread ended normally");
+    // LogToFile 제거 - 디버그 메시지로 대체
     return 0;
 }
 
@@ -426,13 +448,11 @@ void NetworkManager::HandleError(const std::string& description) {
     m_errorCount++;
     m_lastErrorTime = currentTime;
     
-    std::string errorMsg = "[Error] Count: " + std::to_string(m_errorCount) + 
-                          ", Description: " + description;
-    LogToFile(errorMsg);
+    // LogToFile 제거 - 디버그 메시지로 대체
     
     // 5번 연속 에러 시 재연결 시도
     if (m_errorCount >= 5) {
-        LogToFile("[Warning] Too many errors, considering reconnection");
+        // LogToFile 제거 - 디버그 메시지로 대체
         m_shouldReconnect = true;
     }
 }
@@ -451,7 +471,7 @@ bool NetworkManager::AttemptReconnect() {
     m_lastReconnectTime = currentTime;
     m_reconnectAttempts++;
     
-    LogToFile("[Reconnect] Attempting reconnection #" + std::to_string(m_reconnectAttempts));
+    // LogToFile 제거 - 디버그 메시지로 대체
     
     // 기존 소켓 정리
     if (sock != INVALID_SOCKET) {
@@ -464,13 +484,13 @@ bool NetworkManager::AttemptReconnect() {
     
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        LogToFile("[Error] WSAStartup failed during reconnection");
+        // LogToFile 제거 - 디버그 메시지로 대체
         return false;
     }
 
     sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock == INVALID_SOCKET) {
-        LogToFile("[Error] Socket creation failed during reconnection");
+        // LogToFile 제거 - 디버그 메시지로 대체
         return false;
     }
 
@@ -484,13 +504,13 @@ bool NetworkManager::AttemptReconnect() {
     inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
     serverAddr.sin_port = htons(5000);
 
-    if (connect(sock, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
+        if (connect(sock, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
         int error = WSAGetLastError();
-        LogToFile("[Error] Reconnection failed with error: " + std::to_string(error));
+        // LogToFile 제거 - 디버그 메시지로 대체
         return false;
     }
-
-    LogToFile("[Reconnect] Successfully reconnected to server");
+    
+    // LogToFile 제거 - 디버그 메시지로 대체
     
     // 재연결 성공 시 상태 초기화
     m_shouldReconnect = false;
@@ -499,10 +519,10 @@ bool NetworkManager::AttemptReconnect() {
     
     // 로그인 상태 복구 시도 (스테이지 변경 중이 아닐 때만)
     if (!m_username.empty() && !m_isStageChanging) {
-        LogToFile("[Reconnect] Attempting to restore login session");
+        // LogToFile 제거 - 디버그 메시지로 대체
         SendLoginRequest(m_username);
     } else if (m_isStageChanging) {
-        LogToFile("[Reconnect] Skipping login restore during stage change");
+        // LogToFile 제거 - 디버그 메시지로 대체
     }
     
     return true;
@@ -512,7 +532,7 @@ void NetworkManager::ResetErrorInfo() {
     m_errorCount = 0;
     m_packetBufferSize = 0;
     memset(m_packetBuffer, 0, sizeof(m_packetBuffer));
-    LogToFile("[Info] Error info and packet buffer reset");
+    // LogToFile 제거 - 디버그 메시지로 대체
 }
 
 void NetworkManager::SendPlayerUpdate(float x, float y, float z, float rotY) {
@@ -526,7 +546,7 @@ void NetworkManager::SendPlayerUpdate(float x, float y, float z, float rotY) {
             while (safeRotY < -180.0f) safeRotY += 360.0f;
             while (safeRotY > 180.0f) safeRotY -= 360.0f;
             
-            LogToFile("[Warning] Normalized rotation value from " + std::to_string(rotY) + " to " + std::to_string(safeRotY));
+            // LogToFile 제거 - 디버그 메시지로 대체
         }
         
         PacketPlayerUpdate pkt;
@@ -560,16 +580,16 @@ void NetworkManager::SendPlayerUpdate(float x, float y, float z, float rotY) {
                 HandleError("Connection lost during send: " + std::to_string(error));
             } else if (error == WSAEWOULDBLOCK) {
                 // 일시적 에러, 무시하고 계속 진행
-                LogToFile("[Warning] Send buffer full, packet dropped");
+                // LogToFile 제거 - 디버그 메시지로 대체
             } else {
                 // 기타 에러는 로그만 남기고 계속 진행
-                LogToFile("[Warning] Send error: " + std::to_string(error) + ", continuing...");
+                // LogToFile 제거 - 디버그 메시지로 대체
             }
         } else {
             // Player 테스트를 위해 위치 업데이트 로그 추가
             static float lastX = 0.0f, lastY = 0.0f, lastZ = 0.0f;
             if (abs(x - lastX) > 1.0f || abs(y - lastY) > 1.0f || abs(z - lastZ) > 1.0f) {
-                LogToFile("[Player] Sent position update: (" + std::to_string(x) + ", " + std::to_string(y) + ", " + std::to_string(z) + ")");
+                // LogToFile 제거 - 디버그 메시지로 대체
                 lastX = x; lastY = y; lastZ = z;
             }
         }
@@ -598,10 +618,7 @@ void NetworkManager::ProcessPacket(char* buffer) {
                     
                     // 85% 초과 시에만 경고
                     if (memoryUsagePercent > 85.0) {
-                        char memBuffer[256];
-                        sprintf_s(memBuffer, "[Memory] High usage: %.1f%% (%llu MB)", 
-                            memoryUsagePercent, usedMemory / (1024*1024));
-                        LogToFile(memBuffer);
+                        // LogToFile 제거 - 디버그 메시지로 대체
                     }
                 }
             }
@@ -614,12 +631,12 @@ void NetworkManager::ProcessPacket(char* buffer) {
         switch (header->type) {
             case PACKET_LOGIN_RESPONSE: {
                 PacketLoginResponse* loginRespPkt = (PacketLoginResponse*)buffer;
-                LogToFile("[Login] Received login response - Success: " + std::to_string(loginRespPkt->success));
+                // LogToFile 제거 - 디버그 메시지로 대체
                 
                 if (loginRespPkt->success) {
                     m_myClientID = loginRespPkt->clientID;
                     m_isLoggedIn = true;
-                    LogToFile("[Login] Login successful - Client ID: " + std::to_string(m_myClientID));
+                    // LogToFile 제거 - 디버그 메시지로 대체
                     
                     // 로그인 성공 후 준비 완료 신호 전송
                     PacketClientReady readyPacket;
@@ -630,9 +647,9 @@ void NetworkManager::ProcessPacket(char* buffer) {
                     int sendResult = send(sock, (char*)&readyPacket, sizeof(readyPacket), 0);
                     if (sendResult == SOCKET_ERROR) {
                         int error = WSAGetLastError();
-                        LogToFile("[Error] Failed to send ready packet: " + std::to_string(error));
+                        // LogToFile 제거 - 디버그 메시지로 대체
                     } else {
-                        LogToFile("[Login] Sent client ready packet");
+                        // LogToFile 제거 - 디버그 메시지로 대체
                     }
                     
                     if (m_loginSuccessCallback) {
@@ -641,7 +658,7 @@ void NetworkManager::ProcessPacket(char* buffer) {
                 } else {
                     m_isLoggedIn = false;
                     std::string errorMsg = loginRespPkt->message;
-                    LogToFile("[Login] Login failed: " + errorMsg);
+                    // LogToFile 제거 - 디버그 메시지로 대체
                     
                     if (m_loginFailedCallback) {
                         m_loginFailedCallback(errorMsg);
@@ -652,25 +669,25 @@ void NetworkManager::ProcessPacket(char* buffer) {
             
             case PACKET_PLAYER_SPAWN: {
                 PacketPlayerSpawn* spawnPkt = (PacketPlayerSpawn*)buffer;
-                LogToFile("[Spawn] Processing spawn packet for ID: " + std::to_string(spawnPkt->playerID));
+                // LogToFile 제거 - 디버그 메시지로 대체
 
                 // 로그인 상태 확인
                 if (!m_isLoggedIn) {
-                    LogToFile("[Spawn] Ignoring player spawn packet - not logged in yet");
+                    // LogToFile 제거 - 디버그 메시지로 대체
                     break;
                 }
 
                 if (m_myClientID == 0) {
                     m_myClientID = spawnPkt->playerID;
-                    LogToFile("[Spawn] Set my client ID to: " + std::to_string(m_myClientID));
+                    // LogToFile 제거 - 디버그 메시지로 대체
                 }
                 else if (spawnPkt->playerID != m_myClientID) {
                     try {
                         OtherPlayerManager::GetInstance()->SpawnOtherPlayer(spawnPkt->playerID);
-                        LogToFile("[Spawn] Successfully spawned other player: " + std::to_string(spawnPkt->playerID) + " (" + spawnPkt->username + ")");
+                        // LogToFile 제거 - 디버그 메시지로 대체
                     }
                     catch (const std::exception& e) {
-                        LogToFile("[Error] Failed to spawn other player: " + std::string(e.what()));
+                        // LogToFile 제거 - 디버그 메시지로 대체
                     }
                 }
                 break;
@@ -678,15 +695,15 @@ void NetworkManager::ProcessPacket(char* buffer) {
             
             case PACKET_PLAYER_DISCONNECT: {
                 PacketPlayerDisconnect* disconnectPkt = (PacketPlayerDisconnect*)buffer;
-                LogToFile("[Disconnect] Player disconnected: " + std::to_string(disconnectPkt->playerID) + " (" + disconnectPkt->username + ")");
+                // LogToFile 제거 - 디버그 메시지로 대체
                 
                 if (disconnectPkt->playerID != m_myClientID) {
                     try {
                         OtherPlayerManager::GetInstance()->RemoveOtherPlayer(disconnectPkt->playerID);
-                        LogToFile("[Disconnect] Removed other player: " + std::to_string(disconnectPkt->playerID));
+                        // LogToFile 제거 - 디버그 메시지로 대체
                     }
                     catch (const std::exception& e) {
-                        LogToFile("[Error] Failed to remove other player: " + std::string(e.what()));
+                        // LogToFile 제거 - 디버그 메시지로 대체
                     }
                 }
                 break;
@@ -697,12 +714,12 @@ void NetworkManager::ProcessPacket(char* buffer) {
                 
                 // 로그인 상태 확인
                 if (!m_isLoggedIn) {
-                    LogToFile("[Update] Ignoring player update packet - not logged in yet");
+                    // LogToFile 제거 - 디버그 메시지로 대체
                     break;
                 }
                 
                 if (updatePkt->clientID == m_myClientID) {
-                    LogToFile("[Update] Ignoring own update packet");
+                    // LogToFile 제거 - 디버그 메시지로 대체
                     return;
                 }
 
@@ -716,7 +733,7 @@ void NetworkManager::ProcessPacket(char* buffer) {
                 OtherPlayerManager::GetInstance()->UpdateOtherPlayer(
                     updatePkt->clientID, updatePkt->x, updatePkt->y, updatePkt->z, updatePkt->rotY, 
                     animationFile, animationTime, stageName);
-                LogToFile("[Update] Successfully updated player: " + std::to_string(updatePkt->clientID) + " in stage: " + stageName);
+                // LogToFile 제거 - 디버그 메시지로 대체
                 break;
             }
 
@@ -855,7 +872,7 @@ void NetworkManager::ProcessPacket(char* buffer) {
                         if (tigerObj && tigerObj->IsNetworkTiger() && tigerObj->GetNetworkTigerID() == tigerAttackPkt->tigerID) {
                             // 서버 공격 신호 설정 (공격 오브젝트는 0.4초 후 CalcTime에서 생성됨)
                             tigerObj->SetServerAttackSignal(true);
-                            LogToFile("[Tiger] Network tiger " + std::to_string(tigerAttackPkt->tigerID) + " received attack signal from server");
+                            // LogToFile 제거 - 디버그 메시지로 대체
                             break;
                         }
                     }
@@ -886,10 +903,10 @@ void NetworkManager::ProcessPacket(char* buffer) {
                                 } else {
                                     // 클라이언트에서 이미 hit 애니메이션을 재생했으므로 생명력만 업데이트
                                     // 애니메이션은 클라이언트에서 관리하므로 서버에서 재생하지 않음
-                                    LogToFile("[Tiger] Hit animation already playing for tiger " + std::to_string(tigerHitPkt->tigerID));
+                                    // LogToFile 제거 - 디버그 메시지로 대체
                                 }
                                 
-                                LogToFile("[Tiger] Tiger " + std::to_string(tigerHitPkt->tigerID) + " hit, remaining life: " + std::to_string(tigerHitPkt->life));
+                                // LogToFile 제거 - 디버그 메시지로 대체
                             }
                             break;
                         }
@@ -897,14 +914,54 @@ void NetworkManager::ProcessPacket(char* buffer) {
                 }
                 break;
             }
+            
+            case PACKET_PUZZLE_SYNC: {
+                PacketPuzzleSync* puzzleSyncPkt = (PacketPuzzleSync*)buffer;
+                
+                // 로그인 상태 확인
+                if (!m_isLoggedIn) {
+                    break;
+                }
+                
+                OutputDebugString(L"[Puzzle] Received PACKET_PUZZLE_SYNC from server\n");
+                
+                // Scene의 퍼즐 상태를 서버에서 받은 상태로 동기화
+                if (m_scene) {
+                    // 퍼즐 상태를 Scene에 전달
+                    int(*puzzleStatus)[3] = m_scene->GetPuzzleStatus();
+                    for (int i = 0; i < 3; ++i) {
+                        for (int j = 0; j < 3; ++j) {
+                            puzzleStatus[i][j] = puzzleSyncPkt->puzzleStatus[i][j];
+                        }
+                    }
+                    
+                    OutputDebugString(L"[Puzzle] Updated Scene's mPuzzleStatus array\n");
+                    
+                    // 퍼즐 상태가 업데이트되었으므로 실제 퍼즐 셀들의 텍스처도 업데이트
+                    m_scene->UpdatePuzzleCellsFromStatus();
+                    
+                    OutputDebugString(L"[Puzzle] Called UpdatePuzzleCellsFromStatus()\n");
+                    
+                    // 디버그: 퍼즐 상태 출력
+                    wchar_t debugMsg[256];
+                    swprintf_s(debugMsg, L"[Puzzle] Final puzzle status: [%d,%d,%d] [%d,%d,%d] [%d,%d,%d]\n",
+                        puzzleSyncPkt->puzzleStatus[0][0], puzzleSyncPkt->puzzleStatus[0][1], puzzleSyncPkt->puzzleStatus[0][2],
+                        puzzleSyncPkt->puzzleStatus[1][0], puzzleSyncPkt->puzzleStatus[1][1], puzzleSyncPkt->puzzleStatus[1][2],
+                        puzzleSyncPkt->puzzleStatus[2][0], puzzleSyncPkt->puzzleStatus[2][1], puzzleSyncPkt->puzzleStatus[2][2]);
+                    OutputDebugString(debugMsg);
+                } else {
+                    OutputDebugString(L"[Puzzle] Error: m_scene is null!\n");
+                }
+                break;
+            }
 
             default:
-                LogToFile("[Warning] Unknown packet type: " + std::to_string(header->type));
+                // LogToFile 제거 - 디버그 메시지로 대체
                 break;
         }
     }
     catch (const std::exception& e) {
-        LogToFile("[Error] Failed to process packet: " + std::string(e.what()));
+        // LogToFile 제거 - 디버그 메시지로 대체
         // 예외를 상위로 전파하지 않고 여기서 처리
     }
 
@@ -949,9 +1006,9 @@ void NetworkManager::Update(GameTimer& gTimer, Scene* scene) {
     // 재연결 시도가 필요한 경우
     if (ShouldReconnect()) {
         if (AttemptReconnect()) {
-            LogToFile("[Update] Successfully reconnected");
+            // LogToFile 제거 - 디버그 메시지로 대체
         } else {
-            LogToFile("[Update] Reconnection attempt failed");
+            // LogToFile 제거 - 디버그 메시지로 대체
         }
         return;
     }
@@ -969,13 +1026,13 @@ void NetworkManager::Update(GameTimer& gTimer, Scene* scene) {
 
     auto* player = scene->GetLocalPlayer();
     if (!player) {
-        LogToFile("[Error] Local PlayerObject not found in scene");
+        // LogToFile 제거 - 디버그 메시지로 대체
         return;
     }
     
     auto* transform = player->GetComponent<Transform>();
     if (!transform) {
-        LogToFile("[Error] Transform component not found on Local PlayerObject");
+        // LogToFile 제거 - 디버그 메시지로 대체
         return;
     }
     
@@ -989,7 +1046,7 @@ void NetworkManager::Update(GameTimer& gTimer, Scene* scene) {
         while (rotY < -180.0f) rotY += 360.0f;
         while (rotY > 180.0f) rotY -= 360.0f;
         
-        LogToFile("[Warning] Normalized rotation value in Update from " + std::to_string(XMVectorGetY(rot)) + " to " + std::to_string(rotY));
+        // LogToFile 제거 - 디버그 메시지로 대체
     }
     
     m_updateTimer += gTimer.DeltaTime();
@@ -1014,5 +1071,5 @@ void NetworkManager::ClearTigerInfo() {
 
 void NetworkManager::SetStageTransitioning(bool transitioning) {
     m_isStageChanging = transitioning;
-    LogToFile("[Stage] Stage transition state set to: " + std::string(transitioning ? "true" : "false"));
+    // LogToFile 제거 - 디버그 메시지로 대체
 } 

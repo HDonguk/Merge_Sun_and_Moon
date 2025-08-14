@@ -1740,6 +1740,57 @@ bool PuzzleFrameObject::AllCellMatch()
     return true;
 }
 
+void PuzzleFrameObject::UpdatePuzzleCellsFromStatus(int puzzleStatus[3][3])
+{
+    OutputDebugString(L"[PuzzleFrame] UpdatePuzzleCellsFromStatus() called\n");
+    
+    // 모든 퍼즐 셀의 상태를 서버에서 받은 상태로 업데이트
+    for (int i = 0; i < 3; ++i)
+    {
+        for (int j = 0; j < 3; ++j)
+        {
+            if (mCells[i][j])
+            {
+                int oldStatus = mCells[i][j]->GetStatus();
+                mCells[i][j]->SetStatus(puzzleStatus[i][j]);
+                int newStatus = mCells[i][j]->GetStatus();
+                
+                // 상태가 변경된 경우에만 로그 출력
+                if (oldStatus != newStatus) {
+                    wchar_t debugMsg[128];
+                    swprintf_s(debugMsg, L"[PuzzleFrame] Cell[%d][%d] status changed: %d -> %d\n", i, j, oldStatus, newStatus);
+                    OutputDebugString(debugMsg);
+                }
+            }
+            else
+            {
+                OutputDebugString(L"[PuzzleFrame] Warning: mCells[i][j] is null\n");
+            }
+        }
+    }
+    
+    OutputDebugString(L"[PuzzleFrame] All puzzle cells updated\n");
+}
+
+void PuzzleFrameObject::GetPuzzleCellStatus(int puzzleStatus[3][3])
+{
+    // 현재 퍼즐 셀들의 상태를 puzzleStatus 배열에 복사
+    for (int i = 0; i < 3; ++i)
+    {
+        for (int j = 0; j < 3; ++j)
+        {
+            if (mCells[i][j])
+            {
+                puzzleStatus[i][j] = mCells[i][j]->GetStatus();
+            }
+            else
+            {
+                puzzleStatus[i][j] = 0;  // 기본값
+            }
+        }
+    }
+}
+
 void PuzzleCellObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration)
 {
     RiceCakeProjectileObject* riceCake = dynamic_cast<RiceCakeProjectileObject*>(&other);
@@ -1757,12 +1808,40 @@ void PuzzleCellObject::OnProcessCollision(Object& other, XMVECTOR collisionNorma
         default:
             break;
         }
+        
+        // 퍼즐 상태가 변경되었으므로 서버와 동기화
+        if (m_scene) {
+            m_scene->SyncPuzzleStatus();
+        }
     }
 }
 
 int PuzzleCellObject::GetStatus()
 {
     return mStatus % 2;
+}
+
+void PuzzleCellObject::SetStatus(int status)
+{
+    int oldStatus = mStatus;
+    mStatus = status;
+    
+    // 텍스처도 즉시 업데이트
+    Texture* texture = GetComponent<Texture>();
+    if (texture) {
+        if (status == 0) {
+            texture->mName = L"PuzzleO";
+        } else {
+            texture->mName = L"PuzzleX";
+        }
+        
+        wchar_t debugMsg[128];
+        swprintf_s(debugMsg, L"[PuzzleCell] Status changed: %d -> %d, Texture set to: %s\n", 
+                   oldStatus, status, status == 0 ? L"PuzzleO" : L"PuzzleX");
+        OutputDebugString(debugMsg);
+    } else {
+        OutputDebugString(L"[PuzzleCell] Warning: Texture component not found\n");
+    }
 }
 
 void TigerObject::SetNetworkTransform(float x, float y, float z, float rotY)

@@ -1256,7 +1256,15 @@ std::tuple<float, float, float, float, float> Scene::GetBounds(float x, float z)
 
 int Scene::GetTextureIndex(wstring name)
 {
-    return m_texture_name_to_index.at(name);
+    auto it = m_texture_name_to_index.find(name);
+    if (it != m_texture_name_to_index.end()) {
+        return it->second;
+    }
+    // 텍스처를 찾을 수 없는 경우 기본값 반환
+    OutputDebugString(L"[Scene] Texture not found: ");
+    OutputDebugString(name.c_str());
+    OutputDebugString(L"\n");
+    return -1;
 }
 
 std::tuple<XMVECTOR, float> Scene::GetCollisionData(BoundingOrientedBox OBB1, BoundingOrientedBox OBB2)
@@ -1531,7 +1539,57 @@ void Scene::ProcessStageQueue()
 int(*Scene::GetPuzzleStatus())[3]
 {
         return mPuzzleStatus;
+}
+
+void Scene::UpdatePuzzleCellsFromStatus()
+{
+    OutputDebugString(L"[Scene] UpdatePuzzleCellsFromStatus() called\n");
     
+    // PuzzleFrameObject를 찾아서 퍼즐 셀들을 업데이트
+    for (Object* obj : m_objects) {
+        PuzzleFrameObject* puzzleFrame = dynamic_cast<PuzzleFrameObject*>(obj);
+        if (puzzleFrame) {
+            OutputDebugString(L"[Scene] Found PuzzleFrameObject, updating puzzle cells\n");
+            
+            // PuzzleFrameObject의 메서드를 사용하여 퍼즐 셀들을 업데이트
+            puzzleFrame->UpdatePuzzleCellsFromStatus(mPuzzleStatus);
+            
+            OutputDebugString(L"[Scene] Puzzle cells updated successfully\n");
+            break; // PuzzleFrameObject를 찾았으면 종료
+        }
+    }
+    
+    // PuzzleFrameObject를 찾지 못한 경우
+    static bool notFoundLogged = false;
+    if (!notFoundLogged) {
+        OutputDebugString(L"[Scene] Warning: PuzzleFrameObject not found in scene objects\n");
+        notFoundLogged = true;
+    }
+}
+
+void Scene::UpdatePuzzleStatusFromCells()
+{
+    // PuzzleFrameObject를 찾아서 현재 퍼즐 셀들의 상태를 mPuzzleStatus 배열에 반영
+    for (Object* obj : m_objects) {
+        PuzzleFrameObject* puzzleFrame = dynamic_cast<PuzzleFrameObject*>(obj);
+        if (puzzleFrame) {
+            // PuzzleFrameObject의 GetPuzzleCellStatus 메서드를 사용하여 현재 상태를 가져옴
+            puzzleFrame->GetPuzzleCellStatus(mPuzzleStatus);
+            OutputDebugString(L"[Scene] Updated mPuzzleStatus from actual puzzle cells\n");
+            break; // PuzzleFrameObject를 찾았으면 종료
+        }
+    }
+}
+
+void Scene::SyncPuzzleStatus() {
+    // Framework를 통해 NetworkManager에 접근하여 퍼즐 상태 전송
+    if (m_parent && m_parent->IsNetworkEnabled()) {
+        // 먼저 현재 퍼즐 셀들의 상태를 mPuzzleStatus 배열에 반영
+        UpdatePuzzleStatusFromCells();
+        
+        m_parent->GetNetworkManager().SendPuzzleUpdate(mPuzzleStatus);
+        OutputDebugString(L"[Scene] Puzzle status synced with server\n");
+    }
 }
 
 void Scene::DeleteCurrentObjects()
@@ -1638,8 +1696,15 @@ void Scene::BuildPSO(ID3D12Device* device)
     D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
     psoDesc.InputLayout = { m_inputElement.data(), static_cast<UINT>(m_inputElement.size())};
     psoDesc.pRootSignature = m_rootSignature.Get();
-    psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_shaders.at("VS_Opaque").Get());
-    psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_shaders.at("PS_Opaque").Get());
+    auto vsIt = m_shaders.find("VS_Opaque");
+    auto psIt = m_shaders.find("PS_Opaque");
+    if (vsIt != m_shaders.end() && psIt != m_shaders.end()) {
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(vsIt->second.Get());
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(psIt->second.Get());
+    } else {
+        OutputDebugString(L"[Scene] Required shaders not found for PSO_Opaque\n");
+        return;
+    }
     psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
     psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
     psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
@@ -1654,8 +1719,15 @@ void Scene::BuildPSO(ID3D12Device* device)
     psoDesc.RasterizerState.DepthBias = 10000;
     psoDesc.RasterizerState.DepthBiasClamp = 0.0f;
     psoDesc.RasterizerState.SlopeScaledDepthBias = 1.2f;
-    psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_shaders.at("VS_Shadow").Get());
-    psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_shaders.at("PS_Shadow").Get());
+    auto vsShadowIt = m_shaders.find("VS_Shadow");
+    auto psShadowIt = m_shaders.find("PS_Shadow");
+    if (vsShadowIt != m_shaders.end() && psShadowIt != m_shaders.end()) {
+        psoDesc.VS = CD3DX12_SHADER_BYTECODE(vsShadowIt->second.Get());
+        psoDesc.PS = CD3DX12_SHADER_BYTECODE(psShadowIt->second.Get());
+    } else {
+        OutputDebugString(L"[Scene] Required shaders not found for PSO_Shadow\n");
+        return;
+    }
     psoDesc.NumRenderTargets = 0;
     psoDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
     ThrowIfFailed(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(m_PSOs["PSO_Shadow"].GetAddressOf())));
@@ -2127,7 +2199,13 @@ void Scene::OnRender(ID3D12Device* device, ID3D12GraphicsCommandList* commandLis
     {
         commandList->RSSetViewports(1, &m_viewport);
         commandList->RSSetScissorRects(1, &m_scissorRect);
-        commandList->SetPipelineState(m_PSOs.at("PSO_Opaque").Get());
+        auto psoIt = m_PSOs.find("PSO_Opaque");
+        if (psoIt != m_PSOs.end()) {
+            commandList->SetPipelineState(psoIt->second.Get());
+        } else {
+            OutputDebugString(L"[Scene] PSO_Opaque not found\n");
+            return;
+        }
         commandList->SetGraphicsRootDescriptorTable(3, m_shadow->GetGpuDescHandleForShadow());
         RenderObjects(device, commandList);
         break;
@@ -2152,16 +2230,24 @@ void Scene::OnDestroy()
 void Scene::OnProcessCollision()
 {
     size_t objCount = m_objects.size();
-    for (int i = 0; i < objCount - 1; ++i)
+    if (objCount < 2) return; // 최소 2개 이상의 객체가 있어야 충돌 검사 가능
+    
+    for (size_t i = 0; i < objCount - 1; ++i)
     {
-        if (!m_objects[i]->GetValid()) continue;
+        // 배열 범위 검사
+        if (i >= m_objects.size()) break;
+        
+        if (!m_objects[i] || !m_objects[i]->GetValid()) continue;
         Object* obj = m_objects[i];
         Collider* collider = obj->GetComponent<Collider>();
         if (!collider) continue;
         auto& OBB = collider->GetOBB();
-        for (int j = i + 1; j < objCount; ++j)
+        for (size_t j = i + 1; j < objCount; ++j)
         {
-            if (!m_objects[j]->GetValid()) continue;
+            // 배열 범위 검사
+            if (j >= m_objects.size()) break;
+            
+            if (!m_objects[j] || !m_objects[j]->GetValid()) continue;
             Object* otherObj = m_objects[j];
             Collider* otherCollider = otherObj->GetComponent<Collider>();
             if (!otherCollider) continue;

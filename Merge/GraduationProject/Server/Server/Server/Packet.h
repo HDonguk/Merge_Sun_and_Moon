@@ -19,7 +19,9 @@ enum PacketType {
     PACKET_TIGER_ATTACK = 10,  // 호랑이 공격 패킷
     PACKET_TIGER_RESPAWN_REQUEST = 11,  // 호랑이 재생성 요청
     PACKET_TIGER_HIT = 12,     // 호랑이 Hit 패킷
-    PACKET_STAGE_CHANGE = 13   // 스테이지 변경 패킷
+    PACKET_STAGE_CHANGE = 13,  // 스테이지 변경 패킷
+    PACKET_PUZZLE_UPDATE = 14, // 퍼즐 상태 업데이트 패킷
+    PACKET_PUZZLE_SYNC = 15    // 퍼즐 상태 동기화 패킷
 };
 
 struct PacketPlayerUpdate {
@@ -101,5 +103,16 @@ struct PacketStageChange {
     PacketHeader header;
     int clientID;
     char stageName[32];  // 스테이지 이름 (예: "Hunting", "God")
+};
+
+struct PacketPuzzleUpdate {
+    PacketHeader header;
+    int clientID;
+    int puzzleStatus[3][3];  // 퍼즐 상태 (0: O, 1: X)
+};
+
+struct PacketPuzzleSync {
+    PacketHeader header;
+    int puzzleStatus[3][3];  // 서버에서 전송하는 퍼즐 상태
 };
 #pragma pack(pop)

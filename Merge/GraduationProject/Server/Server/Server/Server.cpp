@@ -16,7 +16,10 @@ GameServer::GameServer()
     , m_port(5000)
     , m_huntingStageActive(false)
     , m_randomEngine(std::random_device{}())
+    , m_puzzleInitialized(false)
 {
+    // 퍼즐 상태 초기화
+    InitializePuzzle();
 }
 
 GameServer::~GameServer() {
@@ -242,7 +245,7 @@ void GameServer::HandlePacket(IOContext* ioContext, int clientID, DWORD bytesTra
         
         // 패킷 헤더 유효성 검사
         if (header->size < sizeof(PacketHeader) || header->size > MAX_PACKET_SIZE || 
-            header->type <= 0 || header->type > 13) {
+            header->type <= 0 || header->type > 15) {
             std::cout << "[Error] Invalid packet header - Size: " << header->size 
                       << ", Type: " << header->type << ", Client: " << clientID << std::endl;
             
@@ -308,7 +311,10 @@ void GameServer::ProcessSinglePacket(char* buffer, int clientID, int packetSize)
                 response.success = true;
                 strncpy_s(response.message, "Already logged in", sizeof(response.message) - 1);
                 
-                SendPacket(m_clients[clientID].socket, &response, sizeof(response));
+                auto clientIt = m_clients.find(clientID);
+                if (clientIt != m_clients.end()) {
+                    SendPacket(clientIt->second.socket, &response, sizeof(response));
+                }
                 break;
             }
             
@@ -336,8 +342,11 @@ void GameServer::ProcessSinglePacket(char* buffer, int clientID, int packetSize)
                 strncpy_s(response.message, "Login successful", sizeof(response.message) - 1);
                 
                 // 클라이언트 정보 업데이트
-                m_clients[clientID].username = pkt->username;
-                m_clients[clientID].isLoggedIn = true;
+                auto clientIt = m_clients.find(clientID);
+                if (clientIt != m_clients.end()) {
+                    clientIt->second.username = pkt->username;
+                    clientIt->second.isLoggedIn = true;
+                }
                 
                 std::cout << "[Login] Success for client " << clientID << " - Username: " << pkt->username << std::endl;
                 
@@ -354,7 +363,10 @@ void GameServer::ProcessSinglePacket(char* buffer, int clientID, int packetSize)
                 std::cout << "[Login] Waiting for client " << clientID << " to send ready signal" << std::endl;
             }
             
-            SendPacket(m_clients[clientID].socket, &response, sizeof(response));
+            auto clientIt = m_clients.find(clientID);
+            if (clientIt != m_clients.end()) {
+                SendPacket(clientIt->second.socket, &response, sizeof(response));
+            }
             break;
         }
         
@@ -525,11 +537,18 @@ void GameServer::ProcessSinglePacket(char* buffer, int clientID, int packetSize)
                 tigerPacket.y = tiger.y;
                 tigerPacket.z = tiger.z;
                 
-                if (!SendPacket(m_clients[clientID].socket, &tigerPacket, sizeof(PacketTigerSpawn))) {
+                auto clientIt = m_clients.find(clientID);
+                if (clientIt != m_clients.end()) {
+                    if (!SendPacket(clientIt->second.socket, &tigerPacket, sizeof(PacketTigerSpawn))) {
                     std::cout << "[Error] Failed to send tiger respawn packet for ID: " << tiger.tigerID << std::endl;
                     break;
                 }
                 std::cout << "[Success] Sent tiger respawn packet for ID: " << tiger.tigerID << std::endl;
+                    } else {
+                        std::cout << "[Error] Client " << clientID << " not found for tiger respawn" << std::endl;
+                        break;
+                    }
+                }
                 
                 // 각 호랑이 스폰 사이에 짧은 지연 추가
                 Sleep(50);
@@ -587,9 +606,29 @@ void GameServer::ProcessSinglePacket(char* buffer, int clientID, int packetSize)
                 ActivateHuntingStage();
             }
             
+            // God 스테이지로 변경된 경우 퍼즐 상태 전송
+            if (strcmp(pkt->stageName, "God") == 0) {
+                SendPuzzleStatusToClient(clientID);
+            }
+            
             std::cout << "[StageChange] Total clients after stage change: " << m_clients.size() << std::endl;
             break;
         }
+        
+        case PACKET_PUZZLE_UPDATE: {
+            if (header->size != sizeof(PacketPuzzleUpdate)) {
+                std::cout << "[Error] Invalid PUZZLE_UPDATE packet size" << std::endl;
+                break;
+            }
+            PacketPuzzleUpdate* pkt = (PacketPuzzleUpdate*)buffer;
+            
+            std::cout << "[Puzzle] Client " << clientID << " updated puzzle status" << std::endl;
+            
+            // 서버의 퍼즐 상태 업데이트 및 다른 클라이언트들과 동기화
+            UpdatePuzzleStatus(clientID, pkt->puzzleStatus);
+            break;
+        }
+        
         default:
             std::cout << "  -> Unknown packet type" << std::endl;
             break;
@@ -769,7 +808,13 @@ void GameServer::BroadcastNewPlayer(int newClientID) {
         newClientPacket.header.type = PACKET_PLAYER_SPAWN;
         newClientPacket.header.size = sizeof(PacketPlayerSpawn);
         newClientPacket.playerID = newClientID;
-        strncpy_s(newClientPacket.username, m_clients[newClientID].username.c_str(), sizeof(newClientPacket.username) - 1);
+        auto newClientIt = m_clients.find(newClientID);
+        if (newClientIt != m_clients.end()) {
+            strncpy_s(newClientPacket.username, newClientIt->second.username.c_str(), sizeof(newClientPacket.username) - 1);
+        } else {
+            std::cout << "[Error] Client " << newClientID << " not found for username copy" << std::endl;
+            return;
+        }
         
         // 간단한 브로드캐스트 (에러 처리 개선)
         int broadcastCount = 0;
@@ -933,7 +978,9 @@ void GameServer::UpdateTigerBehavior(TigerInfo& tiger, float deltaTime) {
     
     // 이미 추적 중인 클라이언트가 있는지 확인
     if (tiger.targetClientID != -1 && m_clients.find(tiger.targetClientID) != m_clients.end()) {
-        const auto& targetClient = m_clients.at(tiger.targetClientID);
+        auto targetClientIt = m_clients.find(tiger.targetClientID);
+        if (targetClientIt != m_clients.end()) {
+            const auto& targetClient = targetClientIt->second;
         if (targetClient.isLoggedIn) {
             // 추적 중인 클라이언트가 여전히 로그인되어 있음
             
@@ -972,6 +1019,7 @@ void GameServer::UpdateTigerBehavior(TigerInfo& tiger, float deltaTime) {
             tiger.isChasing = false;
             OutputDebugStringA(("[Tiger] " + std::to_string(tiger.tigerID) + " stopped chasing client " + std::to_string(oldTargetID) + " (logged out)\n").c_str());
         }
+        }
     } else if (tiger.targetClientID != -1) {
         // 추적 중인 클라이언트가 더 이상 존재하지 않음 (연결 해제 등)
         int oldTargetID = tiger.targetClientID;
@@ -1004,10 +1052,13 @@ void GameServer::UpdateTigerBehavior(TigerInfo& tiger, float deltaTime) {
             float dist = sqrt(nearestDist);
             if (dist < CHASE_RADIUS) {
                 tiger.targetClientID = nearestClientID;
-                const auto& newTargetClient = m_clients.at(nearestClientID);
+                auto newTargetClientIt = m_clients.find(nearestClientID);
+                if (newTargetClientIt != m_clients.end()) {
+                    const auto& newTargetClient = newTargetClientIt->second;
                 OutputDebugStringA(("[Tiger] " + std::to_string(tiger.tigerID) + " started chasing client " + std::to_string(nearestClientID) + 
                     " at distance " + std::to_string(dist) + " (pos: " + std::to_string(newTargetClient.lastUpdate.x) + 
                     ", " + std::to_string(newTargetClient.lastUpdate.z) + ")\n").c_str());
+                }
             }
         }
     }
@@ -1301,6 +1352,71 @@ std::vector<int> GameServer::GetClientsInStage(const std::string& stageName) {
         }
     }
     return clientsInStage;
+}
+
+// 퍼즐 관련 메서드들 구현
+void GameServer::InitializePuzzle() {
+    // 기본 퍼즐 상태 설정 (클라이언트와 동일한 초기값)
+    m_puzzleStatus[0][0] = 0; m_puzzleStatus[0][1] = 0; m_puzzleStatus[0][2] = 0;
+    m_puzzleStatus[1][0] = 1; m_puzzleStatus[1][1] = 1; m_puzzleStatus[1][2] = 1;
+    m_puzzleStatus[2][0] = 0; m_puzzleStatus[2][1] = 0; m_puzzleStatus[2][2] = 0;
+    
+    m_puzzleInitialized = true;
+    std::cout << "[Server] Puzzle initialized with default state" << std::endl;
+}
+
+void GameServer::UpdatePuzzleStatus(int clientID, int puzzleStatus[3][3]) {
+    // 퍼즐 상태 업데이트
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            m_puzzleStatus[i][j] = puzzleStatus[i][j];
+        }
+    }
+    
+    std::cout << "[Server] Puzzle status updated by client " << clientID << std::endl;
+    
+    // 다른 클라이언트들에게 퍼즐 상태 동기화
+    BroadcastPuzzleStatus(clientID);
+}
+
+void GameServer::BroadcastPuzzleStatus(int excludeID) {
+    PacketPuzzleSync syncPacket;
+    syncPacket.header.type = PACKET_PUZZLE_SYNC;
+    syncPacket.header.size = sizeof(PacketPuzzleSync);
+    
+    // 현재 퍼즐 상태 복사
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            syncPacket.puzzleStatus[i][j] = m_puzzleStatus[i][j];
+        }
+    }
+    
+    // God 스테이지에 있는 모든 클라이언트에게 전송
+    BroadcastToStage(&syncPacket, sizeof(syncPacket), "God", excludeID);
+    
+    std::cout << "[Server] Puzzle status broadcasted to all clients in God stage" << std::endl;
+}
+
+void GameServer::SendPuzzleStatusToClient(int clientID) {
+    auto clientIt = m_clients.find(clientID);
+    if (clientIt == m_clients.end() || !clientIt->second.isLoggedIn) {
+        return;
+    }
+    
+    PacketPuzzleSync syncPacket;
+    syncPacket.header.type = PACKET_PUZZLE_SYNC;
+    syncPacket.header.size = sizeof(PacketPuzzleSync);
+    
+    // 현재 퍼즐 상태 복사
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            syncPacket.puzzleStatus[i][j] = m_puzzleStatus[i][j];
+        }
+    }
+    
+    if (SendPacket(clientIt->second.socket, &syncPacket, sizeof(syncPacket))) {
+        std::cout << "[Server] Puzzle status sent to client " << clientID << std::endl;
+    }
 }
 
 int main() {

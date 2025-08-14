@@ -1,0 +1,11 @@
+[21:43:01] [OtherPlayerManager] Stage transition started
+[21:43:01] [OtherPlayerManager] All other players cleared successfully
+[21:43:01] [OtherPlayerManager] Stage transition started
+[21:43:01] [OtherPlayerManager] All other players cleared successfully
+[21:43:01] [OtherPlayerManager] Stage transition ended
+[21:43:59] [OtherPlayerManager] Stage transition started
+[21:43:59] [OtherPlayerManager] All other players cleared successfully
+[21:43:59] [OtherPlayerManager] Stage transition started
+[21:43:59] [OtherPlayerManager] Stage transition ended
+[21:44:03] [OtherPlayerManager] Stage transition started
+[21:44:03] [OtherPlayerManager] All other players cleared successfully

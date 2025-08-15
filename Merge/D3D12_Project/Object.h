@@ -351,6 +351,7 @@ private:
 	XMFLOAT3 mDir{};
 	bool m_isNetworkProjectile = false;  // 네트워크 발사체 여부
 	int m_networkProjectileID = -1;      // 네트워크 발사체 ID
+	float m_updateTimer = 0.0f;          // 위치 업데이트 타이머 (일정 간격으로만 서버에 전송)
 
 public:
 	float mSpeed = 200.0f;  // 속도를 public으로 이동

@@ -533,6 +533,7 @@ void PlayerObject::Fire()
 {
     if (mIsFired) return;
 
+    // mIsFired 플래그를 함수 시작 부분에서 설정하여 중복 호출 방지
     mIsFired = true;
 
     Animation* anim = GetComponent<Animation>();
@@ -546,6 +547,18 @@ void PlayerObject::Fire()
 
     if (anim->mCurrentFileName == "boy_throw.fbx")
     {
+        // 떡이 부족하거나 이미 발사된 상태에서는 추가 발사 차단
+        if (mRiceCake <= 0) {
+            OutputDebugString(L"[PlayerObject] Fire() blocked - No rice cakes available\n");
+            return;
+        }
+
+        // 애니메이션 상태 재확인 (중복 호출 방지)
+        if (anim->mCurrentFileName != "boy_throw.fbx") {
+            OutputDebugString(L"[PlayerObject] Fire() blocked - Wrong animation state\n");
+            return;
+        }
+
         --mRiceCake;
 
         Transform* transform = GetComponent<Transform>();
@@ -575,6 +588,8 @@ void PlayerObject::Fire()
                 // 로컬 발사체임을 표시
                 obj->SetIsNetworkProjectile(false);
                 obj->SetNetworkProjectileID(obj->GetId());
+                
+                OutputDebugString(L"[PlayerObject] Rice cake projectile spawned and sent to server\n");
             }
         }
         
@@ -614,13 +629,23 @@ void PlayerObject::CalcTime(float deltaTime)
     if (anim->mCurrentFileName == "boy_attack(45).fbx") 
     {
         mElapseTime += deltaTime;
-        if (mElapseTime > 0.5f) Fire();
+        if (mElapseTime > 0.5f && !mIsFired) {
+            // 애니메이션 상태 재확인 (중복 호출 방지)
+            if (anim->mCurrentFileName == "boy_attack(45).fbx") {
+                Fire();
+            }
+        }
         if (mElapseTime > 1.0f) TimeOut();
     }
     else if (anim->mCurrentFileName == "boy_throw.fbx")
     {
         mElapseTime += deltaTime;
-        if (mElapseTime > 0.7f) Fire();
+        if (mElapseTime > 0.7f && !mIsFired) {
+            // 애니메이션 상태 재확인 (중복 호출 방지)
+            if (anim->mCurrentFileName == "boy_throw.fbx") {
+                Fire();
+            }
+        }
         if (mElapseTime > 1.0f) TimeOut();
     }
     else 
@@ -647,7 +672,6 @@ void PlayerObject::CalcTime(float deltaTime)
         mElapseTime += deltaTime;
         if (mElapseTime > 2.0f) TimeOut();
     }
-
 }
 
 
@@ -1681,13 +1705,20 @@ void RiceCakeProjectileObject::OnUpdate(GameTimer& gTimer)
     pos += XMLoadFloat3(&mDir) * mSpeed * gTimer.DeltaTime();
     transform->SetPosition(pos);
 
-    // 네트워크 발사체가 아닌 경우에만 서버에 위치 업데이트 전송
+    // 네트워크 발사체가 아닌 경우에만 서버에 위치 업데이트 전송 (일정 간격으로만)
     if (!m_isNetworkProjectile && m_scene && m_scene->GetFramework() && m_scene->GetFramework()->IsNetworkEnabled()) {
         NetworkManager& networkManager = m_scene->GetFramework()->GetNetworkManager();
         if (networkManager.IsLoggedIn()) {
-            XMFLOAT3 currentPos;
-            XMStoreFloat3(&currentPos, pos);
-            networkManager.SendRiceCakeUpdate(m_networkProjectileID, currentPos.x, currentPos.y, currentPos.z);
+            // 위치 업데이트를 일정 간격으로만 전송 (60fps 기준으로 30프레임마다, 약 2fps)
+            m_updateTimer += gTimer.DeltaTime();
+            const float UPDATE_INTERVAL = 0.5f; // 약 2fps (30프레임마다)
+            
+            if (m_updateTimer >= UPDATE_INTERVAL) {
+                XMFLOAT3 currentPos;
+                XMStoreFloat3(&currentPos, pos);
+                networkManager.SendRiceCakeUpdate(m_networkProjectileID, currentPos.x, currentPos.y, currentPos.z);
+                m_updateTimer = 0.0f;
+            }
         }
     }
 

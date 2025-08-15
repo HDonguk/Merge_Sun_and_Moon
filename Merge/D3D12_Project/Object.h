@@ -282,12 +282,34 @@ public:
 private:
 };
 
-class RotFenceObject : public Object
+class MovePlatformObject : public Object
 {
 public:
 	Object::Object;
 	void OnUpdate(GameTimer& gTimer) override;
 private:
+	float mSpeed = 30.0f;
+	float mElapseTime = 0.0f;
+};
+
+class RotPlatformObject : public Object
+{
+public:
+	Object::Object;
+	void OnUpdate(GameTimer& gTimer) override;
+private:
+	float mSpeed = 30.0f;
+};
+
+class PuzzlePlatformObject : public Object
+{
+public:
+	Object::Object;
+	void OnUpdate(GameTimer& gTimer) override;
+private:
+	float mSpeed = 30.0f;
+	float mMin = 5.0f;
+	float mMax = 150.0f;
 };
 
 class AxeObject : public Object

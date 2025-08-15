@@ -1342,12 +1342,12 @@ void TigerLeather::OnProcessCollision(Object& other, XMVECTOR collisionNormal, f
     if (player) Delete();
 }
 
-void RotFenceObject::OnUpdate(GameTimer& gTimer)
+void RotPlatformObject::OnUpdate(GameTimer& gTimer)
 {
     Transform* transform = GetComponent<Transform>();
     XMFLOAT3 rot{};
     XMStoreFloat3(&rot, transform->GetRotation());
-    rot.z += 30.0f * gTimer.DeltaTime();
+    rot.z += mSpeed * gTimer.DeltaTime();
     transform->SetRotation(XMLoadFloat3(&rot));
     Object::OnUpdate(gTimer);
 }
@@ -1841,6 +1841,50 @@ void PuzzleCellObject::OnProcessCollision(Object& other, XMVECTOR collisionNorma
 int PuzzleCellObject::GetStatus()
 {
     return mStatus % 2;
+}
+
+void PuzzlePlatformObject::OnUpdate(GameTimer& gTimer)
+{
+    PuzzleFrameObject* puzzleFrame = m_scene->GetObj<PuzzleFrameObject>();
+    XMVECTOR dir{};
+    bool isAllCellMatch = puzzleFrame->AllCellMatch();
+    if (isAllCellMatch)
+    {
+        dir = { 0.0f, 1.0f, 0.0f };
+    }
+    else
+    {
+        dir = { 0.0f, -1.0f, 0.0f };
+    }
+
+    Transform* transform = GetComponent<Transform>();
+    XMVECTOR pos = transform->GetPosition();
+    pos += dir * mSpeed * gTimer.DeltaTime();
+    float y = XMVectorGetY(pos);
+    y = y < mMin ? mMin : (y > mMax ? mMax : y);
+    pos = XMVectorSetY(pos, y);
+    transform->SetPosition(pos);
+
+    Object::OnUpdate(gTimer);
+}
+
+void MovePlatformObject::OnUpdate(GameTimer& gTimer)
+{
+    mElapseTime += gTimer.DeltaTime();
+    float result = sinf(mElapseTime);
+    result = result >= 0.0f ? 1.0f : -1.0f;
+    XMVECTOR dir = { 0.0f, 0.0f, result };
+
+    Transform* transform = GetComponent<Transform>();
+    XMMATRIX finalM = transform->GetFinalM();
+    dir = XMVector3TransformNormal(dir, finalM);
+    dir = XMVector3Normalize(dir);
+
+    XMVECTOR pos = transform->GetPosition();
+    pos += dir * mSpeed * gTimer.DeltaTime();
+    transform->SetPosition(pos);
+
+    Object::OnUpdate(gTimer);
 }
 
 void PuzzleCellObject::SetStatus(int value)

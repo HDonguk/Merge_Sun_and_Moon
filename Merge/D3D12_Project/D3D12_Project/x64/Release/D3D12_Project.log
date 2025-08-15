@@ -260,6 +260,27 @@ C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Packet
 C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\OtherPlayerManager.cpp(66,38): warning C4101: 'e' :참조되지 않은 지역 변수입니다.
 C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\OtherPlayerManager.cpp(81,38): warning C4101: 'e' :참조되지 않은 지역 변수입니다.
 C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\OtherPlayerManager.cpp(98,34): warning C4101: 'e' :참조되지 않은 지역 변수입니다.
+  ResourceManager.cpp
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\ResourceManager.cpp(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,1): warning C4005: '_WINSOCKAPI_': 매크로 재정의
+  (소스 파일 'ResourceManager.cpp'을(를) 컴파일하는 중)
+  C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,1):
+  이전에 명령줄에서 선언된 '_WINSOCKAPI_'
+  
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\ResourceManager.cpp(21,51): warning C4267: '=': 'size_t'에서 'UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\ResourceManager.cpp(22,51): warning C4267: '=': 'size_t'에서 'UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\ResourceManager.cpp(50,50): warning C4267: '=': 'size_t'에서 'UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\ResourceManager.cpp(51,50): warning C4267: '=': 'size_t'에서 'UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\ResourceManager.cpp(64,15): warning C4244: '초기화 중': 'std::streamoff'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\ResourceManager.cpp(71,12): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\ResourceManager.cpp(72,13): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\ResourceManager.cpp(95,41): warning C4244: '=': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\ResourceManager.cpp(97,41): warning C4244: '=': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\ResourceManager.cpp(156,48): warning C4267: '=': 'size_t'에서 'UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\ResourceManager.cpp(157,46): warning C4267: '=': 'size_t'에서 'UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\ResourceManager.cpp(158,50): warning C4267: '=': 'size_t'에서 'UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\ResourceManager.cpp(159,48): warning C4267: '=': 'size_t'에서 'UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\ResourceManager.cpp(160,49): warning C4267: '=': 'size_t'에서 'UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
   Scene.cpp
 C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
 C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,1): warning C4005: '_WINSOCKAPI_': 매크로 재정의
@@ -289,20 +310,22 @@ C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\LoginU
   (소스 파일 'Scene.cpp'을(를) 컴파일하는 중)
   
 C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(572,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1034,13): warning C4305: '=': 'double'에서 'float'(으)로 잘립니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1122,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1250,28): warning C4244: '=': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1251,29): warning C4244: '=': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1640,34): warning C4101: 'e' :참조되지 않은 지역 변수입니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1709,90): warning C4267: '인수': 'size_t'에서 'UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1762,79): warning C4267: '초기화 중': 'size_t'에서 'UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1762,33): warning C4267: '초기화 중': 'size_t'에서 'const UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1795,77): warning C4267: '초기화 중': 'size_t'에서 'UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1795,32): warning C4267: '초기화 중': 'size_t'에서 'const UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1830,82): warning C4267: '=': 'size_t'에서 'UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1837,80): warning C4267: '=': 'size_t'에서 'UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1889,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1906,110): warning C4267: '인수': 'size_t'에서 'UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(953,17): warning C4305: '=': 'double'에서 'float'(으)로 잘립니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1043,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1136,13): warning C4305: '=': 'double'에서 'float'(으)로 잘립니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1352,28): warning C4244: '=': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1353,29): warning C4244: '=': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1742,34): warning C4101: 'e' :참조되지 않은 지역 변수입니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1811,90): warning C4267: '인수': 'size_t'에서 'UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1821,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1864,79): warning C4267: '초기화 중': 'size_t'에서 'UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1864,33): warning C4267: '초기화 중': 'size_t'에서 'const UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1897,77): warning C4267: '초기화 중': 'size_t'에서 'UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1897,32): warning C4267: '초기화 중': 'size_t'에서 'const UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1932,82): warning C4267: '=': 'size_t'에서 'UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(1939,80): warning C4267: '=': 'size_t'에서 'UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(2008,110): warning C4267: '인수': 'size_t'에서 'UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Scene.cpp(2464,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
   Shadow.cpp
 C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Shadow.cpp(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
 C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,1): warning C4005: '_WINSOCKAPI_': 매크로 재정의
@@ -328,6 +351,10 @@ C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Framew
 C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\LoginUI.h(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
   (소스 파일 'Shadow.cpp'을(를) 컴파일하는 중)
   
+  SkinnedData.cpp
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\SkinnedData.cpp(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\SkinnedData.cpp(127,28): warning C4267: 'return': 'size_t'에서 'UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\SkinnedData.cpp(141,16): warning C4267: '초기화 중': 'size_t'에서 'UINT'(으)로 변환하면서 데이터가 손실될 수 있습니다.
   Win32Application.cpp
 C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Win32Application.cpp(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
 C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,1): warning C4005: '_WINSOCKAPI_': 매크로 재정의
@@ -354,8 +381,8 @@ C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\LoginU
   (소스 파일 'Win32Application.cpp'을(를) 컴파일하는 중)
   
   코드를 생성하고 있습니다.
-  19 of 4044 functions ( 0.5%) were compiled, the rest were copied from previous compilation.
-    7 functions were new in current compilation
-    83 functions had inline decision re-evaluated but remain unchanged
+  18 of 4055 functions ( 0.4%) were compiled, the rest were copied from previous compilation.
+    16 functions were new in current compilation
+    230 functions had inline decision re-evaluated but remain unchanged
   코드를 생성했습니다.
   D3D12_Project.vcxproj -> C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\x64\Release\D3D12_Project.exe

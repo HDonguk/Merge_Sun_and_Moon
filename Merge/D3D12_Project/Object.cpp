@@ -1850,33 +1850,7 @@ int PuzzleCellObject::GetStatus()
 
 void PuzzleCellObject::SetStatus(int value)
 {
-    int oldStatus = mStatus;
     mStatus = value;
-    
-    wchar_t debugMsg[256];
-    swprintf_s(debugMsg, L"[PuzzleCellObject] SetStatus: %d -> %d\n", oldStatus, value);
-    OutputDebugString(debugMsg);
-    
-    // 텍스처도 함께 업데이트
-    Texture* texture = GetComponent<Texture>();
-    if (texture) {
-        switch (value % 2)
-        {
-        case 0:
-            texture->mName = L"PuzzleO";
-            OutputDebugString(L"[PuzzleCellObject] Texture changed to PuzzleO\n");
-            break;
-        case 1:
-            texture->mName = L"PuzzleX";
-            OutputDebugString(L"[PuzzleCellObject] Texture changed to PuzzleX\n");
-            break;
-        default:
-            OutputDebugString(L"[PuzzleCellObject] Unknown status value\n");
-            break;
-        }
-    } else {
-        OutputDebugString(L"[PuzzleCellObject] Warning: Texture component not found\n");
-    }
 }
 
 

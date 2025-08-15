@@ -1470,6 +1470,10 @@ void Scene::BuildRandomPuzzleStatus()
             mPuzzleStatus[i][j] = uid1(dre1);
         }
     }
+    
+    // 클라이언트가 생성한 랜덤 퍼즐 패턴을 서버가 덮어쓰지 않도록 서버 동기화 제거
+    // 서버는 클라이언트의 퍼즐 상태 변경만 추적하고, 초기 패턴은 덮어쓰지 않음
+    OutputDebugString(L"[Scene] BuildRandomPuzzleStatus: Random puzzle pattern generated locally\n");
 }
 
 

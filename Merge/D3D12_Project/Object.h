@@ -423,7 +423,7 @@ public:
 class PuzzleCellObject : public Object
 {
 public:
-	Object::Object;
+	using Object::Object;
 	void OnUpdate(GameTimer& gTimer) override;
 	void OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration) override;
 	int GetStatus();

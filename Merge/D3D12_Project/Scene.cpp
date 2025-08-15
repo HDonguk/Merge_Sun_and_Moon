@@ -1463,17 +1463,20 @@ Object* Scene::GetObjFromId(uint32_t id)
 
 void Scene::BuildRandomPuzzleStatus()
 {
+    // 서버에서 퍼즐 상태를 받을 때까지 대기
+    // 클라이언트는 더 이상 로컬에서 랜덤 퍼즐을 생성하지 않음
+    // 서버가 God Stage 진입 시 PACKET_PUZZLE_SYNC로 퍼즐 상태를 전송함
+    
+    // 초기 상태는 모든 0으로 설정 (서버에서 덮어쓸 예정)
     for (int i = 0; i < 3; ++i)
     {
         for (int j = 0; j < 3; ++j)
         {
-            mPuzzleStatus[i][j] = uid1(dre1);
+            mPuzzleStatus[i][j] = 0;
         }
     }
     
-    // 클라이언트가 생성한 랜덤 퍼즐 패턴을 서버가 덮어쓰지 않도록 서버 동기화 제거
-    // 서버는 클라이언트의 퍼즐 상태 변경만 추적하고, 초기 패턴은 덮어쓰지 않음
-    OutputDebugString(L"[Scene] BuildRandomPuzzleStatus: Random puzzle pattern generated locally\n");
+    OutputDebugString(L"[Scene] BuildRandomPuzzleStatus: Waiting for server puzzle pattern\n");
 }
 
 
@@ -1746,8 +1749,10 @@ void Scene::UpdatePuzzleStatusFromCells()
 
 void Scene::SyncPuzzleStatus() {
     if (m_parent && m_parent->IsNetworkEnabled()) {
-        UpdatePuzzleStatusFromCells();
+        // UpdatePuzzleStatusFromCells() 호출 제거 - 클라이언트의 로컬 퍼즐 상태를 서버가 덮어쓰지 않도록 함
+        // 대신 현재 퍼즐 셀들의 상태만 서버로 전송 (로깅 및 추적용)
         m_parent->GetNetworkManager().SendPuzzleUpdate(mPuzzleStatus);
+        OutputDebugString(L"[Scene] SyncPuzzleStatus: Current puzzle status sent to server (local state preserved)\n");
     }
 }
 

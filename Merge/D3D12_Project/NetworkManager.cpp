@@ -923,7 +923,7 @@ void NetworkManager::ProcessPacket(char* buffer) {
                 }
                 
                 if (m_scene) {
-                    // Scene의 퍼즐 상태를 직접 업데이트
+                    // Scene의 퍼즐 상태를 서버에서 받은 값으로 업데이트
                     int(*puzzleStatus)[3] = m_scene->GetPuzzleStatus();
                     for (int i = 0; i < 3; ++i) {
                         for (int j = 0; j < 3; ++j) {
@@ -933,6 +933,8 @@ void NetworkManager::ProcessPacket(char* buffer) {
                     
                     // 퍼즐 셀들의 시각적 표현을 업데이트
                     m_scene->UpdatePuzzleCellsFromStatus();
+                    
+                    OutputDebugString(L"[NetworkManager] Received puzzle pattern from server and updated local state\n");
                 }
                 break;
             }

@@ -98,6 +98,7 @@ public:
         return localPlayer;
     }
 private:
+    void BuildRandomPuzzleStatus();
     void ProcessStageQueue();
     void CompactObjects();
     void ProcessObjectQueue();
@@ -142,7 +143,7 @@ private:
     XMFLOAT3 mInputDir{};
     uint32_t mMainCameraId = -1;
 
-    int mPuzzleStatus[3][3] = { {0,0,0},{1,1,1},{0,0,0} };
+    int mPuzzleStatus[3][3] = { {0,0,0},{0,0,0},{0,0,0} };
 
     unique_ptr<ResourceManager> m_resourceManager;
     //

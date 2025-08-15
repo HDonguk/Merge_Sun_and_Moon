@@ -424,9 +424,10 @@ class PuzzleCellObject : public Object
 {
 public:
 	Object::Object;
+	void OnUpdate(GameTimer& gTimer) override;
 	void OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration) override;
 	int GetStatus();
-	void SetStatus(int status);
+	void SetStatus(int value);
 private:
 	int mStatus = 0;
 };
@@ -442,6 +443,14 @@ public:
 private:
 	PuzzleCellObject* mCells[3][3] = {};
 };
+
+class PuzzleQuestObject : public Object
+{
+public:
+	PuzzleQuestObject(Scene* scene, uint32_t id, uint32_t parentId = -1);
+private:
+};
+
 
 class GrassGroupObject : public Object
 {

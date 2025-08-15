@@ -7,7 +7,7 @@
 #include "Framework.h"
 #include "NetworkManager.h"
 
-std::random_device rd;  // ù ° rd ü
+std::random_device rd; 
 default_random_engine dre(rd());
 uniform_int_distribution uid(-180,180);
 
@@ -1767,6 +1767,23 @@ bool PuzzleFrameObject::AllCellMatch()
     return true;
 }
 
+void PuzzleCellObject::OnUpdate(GameTimer& gTimer)
+{
+    Texture* texture = GetComponent<Texture>();
+    switch (mStatus % 2)
+    {
+    case 0:
+        texture->mName = L"PuzzleO";
+        break;
+    case 1:
+        texture->mName = L"PuzzleX";
+        break;
+    default:
+        break;
+    }
+    Object::OnUpdate(gTimer);
+}
+
 void PuzzleFrameObject::UpdatePuzzleCellsFromStatus(int puzzleStatus[3][3])
 {
     // 모든 퍼즐 셀의 상태를 서버에서 받은 상태로 업데이트
@@ -1818,19 +1835,7 @@ void PuzzleCellObject::OnProcessCollision(Object& other, XMVECTOR collisionNorma
     RiceCakeProjectileObject* riceCake = dynamic_cast<RiceCakeProjectileObject*>(&other);
     if (riceCake)
     {
-        Texture* texture = GetComponent<Texture>();
-        switch (++mStatus % 2)
-        {
-        case 0:
-            texture->mName = L"PuzzleO";
-            break;
-        case 1:
-            texture->mName = L"PuzzleX";
-            break;
-        default:
-            break;
-        }
-        
+        ++mStatus;
         // 퍼즐 상태가 변경되었으므로 서버와 동기화
         if (m_scene) {
             m_scene->SyncPuzzleStatus();
@@ -1842,6 +1847,38 @@ int PuzzleCellObject::GetStatus()
 {
     return mStatus % 2;
 }
+
+void PuzzleCellObject::SetStatus(int value)
+{
+    int oldStatus = mStatus;
+    mStatus = value;
+    
+    wchar_t debugMsg[256];
+    swprintf_s(debugMsg, L"[PuzzleCellObject] SetStatus: %d -> %d\n", oldStatus, value);
+    OutputDebugString(debugMsg);
+    
+    // 텍스처도 함께 업데이트
+    Texture* texture = GetComponent<Texture>();
+    if (texture) {
+        switch (value % 2)
+        {
+        case 0:
+            texture->mName = L"PuzzleO";
+            OutputDebugString(L"[PuzzleCellObject] Texture changed to PuzzleO\n");
+            break;
+        case 1:
+            texture->mName = L"PuzzleX";
+            OutputDebugString(L"[PuzzleCellObject] Texture changed to PuzzleX\n");
+            break;
+        default:
+            OutputDebugString(L"[PuzzleCellObject] Unknown status value\n");
+            break;
+        }
+    } else {
+        OutputDebugString(L"[PuzzleCellObject] Warning: Texture component not found\n");
+    }
+}
+
 
 void PuzzlePlatformObject::OnUpdate(GameTimer& gTimer)
 {
@@ -1887,36 +1924,29 @@ void MovePlatformObject::OnUpdate(GameTimer& gTimer)
     Object::OnUpdate(gTimer);
 }
 
-void PuzzleCellObject::SetStatus(int value)
+PuzzleQuestObject::PuzzleQuestObject(Scene* scene, uint32_t id, uint32_t parentId) : Object(scene, id, parentId)
 {
-    int oldStatus = mStatus;
-    mStatus = value;
-    
-    wchar_t debugMsg[256];
-    swprintf_s(debugMsg, L"[PuzzleCellObject] SetStatus: %d -> %d\n", oldStatus, value);
-    OutputDebugString(debugMsg);
-    
-    // 텍스처도 함께 업데이트
-    Texture* texture = GetComponent<Texture>();
-    if (texture) {
-        switch (value % 2)
+    int(*targetStatus)[3] = scene->GetPuzzleStatus();
+
+    PuzzleCellObject* obj = nullptr;
+    float scale = 0.27f;
+    float offset = 0.315f;
+    for (int i = 0; i < 3; ++i)
+    {
+        for (int j = 0; j < 3; ++j)
         {
-        case 0:
-            texture->mName = L"PuzzleO";
-            OutputDebugString(L"[PuzzleCellObject] Texture changed to PuzzleO\n");
-            break;
-        case 1:
-            texture->mName = L"PuzzleX";
-            OutputDebugString(L"[PuzzleCellObject] Texture changed to PuzzleX\n");
-            break;
-        default:
-            OutputDebugString(L"[PuzzleCellObject] Unknown status value\n");
-            break;
+            obj = new PuzzleCellObject(scene, scene->AllocateId(), id);
+            obj->AddComponent(new Transform({ 0.05f + offset * j, 0.0001f, 0.05f + offset * i }, { 0.0f, 0.0f, 0.0f }, { scale, 1.0f, scale }));
+            obj->AddComponent(new Mesh("Quad"));
+            obj->AddComponent(new Texture(L"PuzzleO", -1.0f, 0.4f));
+            scene->AddObj(obj);
+
+            obj->SetStatus(targetStatus[i][j]);
         }
-    } else {
-        OutputDebugString(L"[PuzzleCellObject] Warning: Texture component not found\n");
     }
+
 }
+
 
 void TigerObject::SetNetworkTransform(float x, float y, float z, float rotY)
 {

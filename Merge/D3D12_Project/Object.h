@@ -179,6 +179,7 @@ public:
 	void Dead();
 	void SetLife(int life) { mLife = life; }
 	int GetLife() const { return mLife; }
+	bool IsDead() const { return mIsDead; }  // 죽은 상태 확인
 	void ResetHitTimer() { mElapseTime = 0.0f; }
 	void ResetHitState() { mIsHitted = false; }
 	void ResetAnimationTimer() { mElapseTime = 0.0f; }
@@ -206,6 +207,7 @@ private:
 	bool mIsFired = false;
 	bool mIsHitted = false;
 	int mLife = 3;
+	bool mIsDead = false; // 죽은 상태 플래그 추가
 	
 	// 네트워크 관련 멤버 변수 (단순화)
 	bool m_isNetworkTiger = false;

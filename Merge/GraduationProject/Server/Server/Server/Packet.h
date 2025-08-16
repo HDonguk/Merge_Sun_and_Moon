@@ -98,7 +98,8 @@ struct PacketTigerRespawnRequest {
 struct PacketTigerHit {
     PacketHeader header;
     int tigerID;
-    int life;  // 남은 체력
+    int life;      // 남은 체력
+    int damage;    // 공격 데미지 (1: 일반 공격, 3: 떡 공격)
 };
 
 struct PacketStageChange {

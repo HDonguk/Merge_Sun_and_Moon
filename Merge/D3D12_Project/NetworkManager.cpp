@@ -190,7 +190,7 @@ void NetworkManager::SendTigerRespawnRequest() {
     }
 }
 
-void NetworkManager::SendTigerHit(int tigerID, int life) {
+void NetworkManager::SendTigerHit(int tigerID, int life, int damage) {
     if (!m_isRunning || !m_isLoggedIn) return;
 
     try {
@@ -199,6 +199,7 @@ void NetworkManager::SendTigerHit(int tigerID, int life) {
         pkt.header.type = PACKET_TIGER_HIT;
         pkt.tigerID = tigerID;
         pkt.life = life;
+        pkt.damage = damage;
 
         int sendResult = send(sock, (char*)&pkt, sizeof(pkt), 0);
         if (sendResult == SOCKET_ERROR) {
@@ -892,14 +893,19 @@ void NetworkManager::ProcessPacket(char* buffer) {
                             // 서버에서 받은 생명력으로 업데이트
                             int currentLife = tigerObj->GetLife();
                             if (currentLife != tigerHitPkt->life) {  // 생명력이 변경된 경우에만 처리
+                                OutputDebugString(L"[NetworkManager] Tiger life updated from server\n");
                                 tigerObj->SetLife(tigerHitPkt->life);
                                 
                                 if (tigerHitPkt->life <= 0) {
-                                    tigerObj->Dead();
+                                    // 호랑이 사망 - 즉시 Dead() 호출
+                                    if (!tigerObj->IsDead()) { // 이미 죽지 않은 경우에만
+                                        tigerObj->Dead();
+                                        OutputDebugString(L"[NetworkManager] Tiger died, calling Dead()\n");
+                                    }
                                 } else {
-                                    // 클라이언트에서 이미 hit 애니메이션을 재생했으므로 생명력만 업데이트
-                                    // 애니메이션은 클라이언트에서 관리하므로 서버에서 재생하지 않음
-                                    // LogToFile 제거 - 디버그 메시지로 대체
+                                    // 호랑이 피격 - hit 애니메이션 재생
+                                    tigerObj->ChangeState("0208_tiger_hit.fbx");
+                                    OutputDebugString(L"[NetworkManager] Tiger hit, playing hit animation\n");
                                 }
                                 
                                 // LogToFile 제거 - 디버그 메시지로 대체

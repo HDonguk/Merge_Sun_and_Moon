@@ -34,7 +34,7 @@ public:
     void SendLoginRequest(const std::string& username);
     void SendPlayerDisconnect();
     void SendTigerRespawnRequest();  // 호랑이 재생성 요청
-    void SendTigerHit(int tigerID, int life);  // 호랑이 Hit 상태 전송
+    void SendTigerHit(int tigerID, int life, int damage = 1);  // 호랑이 Hit 상태 전송 (데미지 정보 포함)
     void SendTigerAttack(int tigerID);  // 호랑이 공격 이벤트 전송
     void SendStageChange(const std::wstring& stageName);  // 스테이지 변경 알림
     void SendPuzzleUpdate(int puzzleStatus[3][3]);  // 퍼즐 상태 업데이트 전송

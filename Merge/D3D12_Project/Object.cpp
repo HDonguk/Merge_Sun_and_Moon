@@ -842,6 +842,11 @@ void TigerObject::OnUpdate(GameTimer& gTimer)
 
 void TigerObject::OnProcessCollision(Object& other, XMVECTOR collisionNormal, float penetration)
 {
+    // 죽은 호랑이는 충돌을 처리하지 않음
+    if (mIsDead) {
+        return;
+    }
+    
     TigerAttackObject* ta = dynamic_cast<TigerAttackObject*>(&other);
     if (ta) return;
 
@@ -1083,25 +1088,30 @@ void TigerObject::Fire()
 
 void TigerObject::Hit()
 {
+    // 이미 죽은 호랑이는 공격을 받지 않음
+    if (mIsDead) {
+        OutputDebugString(L"[TigerObject] Dead tiger cannot be hit\n");
+        return;
+    }
+    
     if (mIsHitted) return;
     mIsHitted = true;
     
     OutputDebugString(L"[TigerObject] Hit() called - mIsHitted set to true\n");
     
-    // 네트워크 호랑이도 즉시 hit 애니메이션 재생 (서버 응답과 관계없이)
+    // 네트워크 호랑이인 경우 서버에 hit 이벤트만 전송하고 애니메이션은 서버 응답 후에 변경
     if (m_isNetworkTiger) {
         OutputDebugString(L"[TigerObject] Network tiger hit - sending hit event to server\n");
         Framework* framework = m_scene->GetFramework();
         if (framework && framework->IsNetworkEnabled()) {
             NetworkManager& networkManager = framework->GetNetworkManager();
             if (networkManager.IsLoggedIn()) {
-                networkManager.SendTigerHit(m_networkTigerID, mLife); // 현재 생명력 전송
+                networkManager.SendTigerHit(m_networkTigerID, mLife, 1); // 일반 공격, 데미지 1
                 OutputDebugString(L"[Tiger] Network tiger hit event sent to server\n");
             }
         }
-        // 네트워크 호랑이도 즉시 hit 애니메이션 재생
-        ChangeState("0208_tiger_hit.fbx");
-        OutputDebugString(L"[TigerObject] Network tiger hit animation state changed\n");
+        // 네트워크 호랑이는 서버 응답을 기다린 후 애니메이션 변경
+        // 애니메이션은 PACKET_TIGER_HIT 응답에서 처리됨
         return;
     }
     
@@ -1121,12 +1131,18 @@ void TigerObject::Hit()
 
 void TigerObject::HitByRiceCake()
 {
+    // 이미 죽은 호랑이는 공격을 받지 않음
+    if (mIsDead) {
+        OutputDebugString(L"[TigerObject] Dead tiger cannot be hit by ricecake\n");
+        return;
+    }
+    
     if (mIsHitted) return;
     mIsHitted = true;
     
     OutputDebugString(L"[TigerObject] HitByRiceCake() called - mIsHitted set to true\n");
     
-    // 네트워크 호랑이도 즉시 hit 애니메이션 재생 (서버 응답과 관계없이)
+    // 네트워크 호랑이인 경우 서버에 hit 이벤트만 전송하고 애니메이션은 서버 응답 후에 변경
     if (m_isNetworkTiger) {
         OutputDebugString(L"[TigerObject] Network tiger hit by ricecake - sending hit event to server\n");
         Framework* framework = m_scene->GetFramework();
@@ -1135,13 +1151,12 @@ void TigerObject::HitByRiceCake()
             if (networkManager.IsLoggedIn()) {
                 // 떡으로 맞으면 생명력 대폭 감소 (한방에 죽일 수 있도록)
                 mLife -= 3;
-                networkManager.SendTigerHit(m_networkTigerID, mLife); // 현재 생명력 전송
+                networkManager.SendTigerHit(m_networkTigerID, mLife, 3); // 떡 공격, 데미지 3
                 OutputDebugString(L"[Tiger] Network tiger hit by ricecake event sent to server\n");
             }
         }
-        // 네트워크 호랑이도 즉시 hit 애니메이션 재생
-        ChangeState("0208_tiger_hit.fbx");
-        OutputDebugString(L"[TigerObject] Network tiger hit by ricecake animation state changed\n");
+        // 네트워크 호랑이는 서버 응답을 기다린 후 애니메이션 변경
+        // 애니메이션은 PACKET_TIGER_HIT 응답에서 처리됨
         return;
     }
     
@@ -1160,6 +1175,7 @@ void TigerObject::HitByRiceCake()
 
 void TigerObject::Dead()
 {
+    mIsDead = true;  // 죽은 상태로 표시
     ChangeState("0208_tiger_dying.fbx");
 }
 

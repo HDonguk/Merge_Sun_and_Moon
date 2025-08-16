@@ -484,17 +484,37 @@ void GameServer::ProcessSinglePacket(char* buffer, int clientID, int packetSize)
             if (tigerIt != m_tigers.end()) {
                 TigerInfo& tiger = tigerIt->second;
                 
+                // 이미 죽은 호랑이는 처리하지 않음
+                if (tiger.isDead) {
+                    std::cout << "[TigerHit] Tiger " << pkt->tigerID << " already dead, ignoring hit" << std::endl;
+                    break;
+                }
+                
                 // 서버에서 직접 생명력 감소 (클라이언트 생명력 신뢰하지 않음)
                 if (tiger.life > 0) {
-                    tiger.life--;
+                    // 클라이언트에서 전송한 데미지 정보 사용
+                    int damage = pkt->damage; // 패킷에서 데미지 정보 가져오기
+                    
+                    // 데미지 유효성 검사
+                    if (damage <= 0 || damage > 10) { // 비정상적인 데미지 값 방지
+                        damage = 1;
+                        std::cout << "[TigerHit] Invalid damage value, using default: 1" << std::endl;
+                    }
+                    
+                    std::cout << "[TigerHit] Tiger " << pkt->tigerID << " hit with damage: " << damage << std::endl;
+                    
+                    tiger.life -= damage;
+                    if (tiger.life < 0) tiger.life = 0; // 음수가 되지 않도록 보호
+                    
                     tiger.isHitted = true;
                     
                     if (tiger.life <= 0) {
-                        // 호랑이 사망
+                        // 호랑이 사망 - 완전히 죽은 상태로 표시
+                        tiger.isDead = true;
                         tiger.currentAnimation = "0208_tiger_dying.fbx";
                         tiger.animationTime = 0.0f;
                         tiger.elapseTime = 0.0f;
-                        std::cout << "[TigerHit] Tiger " << pkt->tigerID << " died" << std::endl;
+                        std::cout << "[TigerHit] Tiger " << pkt->tigerID << " died permanently" << std::endl;
                     } else {
                         // 호랑이 피격
                         tiger.currentAnimation = "0208_tiger_hit.fbx";
@@ -529,6 +549,12 @@ void GameServer::ProcessSinglePacket(char* buffer, int clientID, int packetSize)
             
             // 클라이언트에게 모든 호랑이 스폰 패킷을 다시 전송
             for (const auto& [tigerID, tiger] : m_tigers) {
+                // 죽은 호랑이는 제외
+                if (tiger.isDead) {
+                    std::cout << "[TigerRespawn] Skipping dead tiger " << tiger.tigerID << " for respawn" << std::endl;
+                    continue;
+                }
+                
                 PacketTigerSpawn tigerPacket;
                 tigerPacket.header.type = PACKET_TIGER_SPAWN;
                 tigerPacket.header.size = sizeof(PacketTigerSpawn);
@@ -908,6 +934,7 @@ void GameServer::InitializeTigers() {
             tiger.isFired = false;
             tiger.isHitted = false;  // Original과 동일
             tiger.life = 3;          // Original과 동일
+            tiger.isDead = false;    // 초기에는 살아있는 상태
             tiger.hitProtectionTimer = 0.0f;  // hit 보호 타이머 초기화
             tiger.attackDelayTimer = 0.0f;    // 공격 후 딜레이 타이머 초기화
             
@@ -1530,6 +1557,13 @@ void GameServer::SendExistingTigersToClient(int clientID) {
     // 모든 기존 호랑이 정보를 새 클라이언트에게 전송
     for (const auto& tigerPair : m_tigers) {
         const auto& tiger = tigerPair.second;
+        
+        // 죽은 호랑이는 전송하지 않음
+        if (tiger.isDead) {
+            std::cout << "[Server] Skipping dead tiger " << tiger.tigerID << " for client " << clientID << std::endl;
+            continue;
+        }
+        
         PacketTigerSpawn spawnPacket;
         spawnPacket.header.type = PACKET_TIGER_SPAWN;
         spawnPacket.header.size = sizeof(PacketTigerSpawn);

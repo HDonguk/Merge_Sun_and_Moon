@@ -1021,7 +1021,7 @@ void NetworkManager::Update(GameTimer& gTimer, Scene* scene) {
     }
     
     m_updateTimer += gTimer.DeltaTime();
-    const float UPDATE_INTERVAL = 0.016667f;  // 60fps (16.67ms)마다 업데이트
+    const float UPDATE_INTERVAL = 0.004167f;  // 240fps (4.17ms)마다 업데이트
 
     if (m_updateTimer >= UPDATE_INTERVAL) {
         // 로그 제거로 성능 개선

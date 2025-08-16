@@ -133,11 +133,10 @@ C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Networ
 C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(750,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
 C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(690,50): warning C4101: 'e' :참조되지 않은 지역 변수입니다.
 C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(706,50): warning C4101: 'e' :참조되지 않은 지역 변수입니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(812,54): warning C4101: 'e' :참조되지 않은 지역 변수입니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(985,34): warning C4101: 'e' :참조되지 않은 지역 변수입니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(1125,34): warning C4101: 'e' :참조되지 않은 지역 변수입니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(1149,34): warning C4101: 'e' :참조되지 않은 지역 변수입니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(1214,38): warning C4101: 'e' :참조되지 않은 지역 변수입니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(934,34): warning C4101: 'e' :참조되지 않은 지역 변수입니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(1074,34): warning C4101: 'e' :참조되지 않은 지역 변수입니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(1098,34): warning C4101: 'e' :참조되지 않은 지역 변수입니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(1175,38): warning C4101: 'e' :참조되지 않은 지역 변수입니다.
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.39.33519\include\xutility(4537,18): warning C4244: '=': 'const WCHAR'에서 'char'(으)로 변환하면서 데이터가 손실될 수 있습니다.
   (소스 파일 'NetworkManager.cpp'을(를) 컴파일하는 중)
   C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.39.33519\include\xutility(4537,18):
@@ -171,39 +170,6 @@ C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.39.3351
               _SizeTy=unsigned __int64
           ]
   
-C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.39.33519\include\xutility(4537,18): warning C4244: '=': 'wchar_t'에서 'char'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-  (소스 파일 'NetworkManager.cpp'을(를) 컴파일하는 중)
-  C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.39.33519\include\xutility(4537,18):
-  템플릿 인스턴스화 컨텍스트(가장 오래된 인스턴스화 컨텍스트)가
-  	C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(818,45):
-  	컴파일되는 함수 템플릿 인스턴스화 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string<std::_String_iterator<std::_String_val<std::_Simple_types<_Elem>>>,0>(_Iter,_Iter,const _Alloc &)'에 대한 참조를 확인하세요.
-          with
-          [
-              _Elem=wchar_t,
-              _Iter=std::_String_iterator<std::_String_val<std::_Simple_types<wchar_t>>>,
-              _Alloc=std::allocator<char>
-          ]
-  		C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\NetworkManager.cpp(818,45):
-  		'NetworkManager::ProcessPacket'에서 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string'에 대한 첫 번째 참조를 확인하세요.
-  	C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.39.33519\include\xstring(2600,17):
-  	컴파일되는 함수 템플릿 인스턴스화 'void std::basic_string<char,std::char_traits<char>,std::allocator<char>>::_Construct_from_iter<wchar_t*,wchar_t*,_Size_type>(_Iter,const _Sent,_Size)'에 대한 참조를 확인하세요.
-          with
-          [
-              _Size_type=unsigned __int64,
-              _Iter=wchar_t *,
-              _Sent=wchar_t *,
-              _Size=unsigned __int64
-          ]
-  	C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.39.33519\include\xstring(2756,18):
-  	컴파일되는 함수 템플릿 인스턴스화 '_OutIt *std::_Copy_n_unchecked4<wchar_t*,_Size,char*>(_InIt,_SizeTy,_OutIt)'에 대한 참조를 확인하세요.
-          with
-          [
-              _OutIt=char *,
-              _Size=unsigned __int64,
-              _InIt=wchar_t *,
-              _SizeTy=unsigned __int64
-          ]
-  
   Object.cpp
 C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
 C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,1): warning C4005: '_WINSOCKAPI_': 매크로 재정의
@@ -231,12 +197,12 @@ C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\LoginU
   
 C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(710,40): warning C4101: 'e' :참조되지 않은 지역 변수입니다.
 C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(816,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(923,31): warning C4244: '초기화 중': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1316,26): warning C4244: '초기화 중': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1324,22): warning C4244: '=': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1520,19): warning C4244: '초기화 중': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1622,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
-C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1754,15): warning C4244: '초기화 중': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(925,31): warning C4244: '초기화 중': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1336,26): warning C4244: '초기화 중': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1344,22): warning C4244: '=': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1540,19): warning C4244: '초기화 중': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1595,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
+C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\Object.cpp(1774,15): warning C4244: '초기화 중': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
   OtherPlayerManager.cpp
 C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\OtherPlayerManager.cpp(1,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
 C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\stdafx.h(10,1): warning C4005: '_WINSOCKAPI_': 매크로 재정의
@@ -358,8 +324,8 @@ C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\LoginU
   (소스 파일 'Win32Application.cpp'을(를) 컴파일하는 중)
   
   코드를 생성하고 있습니다.
-  7 of 4069 functions ( 0.2%) were compiled, the rest were copied from previous compilation.
-    2 functions were new in current compilation
-    52 functions had inline decision re-evaluated but remain unchanged
+  18 of 4045 functions ( 0.4%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    169 functions had inline decision re-evaluated but remain unchanged
   코드를 생성했습니다.
   D3D12_Project.vcxproj -> C:\Users\PC\OneDrive\바탕 화면\Merge_Sun_and_Moon\Merge\D3D12_Project\x64\Release\D3D12_Project.exe

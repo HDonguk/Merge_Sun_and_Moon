@@ -222,6 +222,9 @@ private:
 	// hit 애니메이션 후 idle 상태 보호를 위한 플래그
 	bool m_protectIdleAfterHit = false;
 	float m_hitProtectionTimer = 0.0f;  // hit 애니메이션 후 보호 타이머
+	
+	// 가죽 생성 중복 방지를 위한 플래그
+	bool m_leatherCreated = false;
 };
 
 

@@ -770,63 +770,9 @@ void NetworkManager::ProcessPacket(char* buffer) {
                 swprintf_s(debugMsg, L"[Tiger] Successfully stored tiger info for ID: %d\n", tigerSpawnPkt->tigerID);
                 OutputDebugString(debugMsg);
                 
-                // Scene에 Tiger 생성 요청 (Hunting Stage일 때만)
-                if (m_scene) {
-                    OutputDebugString(L"[Tiger] Scene found, checking current stage...\n");
-                    // 현재 스테이지가 Hunting일 때만 호랑이 생성
-                    if (m_scene->GetCurrentStage() == L"Hunting") {
-                        OutputDebugString(L"[Tiger] Current stage is Hunting, creating tiger object...\n");
-                        try {
-                            float scale = 0.2f;
-                            TigerObject* tigerObj = new TigerObject(m_scene, m_scene->AllocateId());
-                            tigerObj->SetIsNetworkTiger(true);  // 네트워크 호랑이로 설정
-                            tigerObj->AddComponent(new Transform{ {tigerSpawnPkt->x, tigerSpawnPkt->y, tigerSpawnPkt->z} });
-                            tigerObj->AddComponent(new AdjustTransform{ {0.0f, 0.0f, -40.0f * scale}, {0.0f, 180.0f, 0.0f}, {scale, scale, scale} });
-                            tigerObj->AddComponent(new Mesh{ "0113_tiger.fbx" });
-                            tigerObj->AddComponent(new Texture{ L"tigercolor", 1.0f, 0.4f });
-                            tigerObj->AddComponent(new Animation{ "0113_tiger_walk.fbx" });
-                            tigerObj->AddComponent(new Gravity);
-                            tigerObj->AddComponent(new Collider{ {0.0f, 6.0f, 0.0f}, {2.0f, 6.0f, 10.0f} });
-                            
-                            m_scene->AddObj(tigerObj);
-                            
-                            // 호랑이 ID를 저장하여 나중에 업데이트할 때 사용
-                            tigerObj->SetNetworkTigerID(tigerSpawnPkt->tigerID);
-                            
-                            // 초기 위치 설정 (보간 제거로 인해 즉시 설정)
-                            Transform* transform = tigerObj->GetComponent<Transform>();
-                            if (transform) {
-                                transform->SetPosition({tigerSpawnPkt->x, tigerSpawnPkt->y, tigerSpawnPkt->z, 1.0f});
-                                transform->SetRotation({0.0f, 0.0f, 0.0f});
-                            }
-                            
-                            // 초기 애니메이션 설정
-                            Animation* anim = tigerObj->GetComponent<Animation>();
-                            if (anim) {
-                                anim->ResetAnim("0722_tiger_idle2.fbx", 0.0f);
-                            }
-                            
-                            swprintf_s(debugMsg, L"[Tiger] Successfully created tiger object for ID: %d\n", tigerSpawnPkt->tigerID);
-                            OutputDebugString(debugMsg);
-                        }
-                        catch (const std::exception& e) {
-                            OutputDebugString(L"[Error] Failed to create tiger object\n");
-                        }
-                    } else {
-                        // wstring을 안전하게 string으로 변환
-                        std::wstring currentStage = m_scene->GetCurrentStage();
-                        std::string stageStr(currentStage.begin(), currentStage.end());
-                        swprintf_s(debugMsg, L"[Tiger] Ignoring tiger spawn - not in Hunting Stage (current stage: %s)\n", 
-                                 std::wstring(stageStr.begin(), stageStr.end()).c_str());
-                        OutputDebugString(debugMsg);
-                        
-                        // Hunting Stage가 아닌 경우에도 호랑이 정보는 저장해두고, 
-                        // 나중에 Hunting Stage로 진입할 때 생성할 수 있도록 함
-                        OutputDebugString(L"[Tiger] Tiger info stored for later creation when entering Hunting Stage\n");
-                    }
-                } else {
-                    OutputDebugString(L"[Tiger] Scene is null, cannot create tiger object\n");
-                }
+                // 호랑이 정보만 저장하고, 실제 생성은 CreateStoredTigers()에서 처리
+                // 이렇게 하면 중복 생성을 방지할 수 있습니다
+                OutputDebugString(L"[Tiger] Tiger info stored, will be created when entering Hunting Stage\n");
                 break;
             }
             
@@ -890,25 +836,28 @@ void NetworkManager::ProcessPacket(char* buffer) {
                     for (Object* obj : m_scene->GetObjects()) {
                         TigerObject* tigerObj = dynamic_cast<TigerObject*>(obj);
                         if (tigerObj && tigerObj->IsNetworkTiger() && tigerObj->GetNetworkTigerID() == tigerHitPkt->tigerID) {
-                            // 서버에서 받은 생명력으로 업데이트
+                            // 서버에서 받은 생명력으로 업데이트 (항상 처리)
                             int currentLife = tigerObj->GetLife();
-                            if (currentLife != tigerHitPkt->life) {  // 생명력이 변경된 경우에만 처리
-                                OutputDebugString(L"[NetworkManager] Tiger life updated from server\n");
-                                tigerObj->SetLife(tigerHitPkt->life);
-                                
-                                if (tigerHitPkt->life <= 0) {
-                                    // 호랑이 사망 - 즉시 Dead() 호출
-                                    if (!tigerObj->IsDead()) { // 이미 죽지 않은 경우에만
-                                        tigerObj->Dead();
-                                        OutputDebugString(L"[NetworkManager] Tiger died, calling Dead()\n");
-                                    }
+                            wchar_t debugMsg[256];
+                            swprintf_s(debugMsg, L"[NetworkManager] Tiger ID %d life: %d -> %d\n", 
+                                     tigerHitPkt->tigerID, currentLife, tigerHitPkt->life);
+                            OutputDebugString(debugMsg);
+                            
+                            // 서버의 생명력을 정확히 반영
+                            tigerObj->SetLife(tigerHitPkt->life);
+                            
+                            if (tigerHitPkt->life <= 0) {
+                                // 호랑이 사망 - 즉시 Dead() 호출
+                                if (!tigerObj->IsDead()) { // 이미 죽지 않은 경우에만
+                                    tigerObj->Dead();
+                                    OutputDebugString(L"[NetworkManager] Tiger died, calling Dead()\n");
                                 } else {
-                                    // 호랑이 피격 - hit 애니메이션 재생
-                                    tigerObj->ChangeState("0208_tiger_hit.fbx");
-                                    OutputDebugString(L"[NetworkManager] Tiger hit, playing hit animation\n");
+                                    OutputDebugString(L"[NetworkManager] Tiger already dead, skipping Dead() call\n");
                                 }
-                                
-                                // LogToFile 제거 - 디버그 메시지로 대체
+                            } else {
+                                // 호랑이 피격 - hit 애니메이션 재생
+                                tigerObj->ChangeState("0208_tiger_hit.fbx");
+                                OutputDebugString(L"[NetworkManager] Tiger hit, playing hit animation\n");
                             }
                             break;
                         }
@@ -1152,8 +1101,15 @@ void NetworkManager::SendRiceCakeUpdate(int projectileID, float x, float y, floa
 }
 
 void NetworkManager::CreateStoredTigers() {
-    if (!m_scene || m_scene->GetCurrentStage() != L"Hunting") {
-        OutputDebugString(L"[NetworkManager] Cannot create stored tigers - not in Hunting Stage\n");
+    if (!m_scene) {
+        OutputDebugString(L"[NetworkManager] Cannot create stored tigers - scene is null\n");
+        return;
+    }
+    
+    // 현재 스테이지가 Hunting이 아닌 경우에도 호랑이 정보는 저장해두고,
+    // 나중에 Hunting Stage로 진입할 때 생성할 수 있도록 함
+    if (m_scene->GetCurrentStage() != L"Hunting") {
+        OutputDebugString(L"[NetworkManager] Not in Hunting Stage, but storing tiger info for later\n");
         return;
     }
     
@@ -1163,19 +1119,21 @@ void NetworkManager::CreateStoredTigers() {
     for (const auto& tigerPair : m_tigers) {
         const auto& tigerInfo = tigerPair.second;
         
-        // 이미 생성된 호랑이가 있는지 확인
+        // 이미 생성된 호랑이가 있는지 확인 (더 정확한 체크)
         bool tigerExists = false;
         for (Object* obj : m_scene->GetObjects()) {
             TigerObject* existingTiger = dynamic_cast<TigerObject*>(obj);
             if (existingTiger && existingTiger->IsNetworkTiger() && 
                 existingTiger->GetNetworkTigerID() == tigerInfo.tigerID) {
                 tigerExists = true;
+                wchar_t debugMsg[256];
+                swprintf_s(debugMsg, L"[NetworkManager] Tiger ID %d already exists, skipping creation\n", tigerInfo.tigerID);
+                OutputDebugString(debugMsg);
                 break;
             }
         }
         
         if (tigerExists) {
-            OutputDebugString(L"[NetworkManager] Tiger already exists, skipping creation\n");
             continue;
         }
         
@@ -1201,11 +1159,14 @@ void NetworkManager::CreateStoredTigers() {
                 transform->SetRotation({0.0f, 0.0f, 0.0f});
             }
             
-            // 초기 애니메이션 설정
+            // 초기 애니메이션 설정 (idle 상태로 시작)
             Animation* anim = tigerObj->GetComponent<Animation>();
             if (anim) {
                 anim->ResetAnim("0722_tiger_idle2.fbx", 0.0f);
             }
+            
+            // 초기 생명력 설정 (기본값 3)
+            tigerObj->SetLife(3);
             
             wchar_t debugMsg[256];
             swprintf_s(debugMsg, L"[NetworkManager] Successfully created stored tiger ID: %d\n", tigerInfo.tigerID);

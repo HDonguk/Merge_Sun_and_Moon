@@ -826,6 +826,8 @@ void CameraObject::ProcessInput()
 
 TigerObject::TigerObject(Scene* scene, uint32_t id, uint32_t parentId) : Object(scene, id, parentId)
 {
+    // 멤버 변수 초기화
+    m_leatherCreated = false;
 }
 
 void TigerObject::OnUpdate(GameTimer& gTimer)
@@ -1090,7 +1092,7 @@ void TigerObject::Hit()
 {
     // 이미 죽은 호랑이는 공격을 받지 않음
     if (mIsDead) {
-        OutputDebugString(L"[TigerObject] Dead tiger cannot be hit\n");
+        OutputDebugString(L"[TigerObject] Dead tiger cannot be hit - mIsDead: true\n");
         return;
     }
     
@@ -1133,7 +1135,7 @@ void TigerObject::HitByRiceCake()
 {
     // 이미 죽은 호랑이는 공격을 받지 않음
     if (mIsDead) {
-        OutputDebugString(L"[TigerObject] Dead tiger cannot be hit by ricecake\n");
+        OutputDebugString(L"[TigerObject] Dead tiger cannot be hit by ricecake - mIsDead: true\n");
         return;
     }
     
@@ -1149,8 +1151,8 @@ void TigerObject::HitByRiceCake()
         if (framework && framework->IsNetworkEnabled()) {
             NetworkManager& networkManager = framework->GetNetworkManager();
             if (networkManager.IsLoggedIn()) {
-                // 떡으로 맞으면 생명력 대폭 감소 (한방에 죽일 수 있도록)
-                mLife -= 3;
+                // 네트워크 호랑이는 로컬 생명력 감소 없이 서버에만 이벤트 전송
+                // 생명력과 애니메이션은 서버 응답에서 처리됨
                 networkManager.SendTigerHit(m_networkTigerID, mLife, 3); // 떡 공격, 데미지 3
                 OutputDebugString(L"[Tiger] Network tiger hit by ricecake event sent to server\n");
             }
@@ -1177,6 +1179,17 @@ void TigerObject::Dead()
 {
     mIsDead = true;  // 죽은 상태로 표시
     ChangeState("0208_tiger_dying.fbx");
+    
+    // 네트워크 호랑이인 경우 즉시 제거하지 않고 애니메이션 완료 후 제거
+    if (m_isNetworkTiger) {
+        // 애니메이션 완료 후 제거되도록 m_valid는 false로 설정하지 않음
+        // CalcTime()에서 애니메이션 완료 후 CreateLeather()와 Delete() 호출
+        OutputDebugString(L"[TigerObject] Network tiger died, will be removed after animation\n");
+    } else {
+        // 로컬 호랑이는 즉시 제거
+        m_valid = false;
+        OutputDebugString(L"[TigerObject] Local tiger died, marked for removal\n");
+    }
 }
 
 void TigerObject::CalcTime(float deltaTime) 
@@ -1228,8 +1241,15 @@ void TigerObject::CalcTime(float deltaTime)
             mElapseTime += deltaTime;
             // 네트워크 호랑이의 죽는 애니메이션이 끝나면 가죽 생성 후 삭제
             if (mElapseTime > 1.9f) {
-                CreateLeather();
-                Delete();
+                // 이미 가죽이 생성되었는지 확인하여 중복 생성 방지
+                if (!m_leatherCreated) {
+                    CreateLeather();
+                    m_leatherCreated = true;
+                    OutputDebugString(L"[TigerObject] Network tiger leather created\n");
+                }
+                
+                m_valid = false;  // 애니메이션 완료 후 제거되도록 표시
+                OutputDebugString(L"[TigerObject] Network tiger dying animation completed, marked for removal\n");
             }
         }
         return;

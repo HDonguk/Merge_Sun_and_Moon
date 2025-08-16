@@ -604,6 +604,12 @@ void GameServer::ProcessSinglePacket(char* buffer, int clientID, int packetSize)
             // Hunting 스테이지로 변경된 경우 호랑이 초기화
             if (strcmp(pkt->stageName, "Hunting") == 0) {
                 ActivateHuntingStage();
+                
+                // 새로 Hunting Stage에 진입한 클라이언트에게 기존 호랑이 정보 전송
+                if (m_huntingStageActive && !m_tigers.empty()) {
+                    std::cout << "[StageChange] Sending existing tiger info to client " << clientID << " entering Hunting Stage" << std::endl;
+                    SendExistingTigersToClient(clientID);
+                }
             }
             
             // God 스테이지로 변경된 경우 퍼즐 상태 전송
@@ -857,6 +863,9 @@ void GameServer::BroadcastNewPlayer(int newClientID) {
                 }
             }
         }
+        
+        // 호랑이 정보는 클라이언트가 Hunting Stage에 진입할 때 전송하도록 변경
+        // (BroadcastNewPlayer에서는 전송하지 않음)
         
         std::cout << "[BroadcastNewPlayer] Completed sending info to new client. Broadcasted to " << broadcastCount << " clients" << std::endl;
     }
@@ -1507,6 +1516,37 @@ void GameServer::BroadcastRiceCakeUpdate(int clientID, int projectileID, float x
     
     std::cout << "[Server] Rice cake update broadcasted - Client: " << clientID 
               << ", Projectile: " << projectileID << std::endl;
+}
+
+void GameServer::SendExistingTigersToClient(int clientID) {
+    auto clientIt = m_clients.find(clientID);
+    if (clientIt == m_clients.end() || !clientIt->second.isLoggedIn) {
+        std::cout << "[Error] Client " << clientID << " not found or not logged in for tiger info" << std::endl;
+        return;
+    }
+    
+    std::cout << "[Server] Sending existing tiger info to client " << clientID << " (total tigers: " << m_tigers.size() << ")" << std::endl;
+    
+    // 모든 기존 호랑이 정보를 새 클라이언트에게 전송
+    for (const auto& tigerPair : m_tigers) {
+        const auto& tiger = tigerPair.second;
+        PacketTigerSpawn spawnPacket;
+        spawnPacket.header.type = PACKET_TIGER_SPAWN;
+        spawnPacket.header.size = sizeof(PacketTigerSpawn);
+        spawnPacket.tigerID = tiger.tigerID;
+        spawnPacket.x = tiger.x;
+        spawnPacket.y = tiger.y;
+        spawnPacket.z = tiger.z;
+        
+        if (SendPacket(clientIt->second.socket, &spawnPacket, sizeof(spawnPacket))) {
+            std::cout << "[Server] Sent tiger " << tiger.tigerID << " info to client " << clientID 
+                      << " at position (" << tiger.x << ", " << tiger.y << ", " << tiger.z << ")" << std::endl;
+        } else {
+            std::cout << "[Error] Failed to send tiger " << tiger.tigerID << " info to client " << clientID << std::endl;
+        }
+    }
+    
+    std::cout << "[Server] Completed sending tiger info to client " << clientID << std::endl;
 }
 
 int main() {

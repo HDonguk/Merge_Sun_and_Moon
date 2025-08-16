@@ -100,6 +100,9 @@ private:
     void HandlePacket(IOContext* ioContext, int clientID, DWORD bytesTransferred);
     void ProcessSinglePacket(char* buffer, int clientID, int packetSize);
     
+    // 새로 연결된 클라이언트에게 기존 호랑이 정보 전송
+    void SendExistingTigersToClient(int clientID);
+    
     // 호랑이 관련 메서드
     void InitializeTigers();
     void UpdateTigers(float deltaTime);

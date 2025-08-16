@@ -244,6 +244,12 @@ void Scene::BuildHuntingStage()
     if (m_parent) {
         OtherPlayerManager::GetInstance()->SetStageTransitioning(false);
         OutputDebugString(L"[Scene] BuildHuntingStage: Stage transition completed\n");
+        
+        // 네트워크가 활성화된 경우 저장된 호랑이들을 생성
+        if (m_parent->IsNetworkEnabled()) {
+            OutputDebugString(L"[Scene] Network enabled, creating stored tigers...\n");
+            m_parent->GetNetworkManager().CreateStoredTigers();
+        }
     }
 }
 

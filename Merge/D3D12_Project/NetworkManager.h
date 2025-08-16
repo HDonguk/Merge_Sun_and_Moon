@@ -58,6 +58,9 @@ public:
     void SetLoginSuccessCallback(std::function<void(int, const std::string&)> callback);
     void SetLoginFailedCallback(std::function<void(const std::string&)> callback);
     void SetStageTransitioning(bool transitioning); // 스테이지 전환 상태 설정
+    
+    // 스테이지 변경 시 저장된 호랑이들을 생성하는 메서드
+    void CreateStoredTigers();
 
 private:
     static DWORD WINAPI NetworkThread(LPVOID arg);

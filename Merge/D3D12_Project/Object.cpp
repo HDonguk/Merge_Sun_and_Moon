@@ -4,6 +4,7 @@
 #include "Scene.h"
 #include "DXSampleHelper.h"
 #include <random>
+#include <string>
 #include "Framework.h"
 #include "NetworkManager.h"
 
@@ -166,16 +167,46 @@ void Object::ProcessAnimation(GameTimer& gTimer)
 {
     Animation* animation = GetComponent<Animation>();
     int isAnimate = false;
-    if (animation) {
-        isAnimate = true;
-        vector<XMFLOAT4X4> finalTransforms{ 90 };
-        SkinnedData& animData = m_scene->GetResourceManager().GetAnimationData(animation->mCurrentFileName);
-        
-        animation->mAnimationTime += gTimer.DeltaTime();
-        string clipName = "Take 001";
-        if (animation->mAnimationTime >= animData.GetClipEndTime(clipName)) animation->mAnimationTime = 0.0f;
-        animData.GetFinalTransforms(clipName, animation->mAnimationTime, finalTransforms);
-        memcpy(m_mappedData + sizeof(XMMATRIX), finalTransforms.data(), sizeof(XMMATRIX) * 90);
+    if (animation && animation->mCurrentFileName.length() > 0) {
+        // 애니메이션 파일명이 유효한지 확인 (빈 문자열이 아니고, .fbx 확장자를 가진 경우)
+        if (!animation->mCurrentFileName.empty() && 
+            animation->mCurrentFileName.find(".fbx") != string::npos) {
+            try {
+                SkinnedData& animData = m_scene->GetResourceManager().GetAnimationData(animation->mCurrentFileName);
+                
+                // 애니메이션 데이터가 유효한지 확인 (빈 데이터인지 체크)
+                if (animData.BoneCount() > 0) {
+                    isAnimate = true;
+                    vector<XMFLOAT4X4> finalTransforms{ 90 };
+                    
+                    animation->mAnimationTime += gTimer.DeltaTime();
+                    string clipName = "Take 001";
+                    
+                    // 클립이 존재하는지 확인
+                    if (animation->mAnimationTime >= animData.GetClipEndTime(clipName)) {
+                        animation->mAnimationTime = 0.0f;
+                    }
+                    
+                    animData.GetFinalTransforms(clipName, animation->mAnimationTime, finalTransforms);
+                    memcpy(m_mappedData + sizeof(XMMATRIX), finalTransforms.data(), sizeof(XMMATRIX) * 90);
+                } else {
+                    // 애니메이션 데이터가 비어있는 경우
+                    wchar_t debugMsg[256];
+                    swprintf_s(debugMsg, L"[Object] Warning: Empty animation data for '%hs', skipping animation\n", animation->mCurrentFileName.c_str());
+                    OutputDebugString(debugMsg);
+                }
+            } catch (const std::exception& e) {
+                // 애니메이션 처리 중 예외 발생 시 로그 출력
+                wchar_t debugMsg[256];
+                swprintf_s(debugMsg, L"[Object] Error processing animation '%hs': %hs\n", animation->mCurrentFileName.c_str(), e.what());
+                OutputDebugString(debugMsg);
+            }
+        } else {
+            // 유효하지 않은 애니메이션 파일명
+            wchar_t debugMsg[256];
+            swprintf_s(debugMsg, L"[Object] Warning: Invalid animation filename '%hs', skipping animation\n", animation->mCurrentFileName.c_str());
+            OutputDebugString(debugMsg);
+        }
     }
     memcpy(m_mappedData + sizeof(XMMATRIX) * 91, &isAnimate, sizeof(int));
 }
@@ -658,12 +689,30 @@ void PlayerObject::CalcTime(float deltaTime)
         mElapseTime += deltaTime;
         // 플레이어의 hit 애니메이션은 애니메이션의 실제 길이에 맞춰서 처리
         // Scene을 통해 ResourceManager에 접근하여 실제 애니메이션 길이를 가져와서 사용
-        ResourceManager& resourceManager = m_scene->GetResourceManager();
-        SkinnedData& animData = resourceManager.GetAnimationData(anim->mCurrentFileName);
-        float clipEndTime = animData.GetClipEndTime("Take 001");
-        if (mElapseTime > clipEndTime) {
-            OutputDebugString(L"[PlayerObject] Hit animation timeout - switching to idle\n");
-            TimeOut();
+        try {
+            ResourceManager& resourceManager = m_scene->GetResourceManager();
+            SkinnedData& animData = resourceManager.GetAnimationData(anim->mCurrentFileName);
+            
+            // 애니메이션 데이터가 유효한지 확인
+            if (animData.BoneCount() > 0) {
+                float clipEndTime = animData.GetClipEndTime("Take 001");
+                if (mElapseTime > clipEndTime) {
+                    OutputDebugString(L"[PlayerObject] Hit animation timeout - switching to idle\n");
+                    TimeOut();
+                }
+            } else {
+                // 애니메이션 데이터가 비어있는 경우 기본 타이머 사용
+                if (mElapseTime > 0.8f) {
+                    OutputDebugString(L"[PlayerObject] Hit animation timeout (default timer) - switching to idle\n");
+                    TimeOut();
+                }
+            }
+        } catch (const std::exception& e) {
+            // 예외 발생 시 기본 타이머 사용
+            if (mElapseTime > 0.8f) {
+                OutputDebugString(L"[PlayerObject] Hit animation timeout (exception fallback) - switching to idle\n");
+                TimeOut();
+            }
         }
     }
 

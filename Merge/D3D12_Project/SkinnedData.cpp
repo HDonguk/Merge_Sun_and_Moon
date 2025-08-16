@@ -113,13 +113,33 @@ void AnimationClip::Interpolate(float t, std::vector<XMFLOAT4X4>& boneTransforms
 float SkinnedData::GetClipStartTime(const std::string& clipName)const
 {
 	auto clip = mAnimations.find(clipName);
-	return clip->second.GetClipStartTime();
+	if (clip != mAnimations.end()) {
+		return clip->second.GetClipStartTime();
+	}
+	
+	// 클립을 찾을 수 없는 경우 경고 로그 출력
+	wchar_t debugMsg[256];
+	swprintf_s(debugMsg, L"[SkinnedData] Warning: Clip '%hs' not found, returning default start time\n", clipName.c_str());
+	OutputDebugString(debugMsg);
+	
+	// 기본값 반환 (0.0초)
+	return 0.0f;
 }
 
 float SkinnedData::GetClipEndTime(const std::string& clipName)const
 {
 	auto clip = mAnimations.find(clipName);
-	return clip->second.GetClipEndTime();
+	if (clip != mAnimations.end()) {
+		return clip->second.GetClipEndTime();
+	}
+	
+	// 클립을 찾을 수 없는 경우 경고 로그 출력
+	wchar_t debugMsg[256];
+	swprintf_s(debugMsg, L"[SkinnedData] Warning: Clip '%hs' not found, returning default end time\n", clipName.c_str());
+	OutputDebugString(debugMsg);
+	
+	// 기본값 반환 (1.0초)
+	return 1.0f;
 }
 
 UINT SkinnedData::BoneCount()const

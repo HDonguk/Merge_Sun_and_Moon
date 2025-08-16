@@ -193,6 +193,12 @@ SkinnedData& ResourceManager::GetAnimationData(string name)
 	if (it != mAnimData.end()) {
 		return it->second;
 	}
+	
+	// 애니메이션 데이터를 찾을 수 없는 경우 경고 로그 출력
+	wchar_t debugMsg[256];
+	swprintf_s(debugMsg, L"[ResourceManager] Warning: Animation data not found for '%hs'\n", name.c_str());
+	OutputDebugString(debugMsg);
+	
 	// 기본값 반환 또는 예외 처리
 	static SkinnedData defaultData{};
 	return defaultData;

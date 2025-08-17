@@ -416,29 +416,7 @@ void Scene::BuildBaseStage()
         objectPtr->AddComponent(new Gravity);
         AddObj(objectPtr);
     }
-    //  
-    {
-        float scale = 0.04f;
-        objectPtr = new TestObject(this, AllocateId());
-
-        objectPtr->AddComponent(new Transform{ {430.0f, 0.0f, 300.0f} });
-        objectPtr->AddComponent(new AdjustTransform{ {0.0f * scale, 13.0f * scale, 0.0f * scale}, {0.0f, 0.0f, 0.0f}, {scale, scale, scale} });
-        objectPtr->AddComponent(new Mesh{ "well.fbx" });
-        objectPtr->AddComponent(new Texture{ L"broken_house", 1.0f, 0.4f });
-        objectPtr->AddComponent(new Collider{ {0.0f, 37.5f * scale, 0.0f}, {12.5f * scale, 37.5f * scale, 12.5f * scale} });
-
-        objectPtr->AddComponent(new Gravity);
-        AddObj(objectPtr);
-
-        objectPtr = new TestObject(this, AllocateId());
-        objectPtr->AddComponent(new Transform{ {600.0f, 0.0f, 500.0f} });
-        objectPtr->AddComponent(new AdjustTransform{ {0.0f * scale, 13.0f * scale, 0.0f * scale}, {0.0f, 0.0f, 0.0f}, {scale, scale, scale} });
-        objectPtr->AddComponent(new Mesh{ "well.fbx" });
-        objectPtr->AddComponent(new Texture{ L"broken_house", 1.0f, 0.4f });
-        objectPtr->AddComponent(new Collider{ {0.0f, 37.5f * scale, 0.0f}, {12.5f * scale, 37.5f * scale, 12.5f * scale} });
-        objectPtr->AddComponent(new Gravity);
-        AddObj(objectPtr);
-    }
+   
     {
         float scale = 20.0f;
         int repeat = 10;
@@ -1214,8 +1192,9 @@ void Scene::BuildTitleStage()
     {
         float scale = 0.2f;
         float ratio = GetAspectRatio();
+        float tan30 = 0.57735f;
         objectPtr = new TitleQuadObject(this, AllocateId(), mMainCameraId);
-        objectPtr->AddComponent(new Transform{ {-0.5f * ratio * scale, -0.5f * scale, scale}, {-90.0f, 0.0f, 0.0f}, {scale * ratio, scale, scale} });
+        objectPtr->AddComponent(new Transform{ {-tan30 * ratio * scale, -tan30 * scale, 1.0f * scale}, {-90.0f, 0.0f, 0.0f}, {tan30 * 2.0f * ratio * scale, 1.0f, tan30 * 2.0f * scale} });
         objectPtr->AddComponent(new Mesh{ "Quad" });
         objectPtr->AddComponent(new Texture{ L"Title", -1.0f, 0.4f });
         AddObj(objectPtr);

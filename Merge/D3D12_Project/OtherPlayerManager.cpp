@@ -113,12 +113,15 @@ void OtherPlayerManager::UpdateOtherPlayer(int clientID, float x, float y, float
         return;
     }
     
-    // 현재 스테이지와 다른 스테이지에 있는 플레이어는 업데이트만 차단 (God Stage에서는 모든 플레이어 허용)
+    // 현재 스테이지와 다른 스테이지에 있는 플레이어는 즉시 제거 (God Stage에서는 모든 플레이어 허용)
     if (m_currentStage != stageName && m_currentStage != "God") {
-        OutputDebugString(L"[OtherPlayerManager] Player from different stage, skipping update\n");
-        if (m_networkManager) {
-            // LogToFile 제거 - 디버그 메시지로 대체
-        }
+        wchar_t debugMsg[256];
+        swprintf_s(debugMsg, L"[OtherPlayerManager] Player %d is in different stage (%s), removing from current stage (%s)\n", 
+                   clientID, stageName.c_str(), m_currentStage.c_str());
+        OutputDebugString(debugMsg);
+        
+        // 다른 스테이지에 있는 플레이어 제거
+        RemoveOtherPlayer(clientID);
         return;
     }
     
@@ -237,6 +240,21 @@ void OtherPlayerManager::ClearAllPlayers() {
     OutputDebugString(L"[OtherPlayerManager] All other players cleared\n");
     
     // LogToFile 제거 - 디버그 메시지로 대체
+}
+
+void OtherPlayerManager::SetCurrentStage(const std::string& stageName) { 
+    // 스테이지가 변경되었는지 확인
+    if (m_currentStage != stageName) {
+        wchar_t debugMsg[256];
+        swprintf_s(debugMsg, L"[OtherPlayerManager] Stage changed from %s to %s, clearing all other players\n", 
+                   m_currentStage.c_str(), stageName.c_str());
+        OutputDebugString(debugMsg);
+        
+        // 스테이지가 변경되면 모든 다른 플레이어 정리
+        ClearAllPlayers();
+    }
+    
+    m_currentStage = stageName;  // 현재 스테이지 설정
 }
 
 void OtherPlayerManager::SetStageTransitioning(bool transitioning) {

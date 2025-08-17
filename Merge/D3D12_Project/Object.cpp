@@ -938,7 +938,23 @@ void TigerObject::TigerBehavior(GameTimer& gTimer)
 void TigerObject::ChangeState(string fileName)
 {
     Animation* anim = GetComponent<Animation>();
-    if (anim->ResetAnim(fileName, 0.0f)) mElapseTime = 0.0f;
+    if (!anim) {
+        OutputDebugString(L"[TigerObject] ChangeState failed - Animation component not found\n");
+        return;
+    }
+    
+    // 현재 애니메이션과 변경하려는 애니메이션 로깅
+    wchar_t debugMsg[256];
+    swprintf_s(debugMsg, L"[TigerObject] ChangeState: %s -> %s\n", 
+               anim->mCurrentFileName.c_str(), fileName.c_str());
+    OutputDebugString(debugMsg);
+    
+    if (anim->ResetAnim(fileName, 0.0f)) {
+        mElapseTime = 0.0f;
+        OutputDebugString(L"[TigerObject] Animation state changed successfully\n");
+    } else {
+        OutputDebugString(L"[TigerObject] Animation state change failed\n");
+    }
 }
 
 void TigerObject::Walk()
@@ -1203,7 +1219,19 @@ void TigerObject::HitByRiceCake()
 void TigerObject::Dead()
 {
     mIsDead = true;  // 죽은 상태로 표시
+    
+    // 모든 타이머와 상태 리셋
+    mElapseTime = 0.0f;
+    mAttackTime = 0.0f;
+    mSearchTime = 0.0f;
+    mIsFired = false;
+    mIsHitted = false;
+    m_serverAttackSignal = false;
+    
+    // 애니메이션 상태 강제 변경
     ChangeState("0208_tiger_dying.fbx");
+    
+    OutputDebugString(L"[TigerObject] Tiger died - all timers and states reset, animation changed to dying\n");
     
     // 네트워크 호랑이인 경우 즉시 제거하지 않고 애니메이션 완료 후 제거
     if (m_isNetworkTiger) {
@@ -1223,19 +1251,32 @@ void TigerObject::CalcTime(float deltaTime)
     if (mIsDead) {
         // dying 애니메이션 중일 때만 타이머 업데이트
         Animation* anim = GetComponent<Animation>();
-        if (anim && anim->mCurrentFileName == "0208_tiger_dying.fbx") {
-            mElapseTime += deltaTime;
-            // 네트워크 호랑이의 죽는 애니메이션이 끝나면 가죽 생성 후 삭제
-            if (mElapseTime > 1.9f) {
-                // 이미 가죽이 생성되었는지 확인하여 중복 생성 방지
-                if (!m_leatherCreated) {
-                    CreateLeather();
-                    m_leatherCreated = true;
-                    OutputDebugString(L"[TigerObject] Network tiger leather created\n");
+        if (anim) {
+            // 죽은 호랑이가 dying 애니메이션이 아닌 다른 애니메이션을 재생하고 있다면 강제로 dying으로 변경
+            if (anim->mCurrentFileName != "0208_tiger_dying.fbx") {
+                wchar_t debugMsg[256];
+                swprintf_s(debugMsg, L"[TigerObject] Dead tiger was playing %s, forcing to dying animation\n", 
+                           anim->mCurrentFileName.c_str());
+                OutputDebugString(debugMsg);
+                ChangeState("0208_tiger_dying.fbx");
+                mElapseTime = 0.0f;  // 타이머 리셋
+            }
+            
+            // dying 애니메이션 중일 때만 타이머 업데이트
+            if (anim->mCurrentFileName == "0208_tiger_dying.fbx") {
+                mElapseTime += deltaTime;
+                // 네트워크 호랑이의 죽는 애니메이션이 끝나면 가죽 생성 후 삭제
+                if (mElapseTime > 1.9f) {
+                    // 이미 가죽이 생성되었는지 확인하여 중복 생성 방지
+                    if (!m_leatherCreated) {
+                        CreateLeather();
+                        m_leatherCreated = true;
+                        OutputDebugString(L"[TigerObject] Network tiger leather created\n");
+                    }
+                    
+                    m_valid = false;  // 애니메이션 완료 후 제거되도록 표시
+                    OutputDebugString(L"[TigerObject] Network tiger dying animation completed, marked for removal\n");
                 }
-                
-                m_valid = false;  // 애니메이션 완료 후 제거되도록 표시
-                OutputDebugString(L"[TigerObject] Network tiger dying animation completed, marked for removal\n");
             }
         }
         return;

@@ -1557,6 +1557,25 @@ void Scene::SetStage(wstring stage)
     }
     
     m_stage_queue = stage;
+    
+    // OtherPlayerManager의 현재 스테이지 업데이트
+    OtherPlayerManager* otherPlayerManager = OtherPlayerManager::GetInstance();
+    if (otherPlayerManager) {
+        // 스테이지 전환 시작 표시
+        otherPlayerManager->SetStageTransitioning(true);
+        
+        // wstring을 string으로 변환
+        std::string stageStr(stage.begin(), stage.end());
+        otherPlayerManager->SetCurrentStage(stageStr);
+        
+        // 스테이지 전환 완료 표시
+        otherPlayerManager->SetStageTransitioning(false);
+        
+        wchar_t debugMsg[256];
+        swprintf_s(debugMsg, L"[Scene] SetStage: Updated OtherPlayerManager stage to %s\n", stage.c_str());
+        OutputDebugString(debugMsg);
+    }
+    
    // OutputDebugString(L"[Scene] SetStage: Stage transition queued for " + stage + L"\n");
 }
 

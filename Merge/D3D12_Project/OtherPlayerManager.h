@@ -29,7 +29,7 @@ public:
 
     void SetScene(Scene* scene) { m_currentScene = scene; }
     void SetNetworkManager(NetworkManager* networkManager) { m_networkManager = networkManager; }
-    void SetCurrentStage(const std::string& stageName) { m_currentStage = stageName; }  // 현재 스테이지 설정
+    void SetCurrentStage(const std::string& stageName);  // 현재 스테이지 설정
 
     void SpawnOtherPlayer(int clientID);
     void UpdateOtherPlayer(int clientID, float x, float y, float z, float rotY, const std::string& animationFile = "", float animationTime = 0.0f, const std::string& stageName = "");

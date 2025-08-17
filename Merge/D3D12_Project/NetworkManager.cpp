@@ -869,6 +869,15 @@ void NetworkManager::ProcessPacket(char* buffer) {
                                 if (!tigerObj->IsDead()) { // 이미 죽지 않은 경우에만
                                     tigerObj->Dead();
                                     OutputDebugString(L"[NetworkManager] Tiger died, calling Dead()\n");
+                                    
+                                    // Dead() 호출 후 애니메이션 상태 확인
+                                    Animation* anim = tigerObj->GetComponent<Animation>();
+                                    if (anim) {
+                                        wchar_t debugMsg[256];
+                                        swprintf_s(debugMsg, L"[NetworkManager] Tiger animation after Dead(): %s\n", 
+                                                   anim->mCurrentFileName.c_str());
+                                        OutputDebugString(debugMsg);
+                                    }
                                 } else {
                                     OutputDebugString(L"[NetworkManager] Tiger already dead, skipping Dead() call\n");
                                 }

@@ -943,6 +943,10 @@ void TigerObject::ChangeState(string fileName)
 
 void TigerObject::Walk()
 {
+    // 죽은 호랑이는 움직일 수 없음
+    if (mIsDead) {
+        return;
+    }
     
     Animation* anim = GetComponent<Animation>();
     if (anim->mCurrentFileName == "0208_tiger_attack.fbx") return;
@@ -959,6 +963,11 @@ void TigerObject::Walk()
 
 void TigerObject::Run()
 {
+    // 죽은 호랑이는 달릴 수 없음
+    if (mIsDead) {
+        return;
+    }
+    
     Animation* anim = GetComponent<Animation>();
     if (anim->mCurrentFileName == "0208_tiger_attack.fbx") return;
     if (anim->mCurrentFileName == "0208_tiger_hit.fbx") return;
@@ -975,6 +984,11 @@ void TigerObject::Run()
 
 void TigerObject::Attack()
 {
+    // 죽은 호랑이는 공격할 수 없음
+    if (mIsDead) {
+        return;
+    }
+    
     Animation* anim = GetComponent<Animation>();
     if (anim->mCurrentFileName == "0208_tiger_hit.fbx") return;
     if (anim->mCurrentFileName == "0208_tiger_dying.fbx") return;
@@ -989,6 +1003,11 @@ void TigerObject::Attack()
 }
 void TigerObject::TimeOut()
 {
+    // 죽은 호랑이는 상태 변경할 수 없음
+    if (mIsDead) {
+        return;
+    }
+    
     Animation* anim = GetComponent<Animation>();
     
     if (anim->mCurrentFileName == "0208_tiger_attack.fbx") 
@@ -1018,6 +1037,12 @@ void TigerObject::TimeOut()
 }
 void TigerObject::Fire()
 {
+    // 죽은 호랑이는 공격할 수 없음
+    if (mIsDead) {
+        OutputDebugString(L"[TigerObject] Dead tiger cannot fire - mIsDead: true\n");
+        return;
+    }
+    
     if (mIsFired) return;
     mIsFired = true;
 
@@ -1194,6 +1219,28 @@ void TigerObject::Dead()
 
 void TigerObject::CalcTime(float deltaTime) 
 {
+    // 죽은 호랑이는 타이머 업데이트하지 않음 (dying 애니메이션 제외)
+    if (mIsDead) {
+        // dying 애니메이션 중일 때만 타이머 업데이트
+        Animation* anim = GetComponent<Animation>();
+        if (anim && anim->mCurrentFileName == "0208_tiger_dying.fbx") {
+            mElapseTime += deltaTime;
+            // 네트워크 호랑이의 죽는 애니메이션이 끝나면 가죽 생성 후 삭제
+            if (mElapseTime > 1.9f) {
+                // 이미 가죽이 생성되었는지 확인하여 중복 생성 방지
+                if (!m_leatherCreated) {
+                    CreateLeather();
+                    m_leatherCreated = true;
+                    OutputDebugString(L"[TigerObject] Network tiger leather created\n");
+                }
+                
+                m_valid = false;  // 애니메이션 완료 후 제거되도록 표시
+                OutputDebugString(L"[TigerObject] Network tiger dying animation completed, marked for removal\n");
+            }
+        }
+        return;
+    }
+    
     Animation* anim = GetComponent<Animation>();
 
     // 네트워크 호랑이는 서버에서 관리되므로 타이머만 업데이트
@@ -1236,22 +1283,7 @@ void TigerObject::CalcTime(float deltaTime)
         if (mElapseTime > 0.8f) TimeOut();  // Original과 동일한 0.8초 타이머
     }
 
-        if (anim->mCurrentFileName == "0208_tiger_dying.fbx")
-        {
-            mElapseTime += deltaTime;
-            // 네트워크 호랑이의 죽는 애니메이션이 끝나면 가죽 생성 후 삭제
-            if (mElapseTime > 1.9f) {
-                // 이미 가죽이 생성되었는지 확인하여 중복 생성 방지
-                if (!m_leatherCreated) {
-                    CreateLeather();
-                    m_leatherCreated = true;
-                    OutputDebugString(L"[TigerObject] Network tiger leather created\n");
-                }
-                
-                m_valid = false;  // 애니메이션 완료 후 제거되도록 표시
-                OutputDebugString(L"[TigerObject] Network tiger dying animation completed, marked for removal\n");
-            }
-        }
+        // dying 애니메이션은 함수 시작 부분에서 처리됨
         return;
     }
 

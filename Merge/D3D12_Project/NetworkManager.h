@@ -44,6 +44,9 @@ public:
     void SendRiceCakeSpawn(int projectileID, float x, float y, float z, float dirX, float dirY, float dirZ, float speed);
     void SendRiceCakeUpdate(int projectileID, float x, float y, float z);
     
+    // 호랑이 가죽 동기화 메서드 추가
+    void SendLeatherCountUpdate(int leatherCount);
+    
     void Shutdown();
     bool IsRunning() const { return m_isRunning; }
     bool IsLoggedIn() const { return m_isLoggedIn; }

@@ -943,6 +943,20 @@ void NetworkManager::ProcessPacket(char* buffer) {
                 }
                 break;
             }
+            
+            case PACKET_LEATHER_COUNT_SYNC: {
+                PacketLeatherCountSync* syncPkt = (PacketLeatherCountSync*)buffer;
+                
+                if (m_scene) {
+                    // 서버에서 전송된 호랑이 가죽 개수로 동기화
+                    m_scene->SetLeatherCount(syncPkt->leatherCount);
+                    
+                    wchar_t debugMsg[256];
+                    swprintf_s(debugMsg, L"[NetworkManager] Received leather count sync: %d\n", syncPkt->leatherCount);
+                    OutputDebugString(debugMsg);
+                }
+                break;
+            }
 
             default:
                 // LogToFile 제거 - 디버그 메시지로 대체
@@ -1193,4 +1207,29 @@ void NetworkManager::CreateStoredTigers() {
     }
     
     OutputDebugString(L"[NetworkManager] Finished creating stored tigers\n");
+}
+
+void NetworkManager::SendLeatherCountUpdate(int leatherCount) {
+    if (!m_isRunning || !m_isLoggedIn) return;
+
+    try {
+        PacketLeatherCountUpdate pkt;
+        pkt.header.size = sizeof(PacketLeatherCountUpdate);
+        pkt.header.type = PACKET_LEATHER_COUNT_UPDATE;
+        pkt.clientID = m_myClientID;
+        pkt.leatherCount = leatherCount;
+
+        int sendResult = send(sock, (char*)&pkt, sizeof(pkt), 0);
+        if (sendResult == SOCKET_ERROR) {
+            int error = WSAGetLastError();
+            OutputDebugString(L"[NetworkManager] Failed to send leather count update packet\n");
+        } else {
+            wchar_t debugMsg[256];
+            swprintf_s(debugMsg, L"[NetworkManager] Sent leather count update: %d\n", leatherCount);
+            OutputDebugString(debugMsg);
+        }
+    }
+    catch (const std::exception& e) {
+        OutputDebugString(L"[NetworkManager] Exception in SendLeatherCountUpdate\n");
+    }
 } 

@@ -245,7 +245,7 @@ void GameServer::HandlePacket(IOContext* ioContext, int clientID, DWORD bytesTra
         
         // 패킷 헤더 유효성 검사
         if (header->size < sizeof(PacketHeader) || header->size > MAX_PACKET_SIZE || 
-            header->type <= 0 || header->type > 17) {
+            header->type <= 0 || header->type > 19) {
             std::cout << "[Error] Invalid packet header - Size: " << header->size 
                       << ", Type: " << header->type << ", Client: " << clientID << std::endl;
             
@@ -697,6 +697,18 @@ void GameServer::ProcessSinglePacket(char* buffer, int clientID, int packetSize)
             
             // 다른 클라이언트들에게 떡 발사체 위치 업데이트 브로드캐스트
             BroadcastRiceCakeUpdate(clientID, pkt->projectileID, pkt->x, pkt->y, pkt->z);
+            break;
+        }
+        
+        case PACKET_LEATHER_COUNT_UPDATE: {
+            if (header->size != sizeof(PacketLeatherCountUpdate)) {
+                std::cout << "[Error] Invalid LEATHER_COUNT_UPDATE packet size" << std::endl;
+                break;
+            }
+            PacketLeatherCountUpdate* pkt = (PacketLeatherCountUpdate*)buffer;
+            
+            // 클라이언트의 호랑이 가죽 개수 업데이트 및 동기화
+            UpdateClientLeatherCount(clientID, pkt->leatherCount);
             break;
         }
         
@@ -1611,6 +1623,55 @@ void GameServer::SendExistingTigersToClient(int clientID) {
     
     std::cout << "[Server] Completed sending tiger info to client " << clientID 
               << " - Sent: " << sentCount << ", Skipped: " << skippedCount << std::endl;
+}
+
+// 호랑이 가죽 관련 메서드들 구현
+void GameServer::UpdateClientLeatherCount(int clientID, int leatherCount) {
+    auto clientIt = m_clients.find(clientID);
+    if (clientIt == m_clients.end()) {
+        std::cout << "[Error] Client " << clientID << " not found for leather count update" << std::endl;
+        return;
+    }
+    
+    // 클라이언트의 호랑이 가죽 개수 업데이트
+    clientIt->second.leatherCount = leatherCount;
+    std::cout << "[Server] Updated client " << clientID << " leather count to " << leatherCount << std::endl;
+    
+    // 모든 클라이언트에게 동기화 패킷 전송
+    BroadcastLeatherCountSync(leatherCount, clientID);
+}
+
+void GameServer::BroadcastLeatherCountSync(int leatherCount, int excludeID) {
+    PacketLeatherCountSync syncPacket;
+    syncPacket.header.type = PACKET_LEATHER_COUNT_SYNC;
+    syncPacket.header.size = sizeof(PacketLeatherCountSync);
+    syncPacket.leatherCount = leatherCount;
+    
+    // excludeID를 제외한 모든 클라이언트에게 전송
+    BroadcastPacket(&syncPacket, sizeof(syncPacket), excludeID);
+    
+    std::cout << "[Server] Leather count sync broadcasted - Count: " << leatherCount 
+              << " (excluded client: " << excludeID << ")" << std::endl;
+}
+
+void GameServer::SendLeatherCountToClient(int clientID) {
+    auto clientIt = m_clients.find(clientID);
+    if (clientIt == m_clients.end()) {
+        std::cout << "[Error] Client " << clientID << " not found for leather count sync" << std::endl;
+        return;
+    }
+    
+    PacketLeatherCountSync syncPacket;
+    syncPacket.header.type = PACKET_LEATHER_COUNT_SYNC;
+    syncPacket.header.size = sizeof(PacketLeatherCountSync);
+    syncPacket.leatherCount = clientIt->second.leatherCount;
+    
+    if (SendPacket(clientIt->second.socket, &syncPacket, sizeof(syncPacket))) {
+        std::cout << "[Server] Leather count " << clientIt->second.leatherCount 
+                  << " sent to client " << clientID << std::endl;
+    } else {
+        std::cout << "[Error] Failed to send leather count to client " << clientID << std::endl;
+    }
 }
 
 int main() {

@@ -1564,11 +1564,25 @@ void Scene::IncreaseLeatherCount()
 {
     ++mLeatherCount;
     mLeatherCount = mLeatherCount > 5 ? 5 : mLeatherCount;
+    
+    // 네트워크가 활성화된 경우 서버에 호랑이 가죽 개수 업데이트 전송
+    if (m_parent && m_parent->IsNetworkEnabled()) {
+        m_parent->GetNetworkManager().SendLeatherCountUpdate(mLeatherCount);
+        wchar_t debugMsg[256];
+        swprintf_s(debugMsg, L"[Scene] Leather count increased to %d and sent to server\n", mLeatherCount);
+        OutputDebugString(debugMsg);
+    }
 }
 
 void Scene::ResetLeatherCount()
 {
     mLeatherCount = 0;
+    
+    // 네트워크가 활성화된 경우 서버에 호랑이 가죽 개수 업데이트 전송
+    if (m_parent && m_parent->IsNetworkEnabled()) {
+        m_parent->GetNetworkManager().SendLeatherCountUpdate(mLeatherCount);
+        OutputDebugString(L"[Scene] Leather count reset to 0 and sent to server\n");
+    }
 }
 
 bool Scene::HasEnoughLeather()
@@ -1585,6 +1599,16 @@ float Scene::GetAspectRatio()
 int Scene::GetLeatherCount()
 {
     return mLeatherCount;
+}
+
+void Scene::SetLeatherCount(int count)
+{
+    mLeatherCount = count;
+    OutputDebugString(L"[Scene] Leather count set to: ");
+    
+    wchar_t debugMsg[256];
+    swprintf_s(debugMsg, L"[Scene] Leather count set to: %d\n", count);
+    OutputDebugString(debugMsg);
 }
 
 bool Scene::IsTigerQuestAccepted()
@@ -2144,7 +2168,17 @@ void Scene::ProcessInput()
     if ((keyState[VK_F1] & 0x88) == 0x80) { m_stage_queue = L"Base"; }
     if ((keyState[VK_F2] & 0x88) == 0x80) { m_stage_queue = L"God"; }
     if ((keyState[VK_F3] & 0x88) == 0x80) { m_stage_queue = L"Title"; }
-    if ((keyState[VK_F10] & 0x88) == 0x80) { mLeatherCount = 5; }
+    if ((keyState[VK_F10] & 0x88) == 0x80) { 
+        mLeatherCount = 5; 
+        
+        // 네트워크가 활성화된 경우 서버에 호랑이 가죽 개수 업데이트 전송
+        if (m_parent && m_parent->IsNetworkEnabled()) {
+            m_parent->GetNetworkManager().SendLeatherCountUpdate(mLeatherCount);
+            OutputDebugString(L"[Scene] F10 pressed - leather count set to 5 and sent to server\n");
+        } else {
+            OutputDebugString(L"[Scene] F10 pressed - leather count set to 5 (network disabled)\n");
+        }
+    }
 
     if ((keyState[0x57] & 0x88) == 0x80) { mInputDir.z += 1.0f; } // w down
     if ((keyState[0x53] & 0x88) == 0x80) { mInputDir.z -= 1.0f; } // s down

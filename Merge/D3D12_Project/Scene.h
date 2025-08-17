@@ -43,6 +43,7 @@ public:
     bool HasEnoughLeather();
     float GetAspectRatio();
     int GetLeatherCount();
+    void SetLeatherCount(int count);
     bool IsTigerQuestAccepted();
     void SetTigerQuestState(bool state);
     XMVECTOR GetInputDir();

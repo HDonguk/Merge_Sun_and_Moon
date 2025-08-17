@@ -35,6 +35,7 @@ private:
         int connectionErrorCount = 0; // 연결 에러 횟수
         bool connectionErrorLogged = false; // 연결 에러 로그 출력 여부
         std::string currentStage = "Base"; // 현재 스테이지 정보 추가
+        int leatherCount = 0; // 호랑이 가죽 개수 추가
         
         // 패킷 버퍼링을 위한 추가 필드
         char packetBuffer[MAX_PACKET_SIZE * 4];  // 여러 패킷을 저장할 수 있는 버퍼
@@ -129,5 +130,10 @@ private:
     // 떡 발사체 관련 메서드 추가
     void BroadcastRiceCakeSpawn(int clientID, int projectileID, float x, float y, float z, float dirX, float dirY, float dirZ, float speed);
     void BroadcastRiceCakeUpdate(int clientID, int projectileID, float x, float y, float z);
+
+    // 호랑이 가죽 관련 메서드 추가
+    void UpdateClientLeatherCount(int clientID, int leatherCount);
+    void BroadcastLeatherCountSync(int leatherCount, int excludeID = -1);
+    void SendLeatherCountToClient(int clientID);
 
 }; 

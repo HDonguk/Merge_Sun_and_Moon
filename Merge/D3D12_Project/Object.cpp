@@ -1942,7 +1942,7 @@ void PuzzleFrameObject::OnUpdate(GameTimer& gTimer)
 
 bool PuzzleFrameObject::AllCellMatch()
 {
-    int(*targetStatus)[3] = m_scene->GetPuzzleStatus();
+    int(*targetStatus)[3] = m_scene->GetTargetPattern();  // GetPuzzleStatus() 대신 GetTargetPattern() 사용
     for (int i = 0; i < 3; ++i)
     {
         for (int j = 0; j < 3; ++j)
@@ -2089,7 +2089,7 @@ void MovePlatformObject::OnUpdate(GameTimer& gTimer)
 
 PuzzleQuestObject::PuzzleQuestObject(Scene* scene, uint32_t id, uint32_t parentId) : Object(scene, id, parentId)
 {
-    int(*targetStatus)[3] = scene->GetPuzzleStatus();
+    int(*targetStatus)[3] = scene->GetTargetPattern();  // GetPuzzleStatus() 대신 GetTargetPattern() 사용
 
     PuzzleCellObject* obj = nullptr;
     float scale = 0.27f;
@@ -2105,11 +2105,31 @@ PuzzleQuestObject::PuzzleQuestObject(Scene* scene, uint32_t id, uint32_t parentI
             scene->AddObj(obj);
 
             obj->SetStatus(targetStatus[i][j]);
+            mCells[i][j] = obj;  // 셀을 배열에 저장
         }
     }
-
 }
 
+void PuzzleQuestObject::UpdateTargetPattern(int targetPattern[3][3])
+{
+    // 목표 패턴을 받아서 퍼즐 셀들의 상태를 업데이트
+    for (int i = 0; i < 3; ++i)
+    {
+        for (int j = 0; j < 3; ++j)
+        {
+            if (mCells[i][j])
+            {
+                int oldStatus = mCells[i][j]->GetStatus();
+                mCells[i][j]->SetStatus(targetPattern[i][j]);
+                int newStatus = mCells[i][j]->GetStatus();
+                
+                wchar_t debugMsg[256];
+                swprintf_s(debugMsg, L"[PuzzleQuestObject] Target Cell[%d][%d]: %d -> %d\n", i, j, oldStatus, newStatus);
+                OutputDebugString(debugMsg);
+            }
+        }
+    }
+}
 
 void TigerObject::SetNetworkTransform(float x, float y, float z, float rotY)
 {

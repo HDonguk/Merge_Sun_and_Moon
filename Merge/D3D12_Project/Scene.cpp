@@ -1758,6 +1758,11 @@ int(*Scene::GetPuzzleStatus())[3]
         return mPuzzleStatus;
 }
 
+int(*Scene::GetTargetPattern())[3]
+{
+        return mTargetPattern;
+}
+
 void Scene::UpdatePuzzleCellsFromStatus()
 {
     // PuzzleFrameObject를 찾아서 퍼즐 셀들을 업데이트
@@ -1798,10 +1803,21 @@ void Scene::UpdatePuzzleStatusFromCells()
 
 void Scene::SyncPuzzleStatus() {
     if (m_parent && m_parent->IsNetworkEnabled()) {
-        // UpdatePuzzleStatusFromCells() 호출 제거 - 클라이언트의 로컬 퍼즐 상태를 서버가 덮어쓰지 않도록 함
-        // 대신 현재 퍼즐 셀들의 상태만 서버로 전송 (로깅 및 추적용)
+        // 현재 퍼즐 셀들의 상태를 mPuzzleStatus 배열에 반영
+        UpdatePuzzleStatusFromCells();
+        
+        // 서버로 퍼즐 상태 전송
         m_parent->GetNetworkManager().SendPuzzleUpdate(mPuzzleStatus);
-        OutputDebugString(L"[Scene] SyncPuzzleStatus: Current puzzle status sent to server (local state preserved)\n");
+        
+        OutputDebugString(L"[Scene] SyncPuzzleStatus: Puzzle status synchronized with server\n");
+        
+        // 퍼즐 상태 로그 출력 (디버깅용)
+        wchar_t debugMsg[256];
+        swprintf_s(debugMsg, L"[Scene] Current puzzle status: [%d,%d,%d] [%d,%d,%d] [%d,%d,%d]\n",
+                   mPuzzleStatus[0][0], mPuzzleStatus[0][1], mPuzzleStatus[0][2],
+                   mPuzzleStatus[1][0], mPuzzleStatus[1][1], mPuzzleStatus[1][2],
+                   mPuzzleStatus[2][0], mPuzzleStatus[2][1], mPuzzleStatus[2][2]);
+        OutputDebugString(debugMsg);
     }
 }
 
@@ -2597,5 +2613,24 @@ void Scene::UpdateOtherPlayerRiceCakeProjectile(int projectileID, float x, float
                 transform->SetPosition(XMVectorSet(x, y, z, 1.0f));
             }
         }
+    }
+}
+
+void Scene::UpdatePuzzleQuestTargetPattern()
+{
+    // PuzzleQuestObject를 찾아서 target pattern을 업데이트
+    bool foundPuzzleQuest = false;
+    for (Object* obj : m_objects) {
+        PuzzleQuestObject* puzzleQuest = dynamic_cast<PuzzleQuestObject*>(obj);
+        if (puzzleQuest) {
+            OutputDebugString(L"[Scene] PuzzleQuestObject found, updating target pattern\n");
+            puzzleQuest->UpdateTargetPattern(mTargetPattern);
+            foundPuzzleQuest = true;
+            break;
+        }
+    }
+    
+    if (!foundPuzzleQuest) {
+        OutputDebugString(L"[Scene] Warning: PuzzleQuestObject not found in UpdatePuzzleQuestTargetPattern\n");
     }
 }

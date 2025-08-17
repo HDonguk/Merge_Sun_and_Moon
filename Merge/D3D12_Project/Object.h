@@ -454,7 +454,9 @@ class PuzzleQuestObject : public Object
 {
 public:
 	PuzzleQuestObject(Scene* scene, uint32_t id, uint32_t parentId = -1);
+	void UpdateTargetPattern(int targetPattern[3][3]);  // 목표 패턴을 업데이트하는 메서드 추가
 private:
+	PuzzleCellObject* mCells[3][3] = {};  // 퍼즐 셀들을 저장할 배열 추가
 };
 
 

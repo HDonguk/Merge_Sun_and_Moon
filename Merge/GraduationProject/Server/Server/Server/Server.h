@@ -87,8 +87,9 @@ private:
     bool m_huntingStageActive;  // Hunting 스테이지 활성화 여부
 
     // 퍼즐 상태 관리 추가
-    int m_puzzleStatus[3][3];  // God 스테이지 퍼즐 상태
-    bool m_puzzleInitialized;   // 퍼즐 초기화 여부
+    int m_puzzleStatus[3][3];      // God 스테이지 퍼즐 상태
+    int m_targetPattern[3][3];     // 목표 퍼즐 패턴 (클라이언트가 맞춰야 할 패턴)
+    bool m_puzzleInitialized;      // 퍼즐 초기화 여부
 
     // 내부 메서드
     static DWORD WINAPI WorkerThreadProc(LPVOID lpParam);
@@ -126,6 +127,7 @@ private:
     void UpdatePuzzleStatus(int clientID, int puzzleStatus[3][3]);
     void BroadcastPuzzleStatus(int excludeID = -1);
     void SendPuzzleStatusToClient(int clientID);
+    void PeriodicPuzzleSync();  // 주기적 퍼즐 동기화 추가
 
     // 떡 발사체 관련 메서드 추가
     void BroadcastRiceCakeSpawn(int clientID, int projectileID, float x, float y, float z, float dirX, float dirY, float dirZ, float speed);

@@ -909,10 +909,21 @@ void NetworkManager::ProcessPacket(char* buffer) {
                         }
                     }
                     
+                    // 목표 퍼즐 패턴도 서버에서 받은 값으로 업데이트
+                    int(*targetPattern)[3] = m_scene->GetTargetPattern();
+                    for (int i = 0; i < 3; ++i) {
+                        for (int j = 0; j < 3; ++j) {
+                            targetPattern[i][j] = puzzleSyncPkt->targetPattern[i][j];
+                        }
+                    }
+                    
                     // 퍼즐 셀들의 시각적 표현을 업데이트
                     m_scene->UpdatePuzzleCellsFromStatus();
                     
-                    OutputDebugString(L"[NetworkManager] Received puzzle pattern from server and updated local state\n");
+                    // 목표 퍼즐 패턴도 UI에 업데이트
+                    m_scene->UpdatePuzzleQuestTargetPattern();
+                    
+                    OutputDebugString(L"[NetworkManager] Received puzzle status and target pattern from server and updated local state\n");
                 }
                 break;
             }

@@ -100,6 +100,7 @@ DWORD WINAPI GameServer::WorkerThreadProc(LPVOID lpParam) {
 
 DWORD GameServer::WorkerThread() {
     DWORD lastTime = GetTickCount();
+    DWORD lastPuzzleSyncTime = GetTickCount();  // 퍼즐 동기화 타이머 추가
     
     while (m_isRunning) {
         DWORD currentTime = GetTickCount();
@@ -111,6 +112,12 @@ DWORD GameServer::WorkerThread() {
         
         // 클라이언트 연결 상태 모니터링
         MonitorClientConnections();
+        
+        // 퍼즐 상태 주기적 동기화 (2초마다 - 더 자주 동기화)
+        if (currentTime - lastPuzzleSyncTime > 2000) {
+            lastPuzzleSyncTime = currentTime;
+            PeriodicPuzzleSync();
+        }
         
         // 기존 IOCP 처리 코드
         DWORD bytesTransferred;
@@ -1457,22 +1464,43 @@ std::vector<int> GameServer::GetClientsInStage(const std::string& stageName) {
 
 // 퍼즐 관련 메서드들 구현
 void GameServer::InitializePuzzle() {
-    // 게임 시작 시 서버에서 랜덤 퍼즐 상태 생성
+    // 게임 시작 시 서버에서 퍼즐 초기 상태를 무조건 전부 O(0)으로 설정
+    // 플레이어가 직접 퍼즐을 맞춰서 X(1)로 바꿔야 함
+    
+    // 초기 상태는 무조건 전부 O(0)
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            m_puzzleStatus[i][j] = 0;  // 모든 셀을 O(0)으로 초기화
+        }
+    }
+    
+    // 성공 퍼즐에 대한 목표 패턴은 랜덤으로 생성 (서버 내부에서만 사용)
+    // 이 값은 플레이어에게 전송되지 않고, 서버에서 정답 체크용으로만 사용
     std::random_device rd;
     std::default_random_engine dre(rd());
     std::uniform_int_distribution<int> uid(0, 1);
     
+    // 목표 퍼즐 패턴 생성 (랜덤) 및 저장
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
-            m_puzzleStatus[i][j] = uid(dre);
+            m_targetPattern[i][j] = uid(dre);
         }
     }
     
     m_puzzleInitialized = true;
-    std::cout << "[Server] Puzzle initialized with random state:" << std::endl;
+    std::cout << "[Server] Puzzle initialized with ALL O(0) state - player must solve manually:" << std::endl;
+    std::cout << "[Server] Current puzzle status (all O):" << std::endl;
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
             std::cout << m_puzzleStatus[i][j] << " ";
+        }
+        std::cout << std::endl;
+    }
+    
+    std::cout << "[Server] Target puzzle pattern (random):" << std::endl;
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            std::cout << m_targetPattern[i][j] << " ";
         }
         std::cout << std::endl;
     }
@@ -1481,6 +1509,17 @@ void GameServer::InitializePuzzle() {
 void GameServer::UpdatePuzzleStatus(int clientID, int puzzleStatus[3][3]) {
     // 클라이언트의 퍼즐 상태 변경을 추적 (로깅용)
     std::cout << "[Server] Client " << clientID << " updated puzzle status:" << std::endl;
+    
+    // 이전 상태와 비교하여 변경된 부분 표시
+    std::cout << "[Server] Previous puzzle status:" << std::endl;
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            std::cout << m_puzzleStatus[i][j] << " ";
+        }
+        std::cout << std::endl;
+    }
+    
+    std::cout << "[Server] New puzzle status from client:" << std::endl;
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
             std::cout << puzzleStatus[i][j] << " ";
@@ -1488,8 +1527,28 @@ void GameServer::UpdatePuzzleStatus(int clientID, int puzzleStatus[3][3]) {
         std::cout << std::endl;
     }
     
-    // 각 클라이언트는 자신만의 퍼즐 패턴을 가져야 하므로 다른 클라이언트들에게 브로드캐스트하지 않음
-    // BroadcastPuzzleStatus(clientID); // 이 줄을 주석 처리
+    // 변경된 셀 표시
+    std::cout << "[Server] Changed cells:" << std::endl;
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            if (m_puzzleStatus[i][j] != puzzleStatus[i][j]) {
+                std::cout << "  Position [" << i << "][" << j << "]: " 
+                          << m_puzzleStatus[i][j] << " -> " << puzzleStatus[i][j] << std::endl;
+            }
+        }
+    }
+    
+    // 서버의 퍼즐 상태를 클라이언트가 보낸 상태로 업데이트
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            m_puzzleStatus[i][j] = puzzleStatus[i][j];
+        }
+    }
+    
+    // 모든 클라이언트들과 퍼즐 상태 동기화 (퍼즐을 맞춘 클라이언트 제외)
+    BroadcastPuzzleStatus(clientID);
+    
+    std::cout << "[Server] Puzzle status updated and synchronized with all clients" << std::endl;
 }
 
 void GameServer::BroadcastPuzzleStatus(int excludeID) {
@@ -1497,27 +1556,49 @@ void GameServer::BroadcastPuzzleStatus(int excludeID) {
     syncPacket.header.type = PACKET_PUZZLE_SYNC;
     syncPacket.header.size = sizeof(PacketPuzzleSync);
     
-    // 현재 퍼즐 상태 복사
+    // 현재 서버의 퍼즐 상태 복사
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
             syncPacket.puzzleStatus[i][j] = m_puzzleStatus[i][j];
         }
     }
     
-    // God 스테이지에 있는 클라이언트 수 확인
-    int clientsInGodStage = 0;
-    for (const auto& [id, client] : m_clients) {
-        if (client.isLoggedIn && client.currentStage == "God" && id != excludeID) {
-            clientsInGodStage++;
+    // 목표 퍼즐 패턴 복사
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            syncPacket.targetPattern[i][j] = m_targetPattern[i][j];
         }
     }
     
-    std::cout << "[Server] Clients in God stage: " << clientsInGodStage << " (excluding client " << excludeID << ")" << std::endl;
+    // God 스테이지에 있는 클라이언트 수 확인
+    int clientsInGodStage = 0;
+    int broadcastCount = 0;
     
-    // God 스테이지에 있는 모든 클라이언트에게 전송
-    BroadcastToStage(&syncPacket, sizeof(syncPacket), "God", excludeID);
+    for (const auto& [id, client] : m_clients) {
+        if (client.isLoggedIn && client.currentStage == "God" && id != excludeID) {
+            clientsInGodStage++;
+            
+            // 각 클라이언트에게 퍼즐 상태 전송
+            if (SendPacket(client.socket, &syncPacket, sizeof(syncPacket))) {
+                broadcastCount++;
+                std::cout << "[Server] Puzzle status sent to client " << id << std::endl;
+            } else {
+                std::cout << "[Error] Failed to send puzzle status to client " << id << std::endl;
+            }
+        }
+    }
     
-    std::cout << "[Server] Puzzle status broadcasted to all clients in God stage" << std::endl;
+    std::cout << "[Server] Puzzle status broadcasted to " << broadcastCount << "/" << clientsInGodStage 
+              << " clients in God stage (excluded client: " << excludeID << ")" << std::endl;
+    
+    // 퍼즐 상태 로그 출력
+    std::cout << "[Server] Current puzzle status:" << std::endl;
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            std::cout << m_puzzleStatus[i][j] << " ";
+        }
+        std::cout << std::endl;
+    }
 }
 
 void GameServer::SendPuzzleStatusToClient(int clientID) {
@@ -1537,9 +1618,37 @@ void GameServer::SendPuzzleStatusToClient(int clientID) {
         }
     }
     
-    if (SendPacket(clientIt->second.socket, &syncPacket, sizeof(syncPacket))) {
-        std::cout << "[Server] Puzzle status sent to client " << clientID << std::endl;
+    // 목표 퍼즐 패턴 복사
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            syncPacket.targetPattern[i][j] = m_targetPattern[i][j];
+        }
     }
+    
+    if (SendPacket(clientIt->second.socket, &syncPacket, sizeof(syncPacket))) {
+        std::cout << "[Server] Puzzle status and target pattern sent to client " << clientID << std::endl;
+    }
+}
+
+// 주기적 퍼즐 동기화 함수 구현
+void GameServer::PeriodicPuzzleSync() {
+    // God 스테이지에 있는 클라이언트가 있는지 확인
+    bool hasGodStageClients = false;
+    for (const auto& [id, client] : m_clients) {
+        if (client.isLoggedIn && client.currentStage == "God") {
+            hasGodStageClients = true;
+            break;
+        }
+    }
+    
+    if (!hasGodStageClients) {
+        return;  // God 스테이지에 클라이언트가 없으면 동기화하지 않음
+    }
+    
+    std::cout << "[Server] Periodic puzzle sync - broadcasting current status to all God stage clients" << std::endl;
+    
+    // 모든 God 스테이지 클라이언트에게 퍼즐 상태 동기화 (제외할 클라이언트 없음)
+    BroadcastPuzzleStatus(-1);
 }
 
 // 떡 발사체 관련 메서드들 구현

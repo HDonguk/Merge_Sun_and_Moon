@@ -119,7 +119,8 @@ struct PacketPuzzleUpdate {
 
 struct PacketPuzzleSync {
     PacketHeader header;
-    int puzzleStatus[3][3];  // 서버에서 전송하는 퍼즐 상태
+    int puzzleStatus[3][3];      // 서버에서 전송하는 퍼즐 상태
+    int targetPattern[3][3];     // 목표 퍼즐 패턴 (클라이언트가 맞춰야 할 패턴)
 };
 
 struct PacketRiceCakeSpawn {

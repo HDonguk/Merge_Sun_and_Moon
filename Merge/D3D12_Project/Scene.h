@@ -48,9 +48,11 @@ public:
     void SetTigerQuestState(bool state);
     XMVECTOR GetInputDir();
     int(*GetPuzzleStatus())[3];
+    int(*GetTargetPattern())[3];  // 목표 퍼즐 패턴 반환
     void SyncPuzzleStatus();  // 퍼즐 상태를 서버와 동기화
     void UpdatePuzzleCellsFromStatus();  // 퍼즐 상태를 실제 퍼즐 셀들에 적용
     void UpdatePuzzleStatusFromCells();  // 실제 퍼즐 셀들의 상태를 mPuzzleStatus 배열에 반영
+    void UpdatePuzzleQuestTargetPattern();  // PuzzleQuestObject의 target pattern을 업데이트하는 메서드 추가
 
     // 떡 발사체 동기화 메서드 추가
     void CreateOtherPlayerRiceCakeProjectile(int projectileID, float x, float y, float z, float dirX, float dirY, float dirZ, float speed);
@@ -145,6 +147,7 @@ private:
     uint32_t mMainCameraId = -1;
 
     int mPuzzleStatus[3][3] = { {0,0,0},{0,0,0},{0,0,0} };
+    int mTargetPattern[3][3] = { {0,0,0},{0,0,0},{0,0,0} };  // 목표 퍼즐 패턴
 
     unique_ptr<ResourceManager> m_resourceManager;
     //

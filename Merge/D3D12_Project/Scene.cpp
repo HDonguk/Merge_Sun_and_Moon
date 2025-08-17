@@ -1098,8 +1098,11 @@ void Scene::BuildEndStage()
 
     // End
     {
+        float scale = 0.2f;
+        float ratio = GetAspectRatio();
+        float tan30 = 0.57735f;
         objectPtr = new TitleQuadObject(this, AllocateId(), mMainCameraId);
-        objectPtr->AddComponent(new Transform{ {-0.5f * 1.77f, -0.5f, 1.0f}, {-90.0f, 0.0f, 0.0f}, {1.77f, 1.0f, 1.0f} });
+        objectPtr->AddComponent(new Transform{ {-tan30 * ratio * scale, -tan30 * scale, 1.0f * scale}, {-90.0f, 0.0f, 0.0f}, {tan30 * 2.0f * ratio * scale, 1.0f, tan30 * 2.0f * scale} });
         objectPtr->AddComponent(new Mesh{ "Quad" });
         objectPtr->AddComponent(new Texture{ L"End", -1.0f, 0.4f });
         AddObj(objectPtr);

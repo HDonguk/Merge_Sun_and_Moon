@@ -745,10 +745,9 @@ void NetworkManager::ProcessPacket(char* buffer) {
                           tigerSpawnPkt->tigerID, tigerSpawnPkt->x, tigerSpawnPkt->y, tigerSpawnPkt->z);
                 OutputDebugString(debugMsg);
                 
-                // 로그인 상태 확인 - 로그인 전에 받은 호랑이 스폰 패킷은 무시
+                // 로그인 상태 확인 - 로그인 전에도 호랑이 정보는 저장해두기
                 if (!m_isLoggedIn) {
-                    OutputDebugString(L"[Tiger] Ignoring tiger spawn packet - not logged in yet\n");
-                    break;
+                    OutputDebugString(L"[Tiger] Not logged in yet, but storing tiger info for later\n");
                 }
                 
                 // 이미 스폰된 호랑이인지 확인
@@ -770,17 +769,33 @@ void NetworkManager::ProcessPacket(char* buffer) {
                 swprintf_s(debugMsg, L"[Tiger] Successfully stored tiger info for ID: %d\n", tigerSpawnPkt->tigerID);
                 OutputDebugString(debugMsg);
                 
-                // 호랑이 정보만 저장하고, 실제 생성은 CreateStoredTigers()에서 처리
-                // 이렇게 하면 중복 생성을 방지할 수 있습니다
-                OutputDebugString(L"[Tiger] Tiger info stored, will be created when entering Hunting Stage\n");
+                // 호랑이 카운터 업데이트 및 자동 생성 체크
+                static int expectedTigerCount = 16; // 총 16마리
+                static int receivedTigerCount = 0;
+                
+                receivedTigerCount++;
+                swprintf_s(debugMsg, L"[Tiger] Received %d/%d tigers\n", receivedTigerCount, expectedTigerCount);
+                OutputDebugString(debugMsg);
+                
+                // 모든 호랑이를 받았고 현재 Hunting 스테이지에 있다면 자동 생성
+                if (receivedTigerCount >= expectedTigerCount) {
+                    if (m_scene && m_scene->GetCurrentStage() == L"Hunting") {
+                        OutputDebugString(L"[Tiger] All tigers received, auto-creating in Hunting Stage\n");
+                        CreateStoredTigers();
+                    } else {
+                        OutputDebugString(L"[Tiger] All tigers received but not in Hunting Stage, will create later\n");
+                    }
+                    receivedTigerCount = 0; // 리셋
+                }
                 break;
             }
             
             case PACKET_TIGER_UPDATE: {
                 PacketTigerUpdate* tigerUpdatePkt = (PacketTigerUpdate*)buffer;
                 
-                // 로그인 상태 확인
+                // 로그인 상태 확인 - 로그인 전에는 무시
                 if (!m_isLoggedIn) {
+                    OutputDebugString(L"[Tiger] Ignoring tiger update packet - not logged in yet\n");
                     break;
                 }
                 
@@ -804,8 +819,10 @@ void NetworkManager::ProcessPacket(char* buffer) {
             
             case PACKET_TIGER_ATTACK: {
                 PacketTigerAttack* tigerAttackPkt = (PacketTigerAttack*)buffer;
-                // 로그인 상태 확인
+                
+                // 로그인 상태 확인 - 로그인 전에는 무시
                 if (!m_isLoggedIn) {
+                    OutputDebugString(L"[Tiger] Ignoring tiger attack packet - not logged in yet\n");
                     break;
                 }
                 // Scene에서 해당 호랑이를 찾아서 공격 신호만 설정 (공격 오브젝트는 0.4초 후 CalcTime에서 생성됨)
@@ -826,8 +843,9 @@ void NetworkManager::ProcessPacket(char* buffer) {
             case PACKET_TIGER_HIT: {
                 PacketTigerHit* tigerHitPkt = (PacketTigerHit*)buffer;
                 
-                // 로그인 상태 확인
+                // 로그인 상태 확인 - 로그인 전에는 무시
                 if (!m_isLoggedIn) {
+                    OutputDebugString(L"[Tiger] Ignoring tiger hit packet - not logged in yet\n");
                     break;
                 }
                 
@@ -1106,14 +1124,10 @@ void NetworkManager::CreateStoredTigers() {
         return;
     }
     
-    // 현재 스테이지가 Hunting이 아닌 경우에도 호랑이 정보는 저장해두고,
-    // 나중에 Hunting Stage로 진입할 때 생성할 수 있도록 함
-    if (m_scene->GetCurrentStage() != L"Hunting") {
-        OutputDebugString(L"[NetworkManager] Not in Hunting Stage, but storing tiger info for later\n");
-        return;
-    }
-    
     OutputDebugString(L"[NetworkManager] Creating stored tigers...\n");
+    
+    // 스테이지 체크는 호출하는 쪽에서 이미 처리됨
+    // 여기서는 항상 호랑이 생성 진행
     
     // 저장된 호랑이 정보를 기반으로 호랑이 오브젝트 생성
     for (const auto& tigerPair : m_tigers) {
@@ -1169,7 +1183,8 @@ void NetworkManager::CreateStoredTigers() {
             tigerObj->SetLife(3);
             
             wchar_t debugMsg[256];
-            swprintf_s(debugMsg, L"[NetworkManager] Successfully created stored tiger ID: %d\n", tigerInfo.tigerID);
+            swprintf_s(debugMsg, L"[NetworkManager] Successfully created stored tiger ID: %d at position (%.1f, %.1f, %.1f)\n", 
+                      tigerInfo.tigerID, tigerInfo.x, tigerInfo.y, tigerInfo.z);
             OutputDebugString(debugMsg);
         }
         catch (const std::exception& e) {

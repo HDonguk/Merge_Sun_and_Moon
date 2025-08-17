@@ -450,6 +450,10 @@ void GameServer::ProcessSinglePacket(char* buffer, int clientID, int packetSize)
                 break;
             }
             PacketTigerSpawn* pkt = (PacketTigerSpawn*)buffer;
+            
+            // 호랑이 스폰 패킷을 모든 클라이언트에게 브로드캐스트
+            std::cout << "[TigerSpawn] Broadcasting tiger spawn packet for ID: " << pkt->tigerID 
+                      << " at position (" << pkt->x << ", " << pkt->y << ", " << pkt->z << ")" << std::endl;
             BroadcastPacket(pkt, sizeof(PacketTigerSpawn));
             break;
         }
@@ -601,6 +605,12 @@ void GameServer::ProcessSinglePacket(char* buffer, int clientID, int packetSize)
                 
                 // 기존 플레이어 정보 전송
                 BroadcastNewPlayer(clientID);
+                
+                // 호랑이 스테이지가 활성화된 경우 호랑이 정보도 전송
+                if (m_huntingStageActive && !m_tigers.empty()) {
+                    std::cout << "[ClientReady] Hunting stage active, sending tiger info to client " << clientID << std::endl;
+                    SendExistingTigersToClient(clientID);
+                }
             } else {
                 std::cout << "[Error] Client " << clientID << " disconnected after ready" << std::endl;
             }
@@ -890,8 +900,14 @@ void GameServer::BroadcastNewPlayer(int newClientID) {
             }
         }
         
-        // 호랑이 정보는 클라이언트가 Hunting Stage에 진입할 때 전송하도록 변경
-        // (BroadcastNewPlayer에서는 전송하지 않음)
+        // 호랑이 스테이지가 활성화된 경우 호랑이 정보도 전송
+        if (m_huntingStageActive && !m_tigers.empty()) {
+            std::cout << "[BroadcastNewPlayer] Hunting stage active, sending tiger info to new client " << newClientID << std::endl;
+            std::cout << "[BroadcastNewPlayer] Total tigers in server: " << m_tigers.size() << std::endl;
+            SendExistingTigersToClient(newClientID);
+        } else {
+            std::cout << "[BroadcastNewPlayer] Hunting stage not active or no tigers. Active: " << m_huntingStageActive << ", Tigers: " << m_tigers.size() << std::endl;
+        }
         
         std::cout << "[BroadcastNewPlayer] Completed sending info to new client. Broadcasted to " << broadcastCount << " clients" << std::endl;
     }
@@ -1368,6 +1384,10 @@ void GameServer::ActivateHuntingStage() {
         InitializeTigers();
         
         // 모든 클라이언트에게 호랑이 스폰 패킷 전송
+        std::cout << "[Server] Broadcasting tiger spawn packets to all clients..." << std::endl;
+        std::cout << "[Server] Total tigers to broadcast: " << m_tigers.size() << std::endl;
+        
+        int broadcastCount = 0;
         for (const auto& tigerPair : m_tigers) {
             const auto& tiger = tigerPair.second;
             PacketTigerSpawn spawnPacket;
@@ -1379,9 +1399,13 @@ void GameServer::ActivateHuntingStage() {
             spawnPacket.z = tiger.z;
             
             BroadcastPacket(&spawnPacket, sizeof(spawnPacket));
+            std::cout << "[Server] Sent tiger spawn packet for ID: " << tiger.tigerID << std::endl;
+            broadcastCount++;
         }
         
-        std::cout << "[Server] Tigers initialized and spawn packets sent to all clients" << std::endl;
+        std::cout << "[Server] Tigers initialized and spawn packets sent to all clients. Total broadcasted: " << broadcastCount << std::endl;
+    } else {
+        std::cout << "[Server] Hunting Stage already active, skipping initialization" << std::endl;
     }
 }
 
@@ -1554,6 +1578,9 @@ void GameServer::SendExistingTigersToClient(int clientID) {
     
     std::cout << "[Server] Sending existing tiger info to client " << clientID << " (total tigers: " << m_tigers.size() << ")" << std::endl;
     
+    int sentCount = 0;
+    int skippedCount = 0;
+    
     // 모든 기존 호랑이 정보를 새 클라이언트에게 전송
     for (const auto& tigerPair : m_tigers) {
         const auto& tiger = tigerPair.second;
@@ -1561,6 +1588,7 @@ void GameServer::SendExistingTigersToClient(int clientID) {
         // 죽은 호랑이는 전송하지 않음
         if (tiger.isDead) {
             std::cout << "[Server] Skipping dead tiger " << tiger.tigerID << " for client " << clientID << std::endl;
+            skippedCount++;
             continue;
         }
         
@@ -1575,12 +1603,14 @@ void GameServer::SendExistingTigersToClient(int clientID) {
         if (SendPacket(clientIt->second.socket, &spawnPacket, sizeof(spawnPacket))) {
             std::cout << "[Server] Sent tiger " << tiger.tigerID << " info to client " << clientID 
                       << " at position (" << tiger.x << ", " << tiger.y << ", " << tiger.z << ")" << std::endl;
+            sentCount++;
         } else {
             std::cout << "[Error] Failed to send tiger " << tiger.tigerID << " info to client " << clientID << std::endl;
         }
     }
     
-    std::cout << "[Server] Completed sending tiger info to client " << clientID << std::endl;
+    std::cout << "[Server] Completed sending tiger info to client " << clientID 
+              << " - Sent: " << sentCount << ", Skipped: " << skippedCount << std::endl;
 }
 
 int main() {
